@@ -6,6 +6,24 @@ const fold=s=>String(s||"").normalize("NFKC").replace(/ـ/g,"").replace(/[\u064B
 const norm=s=>fold(s).replace(/\s/g,"");
 const dec=v=>typeof v==="string"?JSON.parse(v):v||{};
 const err=m=>Object.assign(new Error(m),{status:400});
+
+function verify(initData,token){
+ if(!initData||!token)throw err("افتح اللعبة من داخل تيليجرام أولاً");
+ const p=new URLSearchParams(initData),hash=p.get("hash");
+ if(!hash)throw err("تعذر التحقق من حساب تيليجرام");
+ p.delete("hash");
+ const check=[...p.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([k,v])=>k+"="+v).join("\n");
+ const secret=crypto.createHmac("sha256","WebAppData").update(token).digest();
+ const expected=crypto.createHmac("sha256",secret).update(check).digest("hex");
+ const actual=Buffer.from(hash,"hex"),wanted=Buffer.from(expected,"hex");
+ if(actual.length!==wanted.length||!crypto.timingSafeEqual(actual,wanted))throw err("بيانات تيليجرام غير صالحة");
+ const date=Number(p.get("auth_date")||0),now=Date.now()/1000;
+ if(!date||date>now+30||now-date>3600)throw err("انتهت صلاحية الجلسة، أغلق اللعبة وافتحها مجددًا");
+ let user;
+ try{user=JSON.parse(p.get("user")||"{}");}catch{throw err("بيانات جلسة تيليجرام غير صالحة");}
+ if(!user.id)throw err("لم أستطع تحديد حسابك");
+ return user;
+}
 const pick=(arr,n)=>{if(n>arr.length)throw err("لا توجد كلمات كافية لهذا الاختيار");const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,n);};
 function makeWords(n,len){if(len===4)return pick(four,n);if(len===5)return pick(five,n);if(len!==0)throw err("اختر كلمات من 4 أو 5 أحرف أو كلهم");if(n===1)return pick(Math.random()<.5?four:five,1);const a=pick(four,Math.ceil(n/2)),b=pick(five,Math.floor(n/2));return Array.from({length:n},(_,i)=>i%2===0?a[Math.floor(i/2)] : b[Math.floor(i/2)]);}
 function feedback(target,guess){const t=Array.from(norm(target)),g=Array.from(norm(guess)),out=Array(t.length).fill(null),left=t.slice();for(let i=0;i<t.length;i++)if(g[i]===t[i]){out[i]=guess[i]===target[i]?"green":"green_purple";left[i]=null;}for(let i=0;i<t.length;i++)if(!out[i]){const j=left.indexOf(g[i]);if(j<0)out[i]="white";else{out[i]=guess[i]===target[j]?"orange":"yellow_purple";left[j]=null;}}return out;}
