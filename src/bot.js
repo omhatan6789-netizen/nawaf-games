@@ -6,6 +6,7 @@ import { handleRankCommand } from "./handlers/ranks.js";
 import { handleResetCommand, handleResetCallback } from "./handlers/reset-stats.js";
 import { handleRoleManagementCommand, handleRolesClearCallback } from "./handlers/role-management.js";
 import { handleCommandLockFlow, enforceCommandLock, handleUserPermissionCommand } from "./handlers/command-permissions.js";
+import { handleReplyManagement, checkAutoReplies, hasReplySession } from "./replies.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -41,24 +42,30 @@ export function createBot() {
     await ctx.reply("البوت يعمل ✅");
   });
 
-  bot.on("message:text", async (ctx) => {
+  bot.on("message", async (ctx) => {
     try {
       recordGroupTextMessage(ctx);
-    } catch (error) {
-      console.error("Message activity tracking failed:", error);
-    }
-    try {
       if (await handleCommandLockFlow(ctx)) return;
+
+      if (hasReplySession(ctx.from?.id)) {
+        await handleReplyManagement(ctx);
+        return;
+      }
+
+      if (typeof ctx.message?.text !== "string") return;
       if (await handleUserPermissionCommand(ctx)) return;
       if (await enforceCommandLock(ctx)) return;
+      if (await handleReplyManagement(ctx)) return;
+
       await handleRoleManagementCommand(ctx);
       await handleResetCommand(ctx);
       await handleRankCommand(ctx);
       await handleActivityCommand(ctx);
       await handlePointsMessage(ctx);
+      await checkAutoReplies(ctx);
     } catch (error) {
-      console.error("Points command failed:", error);
-      await ctx.reply("❌ حصل خطأ أثناء تنفيذ الأمر، حاول مرة ثانية.");
+      console.error("Message handler failed:", error);
+      try { await ctx.reply("❌ حصل خطأ أثناء تنفيذ الأمر، حاول مرة ثانية."); } catch {}
     }
   });
 
