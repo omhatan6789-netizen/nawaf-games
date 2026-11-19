@@ -54,7 +54,7 @@ export async function ensureDeveloperPanelSchema() {
         error TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
-      DO $
+      DO $do$
       BEGIN
         IF EXISTS (
           SELECT 1 FROM information_schema.columns
@@ -78,7 +78,7 @@ export async function ensureDeveloperPanelSchema() {
             USING (success::text IN ('1','true','t'));
           ALTER TABLE developer_broadcast_targets ALTER COLUMN success SET DEFAULT FALSE;
         END IF;
-      END $;
+      END $do$;
       CREATE INDEX IF NOT EXISTS idx_developer_bot_chats_active
         ON developer_bot_chats(active,chat_type);
       CREATE INDEX IF NOT EXISTS idx_developer_broadcast_targets_broadcast
