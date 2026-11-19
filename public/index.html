@@ -5,6 +5,13 @@
 <meta name="theme-color" content="#570909">
 <title>بوت نواف</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+(function () {
+  const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param || '';
+  if (startParam.startsWith('carrom_')) window.location.replace('/carrom/');
+  else if (startParam.startsWith('gravity_')) window.location.replace('/gravity/');
+})();
+</script>
 <style>
 :root{color-scheme:dark;--red:#9e1018;--muted:rgba(255,255,255,.58)}
 *{box-sizing:border-box}
