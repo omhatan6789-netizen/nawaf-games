@@ -29,6 +29,17 @@ function getMedia(message) {
 function messageContent(message) {
   return message.text ?? message.caption ?? "";
 }
+function getTextEntities(source, text) {
+  if (!text) return undefined;
+  if (source.text != null) {
+    const start = source.text.indexOf(text);
+    if (start < 0) return undefined;
+    return (source.entities || [])
+      .filter(entity => entity.offset >= start && entity.offset + entity.length <= start + text.length)
+      .map(entity => ({ ...entity, offset: entity.offset - start }));
+  }
+  return source.caption_entities?.length ? source.caption_entities : undefined;
+}
 function replaceVariables(value, chat, repliedUser) {
   const targetName = repliedUser
     ? [repliedUser.first_name, repliedUser.last_name].filter(Boolean).join(" ") || repliedUser.username || String(repliedUser.id)
@@ -42,7 +53,7 @@ async function sendToChat(api, chatId, source, text, { replyTo, targetChat } = {
   if (!type) {
     if (!finalText) return null;
     return api.sendMessage(chatId, finalText, {
-      entities: !hasVariables && source.entities?.length ? source.entities : undefined,
+      entities: !hasVariables ? getTextEntities(source, text) : undefined,
       reply_parameters: replyTo ? { message_id: replyTo, allow_sending_without_reply: true } : undefined,
       link_preview_options: { is_disabled: false },
     });
@@ -50,7 +61,7 @@ async function sendToChat(api, chatId, source, text, { replyTo, targetChat } = {
   const caption = finalText || undefined;
   const common = {
     caption,
-    caption_entities: !hasVariables && source.caption_entities?.length ? source.caption_entities : undefined,
+    caption_entities: !hasVariables ? getTextEntities(source, text) : undefined,
     reply_parameters: replyTo ? { message_id: replyTo, allow_sending_without_reply: true } : undefined,
   };
   if (type === "photo") return api.sendPhoto(chatId, fileId, common);
