@@ -33,7 +33,7 @@ async function loadCustomCommands() {
 }
 
 function clean(value) {
-  return String(value || "").trim().replace(/\\s+/g, " ");
+  return String(value || "").trim().replace(/\s+/g, " ");
 }
 
 export async function resolveCustomAlias(text) {
@@ -70,7 +70,7 @@ export async function handleCustomCommandManagement(ctx) {
       );
       aliases.set(newCommand, session.oldCommand);
       sessions.delete(userId);
-      await ctx.reply(`✅ تم إضافة الأمر\\n\\n${newCommand} يعمل الآن مثل ${session.oldCommand}`);
+      await ctx.reply(`✅ تم إضافة الأمر\n\n${newCommand} يعمل الآن مثل ${session.oldCommand}`);
     } catch (error) {
       console.error("Saving custom command failed:", error);
       await ctx.reply("❌ حصل خطأ أثناء حفظ الأمر.");
@@ -107,7 +107,7 @@ export async function handleCustomCommandManagement(ctx) {
     await ensureCustomCommandsSchema();
     const rows = [...aliases.entries()].sort((a, b) => a[1].localeCompare(b[1], "ar"));
     await ctx.reply(rows.length
-      ? "📌 الأوامر المضافة:\\n\\n" + rows.map(([alias, original]) => `${alias} ➜ ${original}`).join("\\n")
+      ? "📌 الأوامر المضافة:\n\n" + rows.map(([alias, original]) => `${alias} ➜ ${original}`).join("\n")
       : "لا توجد أوامر مضافة");
     return true;
   }
