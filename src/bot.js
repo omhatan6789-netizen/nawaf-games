@@ -5,6 +5,7 @@ import { handleActivityCommand, handleTopCallback } from "./handlers/activity-co
 import { handleRankCommand } from "./handlers/ranks.js";
 import { handleResetCommand, handleResetCallback } from "./handlers/reset-stats.js";
 import { handleRoleManagementCommand, handleRolesClearCallback } from "./handlers/role-management.js";
+import { handleCommandLockFlow, enforceCommandLock, handleUserPermissionCommand } from "./handlers/command-permissions.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -47,6 +48,9 @@ export function createBot() {
       console.error("Message activity tracking failed:", error);
     }
     try {
+      if (await handleCommandLockFlow(ctx)) return;
+      if (await handleUserPermissionCommand(ctx)) return;
+      if (await enforceCommandLock(ctx)) return;
       await handleRoleManagementCommand(ctx);
       await handleResetCommand(ctx);
       await handleRankCommand(ctx);
