@@ -10,7 +10,8 @@ async function resolveTarget(ctx) {
   const replied = ctx.message?.reply_to_message?.from;
   if (replied) return replied;
   const parts = (ctx.message?.text ?? "").trim().split(/\s+/);
-  const token = parts.slice(2).find((part) => /^\d+$/.test(part) || part.startsWith("@"));
+  const start = parts[0] === "رتبته" ? 1 : 2;
+  const token = parts.slice(start).find((part) => /^\d+$/.test(part) || part.startsWith("@"));
   if (!token) return null;
 
   if (/^\d+$/.test(token)) {
