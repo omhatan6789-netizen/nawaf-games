@@ -1118,7 +1118,7 @@ export default function App() {
                 type="button"
                 onClick={() => {
                   downloadZipFromEndpoint(
-                    '/api/export/project.zip',
+                    '/${game}/api/export/project.zip',
                     'carrom-game-project.zip'
                   ).catch((err) => showToast(err.message));
                 }}
@@ -1131,7 +1131,7 @@ export default function App() {
                 type="button"
                 onClick={() => {
                   downloadZipFromEndpoint(
-                    '/api/export/nawaf-addon.zip',
+                    '/${game}/api/export/nawaf-addon.zip',
                     'nawaf-bot-v2-carrom-addon.zip'
                   ).catch((err) => showToast(err.message));
                 }}
