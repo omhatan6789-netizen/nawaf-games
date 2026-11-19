@@ -77,3 +77,9 @@ for (const archive of archives) {
 }
 fs.writeFileSync(path.join(root, "public", "game-inspection.json"), JSON.stringify(report));
 console.log("[game-import] Wrote temporary inspection report to public/game-inspection.json");
+
+for (const [gameName, game] of Object.entries(report.games)) {
+  for (const file of game.files) {
+    console.log(`[game-report] ${gameName}/${file.path}: ${JSON.stringify(file.content.slice(0, 3500))}`);
+  }
+}
