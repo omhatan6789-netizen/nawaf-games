@@ -102,7 +102,7 @@ async function clearAll(kind,api) {
     total+=ids.length;
     for(const uid of ids) {
       try {
-        if(kind==="restrict") await api.restrictChatMember(chatId,uid,{permissions:allPermissions});
+        if(kind==="restrict") await api.restrictChatMember(chatId,uid,allPermissions);
         else if(kind==="ban") await api.unbanChatMember(chatId,uid,{only_if_banned:false});
       } catch(error) { console.warn("Could not clear platform sanction",kind,chatId,uid,error?.description||error?.message); }
     }
