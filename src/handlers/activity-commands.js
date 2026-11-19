@@ -1,6 +1,7 @@
 import { InlineKeyboard } from "grammy";
 import { pool } from "../db.js";
 import { getPointsLeaderboard } from "../points.js";
+import { flushPendingActivity } from "../activity.js";
 
 function db() {
   if (!pool) throw new Error("DATABASE_URL is not configured");
@@ -21,6 +22,7 @@ export async function handleActivityCommand(ctx) {
   if (!text || !ctx.from) return false;
 
   if (text === "رسائلي" || text === "رسايلي") {
+    await flushPendingActivity();
     const result = await db().query("SELECT messages FROM users WHERE user_id = $1", [String(ctx.from.id)]);
     const count = Number(result.rows[0]?.messages ?? 0);
     await ctx.reply(`💬 عدد رسائلك المسجلة: ${count}`);
