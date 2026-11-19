@@ -31,6 +31,19 @@ function playerName(user) {
 
 async function createLobby(gameType, user) {
   const name = playerName(user);
+  if (gameType === "carrom" || gameType === "gravity") {
+    const port = gameType === "carrom" ? 10001 : 10002;
+    const response = await fetch(`http://127.0.0.1:${port}/api/internal/inline-room`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-bot-token": process.env.BOT_TOKEN },
+      body: JSON.stringify({ userId: user.id, name }),
+      signal: AbortSignal.timeout(4000),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok || !data.roomId) throw new Error(data.error || "تعذر إنشاء غرفة اللعبة");
+    const prefix = gameType === "carrom" ? "carrom_" : "gravity_";
+    return { id: data.roomId, startapp: `${prefix}${data.roomId}` };
+  }
   if (gameType === "word") {
     const id = crypto.randomUUID();
     const words = [...WORDS].sort(() => Math.random() - 0.5).slice(0, 5);
