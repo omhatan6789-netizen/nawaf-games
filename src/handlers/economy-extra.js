@@ -3,6 +3,15 @@ import { randomInt } from "node:crypto";
 
 const transfers = new Map();
 const replySessions = new Map();
+const OWNER_ID = 8453977662;
+const enabledCache = { value: true, until: 0 };
+async function enabled() {
+  if (Date.now() < enabledCache.until) return enabledCache.value;
+  const r = await db().query("SELECT status FROM games_settings WHERE id=1");
+  enabledCache.value = !r.rows[0] || r.rows[0].status !== "off";
+  enabledCache.until = Date.now() + 60000;
+  return enabledCache.value;
+}
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const mention = u => '<a href="tg://user?id='+u.id+'">'+esc(u.first_name || u.username || u.id)+'</a>';
 const db = () => { if (!pool) throw new Error("Database is not configured"); return pool; };
@@ -16,6 +25,7 @@ const lockIds = async (c,ids) => {
   for (const id of [...ids].map(String).sort((a,b)=>BigInt(a)<BigInt(b)?-1:1)) await c.query("SELECT pg_advisory_xact_lock($1::bigint)",[id]);
 };
 const fmtClock = n => [Math.floor(n/60),n%60].map(x=>String(x).padStart(2,"0")).join(":");
+const fmtScratchRemaining = n => [Math.floor(n/3600),Math.floor(n%3600/60),n%60].map(x=>String(x).padStart(2,"0")).join(":");
 
 async function rob(robberId,victimId,amount) {
   const c=await db().connect(), now=Math.floor(Date.now()/1000);
@@ -31,7 +41,8 @@ async function rob(robberId,victimId,amount) {
     const vleft=Math.max(0,Number(m.get(String(victimId))?.victim_rob_until||0)-now);
     if(rleft){await c.query("COMMIT");return {status:"robber_cooldown",remaining:rleft};}
     if(vleft){await c.query("COMMIT");return {status:"victim_cooldown",remaining:vleft};}
-    const p=await c.query("SELECT points FROM points WHERE user_id=$1 FOR UPDATE",[String(victimId)]);
+    await c.query("SELECT user_id FROM points WHERE user_id=ANY($1::bigint[]) ORDER BY user_id FOR UPDATE",[[String(robberId),String(victimId)]]);
+    const p=await c.query("SELECT points FROM points WHERE user_id=$1",[String(victimId)]);
     const available=Number(p.rows[0]?.points||0);
     if(available<=0){await c.query("COMMIT");return {status:"empty"};}
     const stolen=Math.min(Math.max(1,amount),available);
@@ -109,6 +120,7 @@ export async function handleEconomyExtraMessage(ctx) {
   const msg=ctx.message, text=msg?.text?.trim(), user=ctx.from;
   if(!msg||!user||!ctx.chat)return false;
   const id=user.id;
+  if(!await enabled()) return false;
   if(ctx.chat.type==="private" && replySessions.has(id)){
     const sender=replySessions.get(id);replySessions.delete(id);
     try{
