@@ -163,6 +163,10 @@ async function handleSession(ctx, session) {
   return false;
 }
 
+export function hasReplySession(userId) {
+  return sessions.has(Number(userId));
+}
+
 export async function handleReplyManagement(ctx) {
   const message = ctx.message;
   const user = ctx.from;
