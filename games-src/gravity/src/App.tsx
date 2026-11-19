@@ -421,6 +421,7 @@ export default function App() {
       clientId,
       name: playerName.trim() || 'اللاعب الأول',
       targetScore,
+      maxPlayers,
     });
   };
 
