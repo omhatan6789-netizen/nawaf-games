@@ -20,6 +20,7 @@ import { handleEmojiReactionsMessage } from "./emoji-reactions.js";
 import { handleStartCommand, handleStartEditorCommand, handleStartEditorCallback, handleStartEditorMessage } from "./start-editor.js";
 import { handleDeveloperPanelCommand, handleDeveloperPanelCallback, handleDeveloperPanelMessage, trackDeveloperBotChat } from "./developer-panel.js";
 import { handleGamesManagerMessage } from "./handlers/games-manager.js";
+import { handleInlineGamesQuery } from "./inline-games.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -42,6 +43,8 @@ export function createBot() {
       }
     }
   });
+
+  bot.on("inline_query", handleInlineGamesQuery);
 
   bot.command("start", async (ctx) => {
     try { await recordPrivateStart(ctx); }
