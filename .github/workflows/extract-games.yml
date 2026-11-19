@@ -1,0 +1,41 @@
+name: Extract game projects
+
+on:
+  push:
+    paths:
+      - "imports/*.zip"
+      - ".github/workflows/extract-games.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract game archives
+        run: |
+          set -euo pipefail
+          mkdir -p games-src/carrom games-src/gravity
+          unzip -oq "imports/carrom-game-project(1).zip" -d games-src/carrom
+          unzip -oq "imports/gravity-game-project(1).zip" -d games-src/gravity
+
+      - name: Commit extracted source
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add games-src
+          if git diff --cached --quiet; then
+            echo "No extracted source changes."
+            exit 0
+          fi
+          git commit -m "Extract carrom and gravity game source"
+          git push
