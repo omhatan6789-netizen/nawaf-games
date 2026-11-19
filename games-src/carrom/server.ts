@@ -289,6 +289,16 @@ function startShotSimulation(room: CarromRoom) {
     }
 
     const { events, anyMoving } = stepCarromPhysics(g.coins, g.striker, dt);
+    // The server owns online physics, so it must also advance pocket animations;
+    // otherwise clients keep receiving pocketAnim=0 and render the coin outside the pocket.
+    for (const coin of g.coins) {
+      if (coin.pocketed && coin.pocketAnim !== undefined && coin.pocketAnim < 1) {
+        coin.pocketAnim = Math.min(1, coin.pocketAnim + dt * 4.5);
+      }
+    }
+    if (g.striker?.pocketed && g.striker.pocketAnim !== undefined && g.striker.pocketAnim < 1) {
+      g.striker.pocketAnim = Math.min(1, g.striker.pocketAnim + dt * 4.5);
+    }
     for (const ev of events) {
       if (ev.type === 'clack' && ev.intensity > 0.14) {
         broadcastRoom(room, {
