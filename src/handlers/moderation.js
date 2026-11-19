@@ -20,7 +20,7 @@ async function targetOf(ctx){
 async function act(ctx,action,target,seconds,reason){
  const until=seconds?new Date(Date.now()+seconds*1000):null,table={mute:"bot_mutes",restrict:"restrictions",ban:"moderation_bans"}[action];
  if(action==="restrict")await ctx.api.restrictChatMember(ctx.chat.id,target.id,{can_send_messages:false},until?{until_date:Math.floor(until.getTime()/1000)}:{});
- if(action==="ban")await ctx.api.banChatMember(ctx.chat.id,target.id,{...(until?{until_date:until}:{})});
+ if(action==="ban")await ctx.api.banChatMember(ctx.chat.id,target.id,{...(until?{until_date:Math.floor(until.getTime()/1000)}:{})});
  await saveSanction(table,ctx.chat.id,target,until,reason,ctx.from.id);
  const label={mute:"كتم",restrict:"تقييد",ban:"حظر"}[action];
  const lead=action==="mute"?"تم كتمته لين يهجد بعدين فكوه":action==="restrict"?"تم قيَّدته لين يهجد بعدين فكوه":"تم حظرته لعيونك يـ "+esc(await getRank(ctx.from.id,ctx.chat.id));
