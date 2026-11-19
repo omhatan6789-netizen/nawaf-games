@@ -1,6 +1,7 @@
 import { Bot } from "grammy";
 import { handlePointsMessage } from "./handlers/points.js";
 import { recordGroupTextMessage } from "./activity.js";
+import { handleActivityCommand, handleTopCallback } from "./handlers/activity-commands.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -28,6 +29,8 @@ export function createBot() {
     await ctx.reply("هلا! هذا بوت نواف بنسخته الجديدة. جاري نقل المميزات تدريجيًا.");
   });
 
+  bot.callbackQuery(/^topmenu:/, handleTopCallback);
+
   bot.command("ping", async (ctx) => {
     await ctx.reply("البوت يعمل ✅");
   });
@@ -39,6 +42,7 @@ export function createBot() {
       console.error("Message activity tracking failed:", error);
     }
     try {
+      await handleActivityCommand(ctx);
       await handlePointsMessage(ctx);
     } catch (error) {
       console.error("Points command failed:", error);
