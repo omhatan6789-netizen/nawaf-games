@@ -67,7 +67,7 @@ export async function handleRepetitionMessage(ctx){
  if(m.new_chat_members||m.left_chat_member||m.new_chat_title||m.new_chat_photo||m.delete_chat_photo)return;
  try{
   const s=await settings(ctx.chat.id);if(!s.enabled)return;
-  if(Number(u.id)===OWNER_ID||await getDeveloperType(u.id))return;
+  if(Number(u.id)===OWNER_ID||await getDeveloperType(u.id)==="primary")return;
   const level=await getRankLevel(u.id,ctx.chat.id);if(level>(ranks[s.rank]??0))return;
   const arr=addMessage(ctx.chat.id,u.id,m.message_id,s.seconds);if(arr.length<s.limit)return;
   windows.delete(key(ctx.chat.id,u.id));
