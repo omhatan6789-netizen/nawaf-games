@@ -717,8 +717,9 @@ async function startServer() {
 
       if (type === 'update_settings') {
         if (room.hostId !== sess.playerId || room.status !== 'lobby') return;
-        const targetScore = Number(msg.targetScore) === 5 ? 5 : 3;
-        room.targetScore = targetScore;
+        if (msg.targetScore !== undefined) {
+          room.targetScore = Number(msg.targetScore) === 5 ? 5 : 3;
+        }
         const requestedMax = Number(msg.maxPlayers);
         if (Number.isInteger(requestedMax) && requestedMax >= 2 && requestedMax <= 5 && requestedMax >= room.players.length) room.maxPlayers = requestedMax;
         if (typeof msg.name === 'string') {
