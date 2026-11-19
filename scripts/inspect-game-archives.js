@@ -83,3 +83,29 @@ for (const [gameName, game] of Object.entries(report.games)) {
     console.log(`[game-report] ${gameName}/${file.path}: ${JSON.stringify(file.content.slice(0, 3500))}`);
   }
 }
+
+for (const archive of archives) {
+  const dir = path.join(root, ".game-inspection", archive.label);
+  const serverFile = path.join(dir, "server.ts");
+  if (fs.existsSync(serverFile)) {
+    const lines = fs.readFileSync(serverFile, "utf8").split(/\\r?\\n/);
+    const selected = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (/WebSocketServer|createServer|app\\.(get|post|use|all)|server\\.(listen|on)|wss\\.|upgrade|PORT|process\\.env|express\\.static|sendFile|dist|/ws|/api\\//i.test(lines[i])) {
+        selected.push(`${i + 1}: ${lines[i]}`);
+      }
+    }
+    console.log(`[server-map] ${archive.label}: ${JSON.stringify(selected.slice(0, 100))}`);
+  }
+  const appFile = path.join(dir, "src/App.tsx");
+  if (fs.existsSync(appFile)) {
+    const lines = fs.readFileSync(appFile, "utf8").split(/\\r?\\n/);
+    const selected = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (/WebSocket|ws:|wss:|fetch\\(|/api/|location\\.href|window\\.location|startapp|initDataUnsafe/i.test(lines[i])) {
+        selected.push(`${i + 1}: ${lines[i]}`);
+      }
+    }
+    console.log(`[client-map] ${archive.label}: ${JSON.stringify(selected.slice(0, 100))}`);
+  }
+}
