@@ -55,7 +55,7 @@ async function applyBlockedPunishment(ctx,chatId,user,action,duration){
  const untilDate=until?new Date(until*1000):undefined;
  const table={mute:"bot_mutes",restrict:"restrictions",ban:"moderation_bans"}[action];
  if(action==="restrict"){
-  await ctx.api.restrictChatMember(chatId,user.id,{permissions:{can_send_messages:false},...(untilDate?{until_date:untilDate}:{})});
+  await ctx.api.restrictChatMember(chatId,user.id,{can_send_messages:false},untilDate?{until_date:untilDate}:{});
  } else if(action==="ban"){
   await ctx.api.banChatMember(chatId,user.id,{...(untilDate?{until_date:untilDate}:{})});
  }
@@ -179,7 +179,7 @@ export async function handleBlockedWordCallback(ctx){
  }
  if(action==="close"){try{await ctx.deleteMessage();}catch{}return;}
  if(action==="lift"){
-  if(punish==="restrict")await ctx.api.restrictChatMember(originChatId,targetId,{permissions:FULL_PERMISSIONS});
+  if(punish==="restrict")await ctx.api.restrictChatMember(originChatId,targetId,FULL_PERMISSIONS);
   if(punish==="ban")await ctx.api.unbanChatMember(originChatId,targetId,{only_if_banned:false});
   await deleteSanction({mute:"bot_mutes",restrict:"restrictions",ban:"moderation_bans"}[punish],originChatId,targetId);
   try{await ctx.editMessageReplyMarkup({reply_markup:undefined});}catch{}
