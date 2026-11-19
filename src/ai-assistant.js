@@ -145,6 +145,13 @@ async function geminiChat(messages) {
   if (!answer) throw new Error("محرك الذكاء لم يرجع إجابة.");
   return answer.slice(0,3800);
 }
+function telegramHtml(text) {
+  const escaped = String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return escaped.replace(/\\*\\*(.+?)\\*\\*/gs, "<b>$1</b>");
+}
 function historyKey(chatId,userId) { return `${chatId}:${userId}`; }
 function addHistory(key,userText,assistantText) {
   const h=HISTORY.get(key)||[];
@@ -307,7 +314,7 @@ export async function handleAiAssistantMessage(ctx) {
   try {
     const answer=await geminiChat(messages);
     addHistory(key,question,answer);
-    for (let i=0;i<answer.length;i+=3900) await ctx.reply(answer.slice(i,i+3900),{link_preview_options:{is_disabled:true}});
+    await ctx.reply(telegramHtml(answer),{parse_mode:"HTML",link_preview_options:{is_disabled:true}});
   } catch (error) {
     console.error("[AI] Assistant response failed:",error.message);
     await ctx.reply(`يا هلا، ${error.message||"صار خطأ غير متوقع وأنا أجهز الرد. جرّب مرة ثانية بعد قليل."}`);
