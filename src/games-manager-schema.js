@@ -92,12 +92,12 @@ export async function ensureGamesManagerSchema() {
     const seedQuestions = async (gameName, rows) => {
       const count = await pool.query("SELECT COUNT(*)::int AS n FROM game_questions WHERE game_name=$1",[gameName]);
       if (Number(count.rows[0].n) > 0) return;
-      for (const row of rows) {
-        await pool.query(
-          "INSERT INTO game_questions(game_name,question,image,caption,answers) VALUES($1,$2,NULL,NULL,$3::jsonb)",
-          [gameName,row[0],JSON.stringify(row[1])]
-        );
-      }
+      await pool.query(
+        `INSERT INTO game_questions(game_name,question,image,caption,answers)
+         SELECT $1,question,NULL,NULL,answers::jsonb
+         FROM unnest($2::text[],$3::text[]) AS seed(question,answers)`,
+        [gameName,rows.map(row=>row[0]),rows.map(row=>JSON.stringify(row[1]))]
+      );
     };
     await seedQuestions("كلمات",words.map(word=>[`• اكتب كلمة ~ ${word}`,[word]]));
     await seedQuestions("تفكيك",decomposition.map(word=>[`• فكك كلمة ~ ${word}`,[word.split("").join(" ")]]));
