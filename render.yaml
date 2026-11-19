@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: nawaf-bot-node
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: BOT_TOKEN
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: PGSSLMODE
+        value: require
