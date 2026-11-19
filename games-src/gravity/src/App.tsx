@@ -117,7 +117,7 @@ export default function App() {
   const initialRoomCode = useMemo(() => getInitialRoomCodeFromUrl(), []);
   const clientId = useMemo(() => getStableClientId(), []);
 
-  const [screen, setScreen] = useState<'setup' | 'playing'>('setup');
+  const [screen, setScreen] = useState<'choice' | 'setup' | 'playing'>(initialRoomCode ? 'setup' : 'choice');
   const [mode, setMode] = useState<GravityMode>(() =>
     initialRoomCode ? 'online' : 'bot'
   );
@@ -470,6 +470,44 @@ export default function App() {
   const isSpectatingNow =
     mode === 'online' && (amISpectator || hud.spectating);
 
+  if (screen === 'choice') {
+    return (
+      <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center px-4 py-6 bg-[#0d0508]">
+        <main className="w-full max-w-[460px] flex flex-col gap-5">
+          <div className="text-center">
+            <div className="mx-auto mb-3 flex items-center justify-center w-24 h-24 rounded-3xl border border-white/15 bg-[#5cb5f9]/15 text-5xl shadow-lg">🏃‍♂️</div>
+            <h1 className="text-2xl font-black text-white">تحدي الجاذبية</h1>
+            <p className="text-sm text-white/65 mt-2">اختر طريقة اللعب</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setMode('bot'); setOnlineRoom(null); setScreen('setup'); }}
+            className="nawaf-primary w-full py-4 text-base font-black"
+          >
+            🤖 لعب ضد البوت
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const webApp = window.Telegram?.WebApp as any;
+              if (typeof webApp?.switchInlineQuery !== 'function') {
+                showToast('افتح اللعبة من داخل تيليجرام لاختيار المحادثة');
+                return;
+              }
+              webApp.switchInlineQuery('جري الجاذبية', ['users', 'bots', 'groups', 'channels']);
+            }}
+            className="nawaf-secondary w-full py-4 text-base font-black"
+          >
+            👥 لعب ضد شخص بالتيليجرام
+          </button>
+          <button type="button" onClick={() => { window.location.href = '/miniapp/'; }} className="text-xs font-bold text-white/55 py-2">
+            الرجوع للقائمة الرئيسية
+          </button>
+        </main>
+      </div>
+    );
+  }
+
   // Full-height Portrait Gameplay Screen
   if (screen === 'playing') {
     const showCompactMultiHud = mode === 'online' && hud.players.length > 2;
@@ -773,65 +811,6 @@ export default function App() {
               />
             </div>
 
-            {mode === 'local' && (
-              <div>
-                <label
-                  htmlFor="local-p2-name"
-                  className="block text-xs font-bold text-white/75 mb-1.5"
-                >
-                  اسم اللاعب الثاني (نفس الجهاز)
-                </label>
-                <input
-                  id="local-p2-name"
-                  type="text"
-                  maxLength={24}
-                  value={localBlueName}
-                  onChange={(e) => setLocalBlueName(e.target.value)}
-                  placeholder="اكتب اسم اللاعب الثاني..."
-                  className="w-full rounded-xl border border-white/25 bg-[#12070a] px-3.5 py-2.5 text-sm font-bold text-white outline-none focus:border-[#60a5fa]"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Mode Selection */}
-          <div>
-            <div className="text-xs font-bold text-white/75 mb-2">طريقة اللعب</div>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('bot');
-                  setOnlineRoom(null);
-                }}
-                className={`nawaf-choice py-3 px-2 text-xs sm:text-sm ${
-                  mode === 'bot' ? 'active' : ''
-                }`}
-              >
-                🤖 ضد البوت
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('local');
-                  setOnlineRoom(null);
-                }}
-                className={`nawaf-choice py-3 px-2 text-xs sm:text-sm ${
-                  mode === 'local' ? 'active' : ''
-                }`}
-              >
-                👥 نفس الجهاز
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('online')}
-                className={`nawaf-choice py-3 px-2 text-xs sm:text-sm ${
-                  mode === 'online' ? 'active' : ''
-                }`}
-              >
-                🌐 أونلاين (2-5)
-              </button>
-            </div>
           </div>
 
           {/* Bot Difficulty (ONLY سهل / متوسط / صعب — NO seconds sub-labels!) */}
