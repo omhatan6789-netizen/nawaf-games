@@ -14,6 +14,7 @@ import { ensureMandatorySubscriptionSchema } from "./mandatory-subscription-sche
 import { ensureEmojiReactionSchema } from "./emoji-reactions-schema.js";
 import { ensureStartEditorSchema } from "./start-editor-schema.js";
 import { ensureDeveloperPanelSchema } from "./developer-panel-schema.js";
+import { ensureGamesManagerSchema } from "./games-manager-schema.js";
 
 ensureModerationSchema().catch(error => console.error("Moderation schema initialization failed:", error));
 ensureProfileRepliesSchema().catch(error => console.error("Profile replies schema initialization failed:", error));
@@ -22,6 +23,7 @@ ensureMandatorySubscriptionSchema().catch(error => console.error("Mandatory subs
 ensureEmojiReactionSchema().catch(error => console.error("Emoji reaction schema initialization failed:", error));
 ensureStartEditorSchema().catch(error => console.error("Start editor schema initialization failed:", error));
 ensureDeveloperPanelSchema().catch(error => console.error("Developer panel schema initialization failed:", error));
+ensureGamesManagerSchema().catch(error => console.error("Games manager schema initialization failed:", error));
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
