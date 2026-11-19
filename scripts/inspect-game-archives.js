@@ -46,3 +46,27 @@ for (const archive of archives) {
   console.log(`[game-import] ${archive.label}: extracted ${files.length} files`);
   for (const file of files) console.log(`[game-import]   ${file}`);
 }
+
+const inspectFiles = [
+  "metadata.json",
+  "package.json",
+  "server.ts",
+  "src/App.tsx",
+  "src/game/exportCarromMiniApp.ts",
+  "src/game/exportMiniApp.ts",
+  "src/game/carromEngine.ts",
+  "src/game/gravityEngine.ts",
+];
+
+for (const archive of archives) {
+  const base = path.join(root, ".game-inspection", archive.label);
+  for (const relative of inspectFiles) {
+    const file = path.join(base, relative);
+    if (!fs.existsSync(file) || !fs.statSync(file).isFile()) continue;
+    const raw = fs.readFileSync(file, "utf8");
+    const content = raw.length > 12000 ? raw.slice(0, 12000) + "\\n[TRUNCATED]" : raw;
+    console.log(`[game-source] BEGIN ${archive.label}/${relative}`);
+    console.log(JSON.stringify(content));
+    console.log(`[game-source] END ${archive.label}/${relative}`);
+  }
+}
