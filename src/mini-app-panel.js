@@ -17,7 +17,10 @@ const back = () => new InlineKeyboard().text("↩️ لوحة الميني", "mi
 const homeText = "⚙️ لوحة التحكم الخاصة بالميني آب\nاختر القسم اللي تبي تديره:";
 const homeKeyboard = () => new InlineKeyboard()
   .text("🎨 تعديل لون زر بالميني", "minipanel:color").row()
-  .text("📋 الألوان المعدلة", "minipanel:colors").row();
+  .text("📋 الألوان المعدلة", "minipanel:colors").row()
+  .text("🔘 إدارة الأزرار", "minipanel:buttons").row()
+  .text("🎧 إدارة الأصوات", "minipanel:sounds").row()
+  .text("🖼️ صورة الميني آب", "minipanel:banner");
 
 function paletteKeyboard() {
   const kb = new InlineKeyboard();
@@ -64,6 +67,41 @@ export async function handleMiniAppPanelCallback(ctx) {
     if (data === "minipanel:menu") {
       sessions.delete(ctx.from.id);
       await ctx.editMessageText(homeText, { reply_markup: homeKeyboard() });
+    } else if (data === "minipanel:buttons") {
+      const { rows } = await pool.query("SELECT id,title,button_type FROM mini_app_buttons ORDER BY button_type DESC,button_order,id");
+      const lines = ["🔘 أزرار الميني آب", "━━━━━━━━━━━━", ...rows.map((r,i) => `${i+1}. ${esc(r.title)} — ${r.button_type === "large" ? "كبير" : "صغير"}`)];
+      if (!rows.length) lines.push("ما فيه أزرار مضافة حاليًا.");
+      const kb = new InlineKeyboard().text("➕ إضافة زر صغير", "minipanel:add:small").text("➕ إضافة زر كبير", "minipanel:add:large").row();
+      for (const r of rows) kb.text("🗑️ " + String(r.title).slice(0,28), "minipanel:delbutton:" + r.id).row();
+      kb.text("↩️ لوحة الميني", "minipanel:menu");
+      await ctx.editMessageText(lines.join("\\n"), { parse_mode: "HTML", reply_markup: kb });
+    } else if (data.startsWith("minipanel:add:")) {
+      const kind = data.split(":").at(-1);
+      if (!["small","large"].includes(kind)) return true;
+      sessions.set(ctx.from.id, { action: "add_button", step: "title", type: kind });
+      await ctx.editMessageText("ارسل اسم الزر الجديد:", { reply_markup: back() });
+    } else if (data.startsWith("minipanel:delbutton:")) {
+      const id = Number(data.split(":").at(-1));
+      const result = await pool.query("DELETE FROM mini_app_buttons WHERE id=$1 RETURNING title", [id]);
+      await ctx.editMessageText(result.rows[0] ? `تم حذف «${esc(result.rows[0].title)}» ✅` : "الزر غير موجود.", { parse_mode: "HTML", reply_markup: back() });
+    } else if (data === "minipanel:sounds") {
+      const { rows } = await pool.query("SELECT id,title,media_kind FROM mini_app_sounds ORDER BY id");
+      const lines = ["🎧 أصوات الميني آب", "━━━━━━━━━━━━", ...rows.map((r,i) => `${i+1}. ${esc(r.title)} — ${r.media_kind === "video" ? "فيديو" : "صوت"}`)];
+      if (!rows.length) lines.push("ما فيه أصوات مضافة.");
+      const kb = new InlineKeyboard().text("➕ إضافة صوت", "minipanel:addsound").row();
+      for (const r of rows) kb.text("🗑️ " + String(r.title).slice(0,28), "minipanel:delsound:" + r.id).row();
+      kb.text("↩️ لوحة الميني", "minipanel:menu");
+      await ctx.editMessageText(lines.join("\\n"), { parse_mode: "HTML", reply_markup: kb });
+    } else if (data === "minipanel:addsound") {
+      sessions.set(ctx.from.id, { action: "add_sound", step: "media" });
+      await ctx.editMessageText("ارسل ملف صوت أو فيديو (حتى 20 ميجابايت):", { reply_markup: back() });
+    } else if (data.startsWith("minipanel:delsound:")) {
+      const id = Number(data.split(":").at(-1));
+      const result = await pool.query("DELETE FROM mini_app_sounds WHERE id=$1 RETURNING title", [id]);
+      await ctx.editMessageText(result.rows[0] ? `تم حذف الصوت «${esc(result.rows[0].title)}» ✅` : "الصوت غير موجود.", { parse_mode: "HTML", reply_markup: back() });
+    } else if (data === "minipanel:banner") {
+      sessions.set(ctx.from.id, { action: "banner", step: "media" });
+      await ctx.editMessageText("ارسل صورة أو فيديو أو GIF للميني آب (حتى 20 ميجابايت):", { reply_markup: back() });
     } else if (data === "minipanel:color") {
       sessions.set(ctx.from.id, { action: "color", step: "button" });
       await ctx.editMessageText("ارسل اسم الزر كما يظهر داخل الميني آب. تقدر تختار أي زر، حتى زر الرجوع أو أزرار الألعاب.", { reply_markup: back() });
@@ -121,6 +159,78 @@ export async function handleMiniAppPanelMessage(ctx) {
   }
   if (session.action === "color" && session.step === "custom") {
     await saveColor(ctx, session.button, text);
+    return true;
+  }
+  if (session.action === "banner") {
+    const msg = ctx.message;
+    let media = msg.photo?.at(-1) || msg.video || msg.animation;
+    if (msg.document && /^(image|video)\\//.test(msg.document.mime_type || "")) media = msg.document;
+    if (!media) { await ctx.reply("ارسل صورة أو فيديو أو GIF، أو اكتب إلغاء."); return true; }
+    if ((media.file_size || 0) > 20 * 1024 * 1024) { await ctx.reply("الملف أكبر من 20 ميجابايت."); return true; }
+    const mime = media.mime_type || (msg.photo ? "image/jpeg" : "video/mp4");
+    const kind = mime.startsWith("video/") ? "video" : "image";
+    await pool.query("UPDATE mini_app_settings SET banner_file_id=$1,banner_media_kind=$2,banner_mime_type=$3,updated_at=NOW() WHERE id=1", [media.file_id,kind,mime]);
+    sessions.delete(ctx.from.id);
+    await ctx.reply("تم تحديث وسيط أعلى الميني آب بنجاح ✅", { reply_markup: back() });
+    return true;
+  }
+  if (session.action === "add_button") {
+    if (session.step === "title") {
+      if (!text) { await ctx.reply("ارسل اسم الزر."); return true; }
+      session.title = text.slice(0,80); session.step = "target";
+      await ctx.reply("ارسل رابط الموقع أو يوزر تيليجرام مثل @username.");
+    } else if (session.step === "target") {
+      let target = text;
+      if (/^@[A-Za-z0-9_]{5,32}$/.test(target)) target = "https://t.me/" + target.slice(1);
+      else if (/^(https?:\\/\\/)?t\\.me\\//i.test(target) && !/^https?:\\/\\//i.test(target)) target = "https://" + target;
+      if (!/^https?:\\/\\//i.test(target)) { await ctx.reply("الرابط غير صحيح. ارسل رابطًا يبدأ بـ https:// أو @username."); return true; }
+      session.target = target; session.step = "color";
+      await ctx.reply("ارسل لون خلفية الزر بصيغة HEX مثل #ffffff.");
+    } else if (session.step === "color") {
+      if (!/^#[0-9a-fA-F]{6}$/.test(text)) { await ctx.reply("اكتب اللون بصيغة #RRGGBB."); return true; }
+      session.color = text.toLowerCase(); session.step = "image";
+      await ctx.reply(session.type === "large" ? "ارسل صورة أو فيديو أو GIF للزر الكبير، أو اكتب تخطي." : "ارسل صورة للزر الصغير أو اكتب تخطي.");
+    } else if (session.step === "image") {
+      const msg = ctx.message;
+      let media = msg.photo?.at(-1) || msg.video || msg.animation;
+      if (msg.document && /^(image|video)\\//.test(msg.document.mime_type || "")) media = msg.document;
+      let fileId = null, mediaKind = "image", mime = null;
+      if (text.toLowerCase() !== "تخطي") {
+        if (session.type === "large" && !media) { await ctx.reply("ارسل صورة أو فيديو أو GIF، أو اكتب تخطي."); return true; }
+        if (session.type === "small" && !msg.photo) { await ctx.reply("ارسل صورة للزر الصغير أو اكتب تخطي."); return true; }
+        if (media && (media.file_size || 0) > 20 * 1024 * 1024) { await ctx.reply("الملف أكبر من 20 ميجابايت."); return true; }
+        if (media) {
+          mime = media.mime_type || (msg.photo ? "image/jpeg" : "video/mp4");
+          mediaKind = mime.startsWith("video/") ? "video" : "image";
+          fileId = media.file_id;
+        }
+      }
+      const order = await pool.query("SELECT COALESCE(MAX(button_order),0)+1 AS n FROM mini_app_buttons WHERE button_type=$1", [session.type]);
+      await pool.query(`INSERT INTO mini_app_buttons(title,target,button_type,color,image_file_id,button_order,created_by,media_kind,mime_type)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [session.title,session.target,session.type,session.color,fileId,Number(order.rows[0].n),ctx.from.id,mediaKind,mime]);
+      sessions.delete(ctx.from.id);
+      await ctx.reply("تمت إضافة الزر للميني آب بنجاح ✅", { reply_markup: back() });
+    }
+    return true;
+  }
+  if (session.action === "add_sound") {
+    if (session.step === "media") {
+      const msg = ctx.message;
+      let media = msg.audio || msg.voice || msg.video;
+      if (msg.document && /^(audio|video)\\//.test(msg.document.mime_type || "")) media = msg.document;
+      if (!media) { await ctx.reply("ارسل ملف صوتي أو فيديو."); return true; }
+      if ((media.file_size || 0) > 20 * 1024 * 1024) { await ctx.reply("الملف أكبر من 20 ميجابايت."); return true; }
+      const mime = media.mime_type || (msg.video ? "video/mp4" : msg.voice ? "audio/ogg" : "audio/mpeg");
+      Object.assign(session,{step:"title",file_id:media.file_id,mime_type:mime,media_kind:mime.startsWith("video/") ? "video" : "audio",file_size:media.file_size || 0});
+      await ctx.reply("وش الاسم اللي تبيه يظهر للصوت؟");
+    } else if (session.step === "title") {
+      if (!text) { await ctx.reply("اكتب اسمًا للصوت."); return true; }
+      await pool.query("INSERT INTO mini_app_sounds(title,file_id,mime_type,media_kind,file_size,created_by) VALUES($1,$2,$3,$4,$5,$6)",
+        [text.slice(0,80),session.file_id,session.mime_type,session.media_kind,session.file_size,ctx.from.id]);
+      sessions.delete(ctx.from.id);
+      await ctx.reply("تمت إضافة الصوت للميني آب ✅", { reply_markup: back() });
+    }
     return true;
   }
   if (session.action === "reset" && session.step === "button") {
