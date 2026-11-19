@@ -5,14 +5,16 @@ import JSZip from 'jszip';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { WebSocketServer, WebSocket } from 'ws';
-import {
+import type {
   CarromDisc,
   CarromPlayerState,
   FourPlayerMode,
-  MAX_SHOT_SPEED,
   PieceKind,
   PlayerCount,
   QueenStatus,
+} from './src/game/carromPhysics.ts';
+import {
+  MAX_SHOT_SPEED,
   createInitialCoins,
   createStriker,
   findNearestClearSlider,
