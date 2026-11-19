@@ -6,6 +6,7 @@ import { spawn } from "node:child_process";
 import httpProxy from "http-proxy";
 import { createBot } from "./bot.js";
 import { checkDatabase } from "./db.js";
+import { flushPendingActivity } from "./activity.js";
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
@@ -122,6 +123,7 @@ if (bot) {
 async function shutdown(signal) {
   console.log(`${signal} received; shutting down.`);
   if (bot) await bot.stop();
+  try { await flushPendingActivity(); } catch (error) { console.error("Final activity flush failed:", error); }
   for (const child of gameProcesses.values()) child.kill("SIGTERM");
   for (const proxy of gameProxies.values()) proxy.close();
   server.close(() => process.exit(0));
