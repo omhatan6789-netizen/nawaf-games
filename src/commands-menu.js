@@ -1,5 +1,5 @@
 const HOME = "📋 <b>أوامر بوت نواف</b>\n\nاختر القسم الذي تريد معرفة أوامره:";
-const back = (label, target) => [[{ text: label, callback_data: target }]];
+const back = (label, target) => [{ text: label, callback_data: target }];
 const screens = {
   "cmdmenu:users": ["👤 <b>المستخدمين والرتب</b>\n\nاختر القسم:", [
     [{text:"🪪 أوامر المستخدمين",callback_data:"cmdmenu:users_info"},{text:"⬆️ رفع الرتب",callback_data:"cmdmenu:promote"}],
