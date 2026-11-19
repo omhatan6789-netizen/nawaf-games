@@ -47,30 +47,33 @@ for (const archive of archives) {
   for (const file of files) console.log(`[game-import]   ${file}`);
 }
 
-const inspectFiles = [
-  "metadata.json",
-  "package.json",
-  "server.ts",
-  "src/App.tsx",
-  "src/game/exportCarromMiniApp.ts",
-  "src/game/exportMiniApp.ts",
-];
-
+const report = { generatedAt: new Date().toISOString(), games: {} };
 for (const archive of archives) {
   const dir = path.join(root, ".game-inspection", archive.label);
-  for (const relative of inspectFiles) {
+  const files = [
+    "metadata.json",
+    "package.json",
+    "server.ts",
+    "src/App.tsx",
+    "src/game/exportCarromMiniApp.ts",
+    "src/game/exportMiniApp.ts",
+  ];
+  const game = { files: [] };
+  for (const relative of files) {
     const file = path.join(dir, relative);
     if (!fs.existsSync(file) || !fs.statSync(file).isFile()) continue;
-    let raw = fs.readFileSync(file, "utf8");
-    if (relative === "package.json" || relative === "metadata.json") {
+    let content = fs.readFileSync(file, "utf8");
+    if (relative.endsWith("package.json") || relative === "metadata.json") {
       try {
-        const parsed = JSON.parse(raw);
-        raw = JSON.stringify(relative === "package.json"
+        const parsed = JSON.parse(content);
+        content = JSON.stringify(relative.endsWith("package.json")
           ? { name: parsed.name, scripts: parsed.scripts, dependencies: parsed.dependencies, devDependencies: parsed.devDependencies }
           : parsed, null, 2);
       } catch {}
     }
-    const content = raw.length > 2200 ? raw.slice(0, 2200) + "\\n[TRUNCATED]" : raw;
-    console.log(`[game-source] ${archive.label}/${relative}: ${JSON.stringify(content)}`);
+    game.files.push({ path: relative, content: content.slice(0, 9000) });
   }
+  report.games[archive.label] = game;
 }
+fs.writeFileSync(path.join(root, "public", "game-inspection.json"), JSON.stringify(report));
+console.log("[game-import] Wrote temporary inspection report to public/game-inspection.json");
