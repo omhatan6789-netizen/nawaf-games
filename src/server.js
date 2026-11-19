@@ -11,11 +11,13 @@ import { ensureModerationSchema } from "./moderation-schema.js";
 import { ensureProfileRepliesSchema } from "./profile-replies-schema.js";
 import { ensureEconomySchema } from "./economy-schema.js";
 import { ensureMandatorySubscriptionSchema } from "./mandatory-subscription-schema.js";
+import { ensureEmojiReactionSchema } from "./emoji-reactions-schema.js";
 
 ensureModerationSchema().catch(error => console.error("Moderation schema initialization failed:", error));
 ensureProfileRepliesSchema().catch(error => console.error("Profile replies schema initialization failed:", error));
 ensureEconomySchema().catch(error => console.error("Economy schema initialization failed:", error));
 ensureMandatorySubscriptionSchema().catch(error => console.error("Mandatory subscription schema initialization failed:", error));
+ensureEmojiReactionSchema().catch(error => console.error("Emoji reaction schema initialization failed:", error));
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
