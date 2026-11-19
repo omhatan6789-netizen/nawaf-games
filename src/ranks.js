@@ -103,3 +103,87 @@ export async function changeRank({ actorId, targetId, chatId, rank, promote }) {
   }
   return { ok: true, message: promote ? `تم رفعه ${rank} بنجاح.` : `تم تنزيله من ${rank} بنجاح.` };
 }
+
+
+export async function getGroupRankUsers(chatId) {
+  const result = await db().query(
+    `SELECT user_id, rank FROM group_user_ranks
+     WHERE chat_id=$1 AND rank=ANY($2::text[])
+     ORDER BY CASE rank WHEN 'المالك' THEN 5 WHEN 'نائب المالك' THEN 4
+       WHEN 'ادمن اساسي' THEN 3 WHEN 'ادمن' THEN 2 WHEN 'مميز' THEN 1 ELSE 0 END DESC, user_id`,
+    [String(chatId), NORMAL_RANKS]
+  );
+  return result.rows.map(row => ({ userId: Number(row.user_id), rank: row.rank }));
+}
+
+export async function getUsersByGroupRank(chatId, rank) {
+  const result = await db().query(
+    "SELECT user_id FROM group_user_ranks WHERE chat_id=$1 AND rank=$2 ORDER BY user_id",
+    [String(chatId), rank]
+  );
+  return result.rows.map(row => Number(row.user_id));
+}
+
+export async function getSecondaryDevelopers() {
+  const result = await db().query(
+    "SELECT user_id FROM developers WHERE developer_type='secondary' ORDER BY user_id"
+  );
+  return result.rows.map(row => Number(row.user_id));
+}
+
+export async function clearSecondaryDevelopers() {
+  const result = await db().query("DELETE FROM developers WHERE developer_type='secondary'");
+  return result.rowCount;
+}
+
+export async function clearRankList(chatId, rank) {
+  const result = await db().query(
+    "DELETE FROM group_user_ranks WHERE chat_id=$1 AND rank=$2",
+    [String(chatId), rank]
+  );
+  return result.rowCount;
+}
+
+export async function clearGroupRanks(chatId) {
+  const client = await db().connect();
+  try {
+    await client.query("BEGIN");
+    const rows = await client.query(
+      "SELECT rank, COUNT(*)::int AS count FROM group_user_ranks WHERE chat_id=$1 GROUP BY rank",
+      [String(chatId)]
+    );
+    const counts = Object.fromEntries(NORMAL_RANKS.map(rank => [rank, 0]));
+    for (const row of rows.rows) if (Object.hasOwn(counts, row.rank)) counts[row.rank] = Number(row.count);
+    await client.query("DELETE FROM group_user_ranks WHERE chat_id=$1", [String(chatId)]);
+    await client.query("COMMIT");
+    return counts;
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function clearLowerGroupRanks(chatId, userId, actorLevel) {
+  const result = await db().query(
+    `DELETE FROM group_user_ranks WHERE chat_id=$1 AND user_id=$2
+     AND CASE rank WHEN 'مميز' THEN 1 WHEN 'ادمن' THEN 2
+       WHEN 'ادمن اساسي' THEN 3 WHEN 'نائب المالك' THEN 4
+       WHEN 'المالك' THEN 5 ELSE 0 END < $3`,
+    [String(chatId), String(userId), actorLevel]
+  );
+  return result.rowCount;
+}
+
+export async function checkCommandPermission(userId, command, chatId) {
+  const result = await db().query(
+    "SELECT rank FROM command_locks WHERE command=$1",
+    [command]
+  );
+  const required = result.rows[0]?.rank;
+  if (!required) return { allowed: true, required: null };
+  if (await getDeveloperType(userId)) return { allowed: true, required };
+  const level = await getRankLevel(userId, chatId);
+  return { allowed: level >= (RANK_LEVELS[required] ?? 0), required };
+}
