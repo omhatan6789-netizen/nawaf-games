@@ -89,6 +89,10 @@ export async function handleRoleManagementCommand(ctx) {
   const actor = ctx.from;
   if (!text || !actor) return false;
   const chatId = inGroup(ctx) ? ctx.chat.id : null;
+  const knownCommand = text === "كشف المجموعة" || Object.hasOwn(LISTS, text) ||
+    text === "قائمة Dev" || text === "قائمة dev" || text === "مسح Dev" || text === "مسح dev" ||
+    text === "تنزيل الكل" || Object.hasOwn(CLEAR_COMMANDS, text) || text === "مسح الرتب";
+  if (!knownCommand) return false;
   const actorDev = await getDeveloperType(actor.id);
 
   if (text === "كشف المجموعة") {
@@ -147,7 +151,7 @@ export async function handleRoleManagementCommand(ctx) {
     return true;
   }
 
-  if (text === "قائمة Dev") {
+  if (text === "قائمة Dev" || text === "قائمة dev") {
     if (actor.id !== OWNER_ID && actorDev !== "primary") {
       await ctx.reply("❌ هذا الأمر للمطور الأساسي فقط.");
       return true;
@@ -172,7 +176,7 @@ export async function handleRoleManagementCommand(ctx) {
     return true;
   }
 
-  if (text === "مسح مطورين Dev") {
+  if (text === "مسح Dev" || text === "مسح dev") {
     if (actor.id !== OWNER_ID && actorDev !== "primary") {
       await ctx.reply("❌ هذا الأمر للمطور الأساسي فقط.");
       return true;
@@ -239,7 +243,7 @@ export async function handleRoleManagementCommand(ctx) {
     return true;
   }
 
-  if (text === "مسح الكل") {
+  if (text === "مسح الرتب") {
     if (!chatId) {
       await ctx.reply("❌ استخدم الأمر داخل القروب.");
       return true;
