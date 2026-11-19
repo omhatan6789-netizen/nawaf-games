@@ -123,7 +123,7 @@ export async function handleProfileReplies(ctx) {
       const botInfo = await ctx.api.getMe();
       const bio = esc(dev.bio || "لا يوجد بايو.");
       const name = esc(dev.first_name || "المطور");
-      const caption = `Dev Bot ↦ ${esc(botInfo.first_name || "البوت")}\\n━━━━━━━━━━━━━━\\nDev ↦ <a href="tg://user?id=${devId}">${name}</a>\\nBio ↦ ${bio}`;
+      const caption = `Dev Bot ↦ ${esc(botInfo.first_name || "البوت")}\n━━━━━━━━━━━━━━\nDev ↦ <a href="tg://user?id=${devId}">${name}</a>\nBio ↦ ${bio}`;
       const photos = await ctx.api.getUserProfilePhotos(devId, { limit: 1 });
       const photo = photos.photos?.[0]?.at(-1);
       if (photo) await ctx.replyWithPhoto(photo.file_id, { caption, parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: dev.first_name || "الحساب", url: `tg://user?id=${devId}` }]] } });
@@ -148,7 +148,7 @@ export async function handleProfileReplies(ctx) {
       const groupName = esc(ctx.chat.title || "المجموعة");
       const bio = esc(owner.bio || "لا يوجد بايو.");
       const name = esc(owner.first_name || "المالك");
-      const caption = `Owner group ↦ ${groupName}\\n━━━━━━━━━━━━━━\\nUSE ↦ <a href="tg://user?id=${ownerId}">${name}</a>\\nbio ↦ ${bio}`;
+      const caption = `Owner group ↦ ${groupName}\n━━━━━━━━━━━━━━\nUSE ↦ <a href="tg://user?id=${ownerId}">${name}</a>\nbio ↦ ${bio}`;
       const photos = await ctx.api.getUserProfilePhotos(ownerId, { limit: 1 });
       const photo = photos.photos?.[0]?.at(-1);
       if (photo) await ctx.replyWithPhoto(photo.file_id, { caption, parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: owner.first_name || "الحساب", url: `tg://user?id=${ownerId}` }]] } });
