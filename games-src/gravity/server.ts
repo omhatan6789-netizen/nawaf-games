@@ -62,6 +62,7 @@ interface GravityRoom {
   hostId: string;
   status: 'lobby' | 'playing' | 'finished';
   targetScore: number;
+  maxPlayers: number;
   createdAt: number;
   players: RoomPlayer[];
   spectators: Map<string, RoomSpectator>;
@@ -125,7 +126,7 @@ function serializeRoomLobby(room: GravityRoom) {
       status: room.status,
       targetScore: room.targetScore,
       minPlayers: 2,
-      maxPlayers: 5,
+      maxPlayers: room.maxPlayers,
       players: room.players.map((p, idx) => {
         const color = PLAYER_PALETTE[idx] ?? PLAYER_PALETTE[0];
         return {
@@ -484,7 +485,7 @@ async function startServer() {
     const name = sanitizeName(req.body?.name, 'اللاعب الأول');
     const roomId = makeRoomId();
     const room: GravityRoom = {
-      id: roomId, hostId, status: 'lobby', targetScore: 3, createdAt: Date.now(),
+      id: roomId, hostId, status: 'lobby', targetScore: 3, maxPlayers: 5, createdAt: Date.now(),
       players: [{ id: hostId, name, score: 0, withdrawn: false, connected: false, ws: null }],
       spectators: new Map(), game: null, interval: null,
     };
@@ -608,6 +609,7 @@ async function startServer() {
           hostId: playerId,
           status: 'lobby',
           targetScore,
+          maxPlayers: 5,
           createdAt: Date.now(),
           players: [
             {
@@ -681,8 +683,8 @@ async function startServer() {
           return;
         }
 
-        if (room.players.length >= 5) {
-          sendJson(ws, { type: 'error', message: 'الغرفة مكتملة (الحد الأقصى 5 لاعبين)' });
+        if (room.players.length >= room.maxPlayers) {
+          sendJson(ws, { type: 'error', message: `الغرفة مكتملة (الحد الأقصى ${room.maxPlayers} لاعبين)` });
           return;
         }
 
@@ -717,6 +719,12 @@ async function startServer() {
         if (room.hostId !== sess.playerId || room.status !== 'lobby') return;
         const targetScore = Number(msg.targetScore) === 5 ? 5 : 3;
         room.targetScore = targetScore;
+        const requestedMax = Number(msg.maxPlayers);
+        if (Number.isInteger(requestedMax) && requestedMax >= 2 && requestedMax <= 5 && requestedMax >= room.players.length) room.maxPlayers = requestedMax;
+        if (typeof msg.name === 'string') {
+          const host = room.players.find((p) => p.id === room.hostId);
+          if (host) host.name = sanitizeName(msg.name, host.name);
+        }
         broadcastRoom(room, serializeRoomLobby(room));
         return;
       }
