@@ -10,6 +10,7 @@ import { handleReplyManagement, checkAutoReplies, hasReplySession } from "./repl
 import { handleBlockedWords, handleBlockedWordCallback, hasBlockedWordSession, cleanupBlockedWarningsLoop } from "./handlers/blocked-words.js";
 import { handleModerationCommand, handleModerationCallback, handleRepetitionPunishmentCallback, handleMutedMessage, moderationExpiryLoop } from "./handlers/moderation.js";
 import { handleRepetitionCommand, handleRepetitionMessage } from "./handlers/repetition.js";
+import { handleDeleteMessages } from "./handlers/delete-messages.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -68,6 +69,7 @@ export function createBot() {
       if (await handleRepetitionCommand(ctx)) return;
       await handleRoleManagementCommand(ctx);
       if (await handleModerationCommand(ctx)) return;
+      if (await handleDeleteMessages(ctx)) return;
       await handleResetCommand(ctx);
       await handleRankCommand(ctx);
       await handleActivityCommand(ctx);
