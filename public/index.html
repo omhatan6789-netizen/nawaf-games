@@ -1,50 +1,1054 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#250008">
-  <title>بوت نواف 🎖️</title>
-  <style>
-    *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,sans-serif;color:#fff;background:radial-gradient(ellipse at 50% -15%,#c4142b 0%,transparent 52%),linear-gradient(145deg,#53000d 0%,#1b0006 52%,#080808 100%);padding:28px 18px}
-    main{width:min(100%,680px);margin:0 auto}
-    header{text-align:center;padding:34px 12px 28px}
-    h1{font-size:clamp(30px,7vw,42px);margin:0 0 8px;letter-spacing:-1px}
-    header p{color:#e8cdd1;margin:0;line-height:1.8}
-    h2{font-size:19px;margin:10px 2px 16px}
-    .games{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
-    .game{display:flex;flex-direction:column;min-height:190px;padding:20px;text-decoration:none;color:#fff;border:1px solid #ffffff25;border-radius:22px;background:linear-gradient(145deg,#ffffff16,#ffffff08);box-shadow:0 12px 35px #0005;transition:transform .18s,border-color .18s}
-    .game:active{transform:scale(.98)}
-    .emoji{font-size:38px;margin-bottom:14px}
-    .game strong{font-size:20px}
-    .game span.desc{color:#e4cbd0;font-size:13px;line-height:1.7;margin-top:7px}
-    .open{margin-top:auto;padding-top:16px;color:#ffb8c1;font-size:13px;font-weight:700}
-    footer{text-align:center;color:#a98b90;font-size:12px;margin:26px 0 8px}
-  </style>
-</head>
-<body>
-  <main>
-    <header>
-      <h1>بوت نواف 🎖️</h1>
-      <p>الميني آب الموحد للألعاب</p>
-    </header>
-    <h2>الألعاب</h2>
-    <section class="games" aria-label="قائمة الألعاب">
-      <a class="game" href="/carrom/">
-        <div class="emoji" aria-hidden="true">🎯</div>
-        <strong>الكيرم</strong>
-        <span class="desc">ادخل الطاولة والعب مع أصدقائك.</span>
-        <span class="open">العب الآن ←</span>
-      </a>
-      <a class="game" href="/gravity/">
-        <div class="emoji" aria-hidden="true">⚡</div>
-        <strong>ساحة السقوط</strong>
-        <span class="desc">تحدَّ الجاذبية وتنافس في المراحل.</span>
-        <span class="open">العب الآن ←</span>
-      </a>
-    </section>
-    <footer>بوت نواف · يتم إضافة الألعاب والمميزات تدريجيًا</footer>
-  </main>
-</body>
-</html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#570909">
+<title>بوت نواف</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{color-scheme:dark;--red:#9e1018;--muted:rgba(255,255,255,.58)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#a20e18 0%,#650a10 40%,#16090b 100%);color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;padding:0 15px 34px}
+.wrap{max-width:620px;margin:auto}.hero{width:100%;height:220px;overflow:hidden;border-radius:0 0 22px 22px;background:linear-gradient(140deg,#b20e1b,#21090d);box-shadow:0 12px 32px #0006}.hero img,.hero video{width:100%;height:100%;object-fit:cover;display:none}
+.brand{text-align:center;margin:17px 0 22px;color:rgba(255,255,255,.48);font-size:13px;letter-spacing:1.5px;font-weight:600}
+.section-title{font-size:14px;color:#ffffffb8;margin:20px 4px 10px}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.menu button{border:1px solid #fff;border-radius:14px;background:#fff;color:#1a1111;min-height:58px;font-size:15px;font-weight:750;box-shadow:0 4px 0 #260609;cursor:pointer}
+.menu button:first-child{grid-column:span 2}
+.menu button[data-action="help"]{grid-column:span 2;min-height:68px;font-size:17px}
+.custom{display:grid;gap:12px}.custom-card{position:relative;display:flex;align-items:center;gap:12px;padding:10px 13px;border:1px solid #171010;border-radius:16px;background:#fff;color:#171010;box-shadow:0 5px 0 #160608;min-height:74px;text-decoration:none;overflow:hidden}
+.custom-card .thumb{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#eee;flex:none}.custom-card .label{font-weight:750;flex:1;text-align:center;font-size:15px;overflow-wrap:anywhere}.dots{font-size:22px;color:#777;line-height:1}
+.custom-card.large{display:block;padding:0 0 13px;text-align:center}.custom-card.large .large-image,.custom-card.large .large-video{width:100%;height:185px;object-fit:cover;display:block;background:#eee}.custom-card.large .label{display:block;padding:12px 12px 0;font-size:17px}.game-card{display:flex;flex-direction:column;align-items:stretch;gap:0;padding:0;min-height:0;text-align:center}.game-card .game-cover{display:block;width:100%;height:clamp(155px,48vw,230px);object-fit:cover;background:#eee}.game-card .game-cover-placeholder{display:flex;align-items:center;justify-content:center;width:100%;height:clamp(155px,48vw,230px);font-size:64px;background:linear-gradient(145deg,#f3eeee,#ded6d6)}.game-card .label{display:block;width:100%;padding:13px 12px 15px;font-size:18px;line-height:1.4;white-space:normal;overflow-wrap:normal;word-break:normal;flex:none}.game-card .dots{display:none}
+.empty{color:#ffffffbb;text-align:center;font-size:13px;padding:12px}.back-button{width:100%;margin-top:14px;border:1px solid #fff;border-radius:14px;background:#fff;color:#1a1111;min-height:52px;font-size:15px;font-weight:750;box-shadow:0 4px 0 #260609;cursor:pointer}#page-content .custom-card{min-height:58px}
+button{font-family:inherit}
+body.c4-active{padding:0;min-height:100dvh;overflow-x:hidden}
+body.c4-active .wrap{max-width:none;width:100%;margin:0}
+body.c4-active .hero,body.c4-active .brand{display:none}
+body.c4-active #page{padding:0 10px 14px}
+body.c4-active #page-title{display:none}
+body.c4-active #back-home{margin:10px 0 0;min-height:48px}
+.c4-shell{width:100%;max-width:none;margin:0 auto;padding:8px 0 12px}
+.c4-heading{text-align:center;margin:4px 0 12px}.c4-heading h2{font-size:clamp(28px,7vw,36px);margin:0 0 5px;font-weight:950}.c4-heading p{margin:0;color:#ffffffb8;font-size:15px;font-weight:700}
+.c4-shell .c4-panel{padding:clamp(15px,4vw,22px)}
+.c4-shell .c4-label{font-size:16px}
+.c4-shell .c4-level{font-size:17px;min-height:62px}
+.c4-shell .c4-level small{font-size:12px}
+.c4-shell .c4-start{font-size:18px;min-height:56px}
+.c4-shell .c4-player{padding:12px;min-height:64px;transition:box-shadow .25s,border-color .25s,transform .25s}
+.c4-shell .c4-player strong{font-size:15px}
+.c4-shell .c4-player small{font-size:12px}
+.c4-shell .c4-player.active{border-color:var(--turn-color);box-shadow:0 0 0 2px color-mix(in srgb,var(--turn-color) 35%,transparent),0 0 20px color-mix(in srgb,var(--turn-color) 55%,transparent);animation:c4-wave 1.25s ease-in-out infinite}
+@keyframes c4-wave{0%,100%{box-shadow:0 0 0 1px color-mix(in srgb,var(--turn-color) 30%,transparent),0 0 12px color-mix(in srgb,var(--turn-color) 35%,transparent)}50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--turn-color) 0%,transparent),0 0 25px color-mix(in srgb,var(--turn-color) 75%,transparent)}}
+.c4-shell .c4-statusline{font-size:16px}
+.c4-shell .c4-clock{font-size:17px}
+.c4-shell .c4-hint{font-size:14px}
+.c4-arrows{width:100%;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:clamp(4px,1.5vw,8px);padding:0 clamp(7px,2vw,11px);margin:0 auto 7px}
+.c4-arrow{border:0;background:transparent;color:#ff5969;font-size:clamp(23px,6vw,32px);font-weight:1000;line-height:1;min-height:34px;text-shadow:0 0 12px currentColor;opacity:.25;transition:opacity .2s,transform .2s,color .2s}
+.c4-arrow.active{opacity:1;color:var(--turn-color);animation:c4-arrow-pulse .85s ease-in-out infinite}
+@keyframes c4-arrow-pulse{0%,100%{transform:translateY(0);filter:drop-shadow(0 0 2px currentColor)}50%{transform:translateY(5px);filter:drop-shadow(0 0 10px currentColor)}}
+.c4-board-wrap{position:relative;width:100%;max-width:none;margin:0 auto}
+.c4-board{width:100%;gap:clamp(4px,1.5vw,9px);padding:clamp(8px,2.2vw,13px);border-radius:22px;aspect-ratio:7/6}
+.c4-slot .c4-disc{animation:none}
+.c4-slot .c4-disc.falling{animation:c4-real-drop .62s cubic-bezier(.18,.78,.25,1.18) both}
+@keyframes c4-real-drop{0%{transform:translateY(-95vh) scale(.88);opacity:.7}72%{transform:translateY(5px) scale(1.03);opacity:1}86%{transform:translateY(-3px) scale(.99)}100%{transform:translateY(0) scale(1);opacity:1}}
+.c4-slot .c4-disc.blue{background:radial-gradient(circle at 35% 25%,#c2e5ff,#278bff 52%,#0647a5)}
+.c4-slot .c4-disc.red{background:radial-gradient(circle at 35% 25%,#ffb4b8,#f02e40 52%,#a5091d)}
+.c4-win-svg line{stroke:#fff;stroke-width:10}
+.c4-result{font-size:23px;padding:16px}
+.c4-actions button{font-size:15px;min-height:52px}
+@media(min-width:700px){body.c4-active #page{max-width:900px;margin:0 auto}.c4-board-wrap{max-width:760px}.c4-arrows{max-width:760px}.c4-board{max-height:650px}}
+@media(max-width:380px){body.c4-active #page{padding-left:7px;padding-right:7px}.c4-shell .c4-panel{padding:12px}.c4-board{gap:4px;padding:6px}.c4-player{padding:8px}.c4-player strong{font-size:13px}}
+.c4-panel{background:linear-gradient(145deg,#ffffff16,#1606097a);border:1px solid #ffffff24;border-radius:22px;padding:17px;box-shadow:0 12px 30px #0004}
+.c4-label{font-size:13px;color:#ffffffb5;margin:2px 0 11px;font-weight:700}
+.c4-levels{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.c4-level{border:1px solid #ffffff35;border-radius:13px;padding:12px 8px;background:#17090b88;color:#fff;font-weight:800;font-size:14px;cursor:pointer}
+.c4-level[data-length="0"]{grid-column:1/-1}.c4-level small{display:block;color:#ffffff8a;font-weight:500;font-size:10px;margin-top:3px}
+.c4-level.active{border-color:#ffb0b4;background:linear-gradient(140deg,#b31a24,#621017);box-shadow:0 0 0 2px #ff525233}
+.c4-start{background:linear-gradient(135deg,#f04455,#a20d20)!important;color:#fff!important;border:1px solid #ff8994!important;box-shadow:0 4px 0 #650711!important}
+ .c4-secondary{width:100%;border:0;border-radius:14px;min-height:49px;margin-top:14px;font-weight:900;font-size:15px;cursor:pointer}
+.c4-start{background:linear-gradient(100deg,#fff,#ffe7e8);color:#5c0b12;box-shadow:0 4px 0 #5a090e}
+.c4-secondary{background:#ffffff16;color:#fff;border:1px solid #ffffff32}.c4-secondary.c4-win{border-color:#22c55e}.c4-secondary.c4-loss{border-color:#ef4444}
+.c4-players{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}
+.c4-player{display:flex;align-items:center;gap:8px;background:#1007098c;border:1px solid #ffffff20;border-radius:14px;padding:9px 11px;min-width:0;flex:1}
+.c4-disc{width:18px;height:18px;border-radius:50%;flex:none;box-shadow:inset 0 3px 5px #fff6,inset 0 -4px 6px #0005,0 2px 5px #0005}
+.c4-disc.red{background:radial-gradient(circle at 35% 28%,#ff9a9f,#ed2637 52%,#970c1a)}
+.c4-disc.yellow{background:radial-gradient(circle at 35% 28%,#fff6b0,#ffcb35 55%,#b87905)}
+.c4-player strong{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c4-player small{display:block;color:#ffffff75;font-size:10px}
+.c4-vs{color:#ffffff78;font-size:11px;font-weight:900}
+.c4-status{background:#1007099c;border:1px solid #ffffff20;border-radius:14px;padding:11px 13px;margin-bottom:12px}
+.c4-statusline{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:800}
+.c4-clock{font-variant-numeric:tabular-nums;color:#ffd1d3;font-weight:900}
+.c4-track{height:5px;border-radius:8px;background:#ffffff18;margin-top:9px;overflow:hidden}
+.c4-progress{height:100%;width:100%;background:linear-gradient(90deg,#ffb4b7,#f53b4c);border-radius:8px;transition:width .2s linear}
+.c4-board-wrap{position:relative;width:100%;max-width:455px;margin:0 auto}
+.c4-board{position:relative;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:repeat(6,minmax(0,1fr));gap:clamp(4px,1.5vw,8px);aspect-ratio:7/6;padding:clamp(7px,2vw,11px);border-radius:19px;background:linear-gradient(145deg,#3185ed,#1051b8 60%,#093b8e);border:2px solid #8bc5ff;box-shadow:inset 0 5px 10px #ffffff32,inset 0 -9px 15px #001c5b77,0 12px 25px #0008;overflow:hidden}
+.c4-slot{border:0;padding:0;min-width:0;min-height:0;border-radius:50%;background:radial-gradient(circle at 45% 38%,#082b68,#061b49 74%);box-shadow:inset 0 4px 8px #0009,inset 0 -2px 3px #ffffff12;cursor:pointer;position:relative;z-index:1}
+.c4-slot:disabled{cursor:default}
+.c4-slot .c4-disc{display:block;width:100%;height:100%;border-radius:50%;box-shadow:inset 0 4px 6px #fff6,inset 0 -6px 8px #0006,0 2px 4px #001b4d88;animation:c4-drop .22s ease-out}
+.c4-slot .c4-disc.red{background:radial-gradient(circle at 35% 25%,#ffb4b8,#f02e40 52%,#a5091d)}
+.c4-slot .c4-disc.yellow{background:radial-gradient(circle at 35% 25%,#fff8c4,#ffce3c 55%,#bd7900)}
+@keyframes c4-drop{from{transform:translateY(-9px) scale(.82);opacity:.5}to{transform:translateY(0) scale(1);opacity:1}}
+.c4-win-svg{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;overflow:visible}
+.c4-win-svg line{stroke:#fff;stroke-width:9;stroke-linecap:round;filter:drop-shadow(0 0 5px #fff) drop-shadow(0 0 9px #ffdf5a);stroke-dasharray:1;animation:c4-line .45s ease-out}
+@keyframes c4-line{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.c4-result{display:none;text-align:center;font-weight:900;font-size:19px;margin:14px 0 0;padding:12px;border-radius:14px;background:#ffffff13;border:1px solid #ffffff2a}
+.c4-result.show{display:block}.online-game-cover{display:block;width:min(100%,420px);max-height:190px;object-fit:cover;margin:0 auto 14px;border-radius:18px;border:1px solid #ffffff35;box-shadow:0 8px 22px #0005}.c4-withdraw{display:block;width:min(78%,260px);margin:20px auto 4px;min-height:52px;border:1px solid #ff8a91;border-radius:15px;background:linear-gradient(135deg,#f04452,#a80818);color:#fff;font-size:18px;font-weight:950;box-shadow:0 5px 0 #650711,0 0 18px #ed253b55;cursor:pointer}.c4-withdraw:disabled{opacity:.55;cursor:wait}
+.c4-hint{text-align:center;color:#ffffff7d;font-size:11px;margin:10px 0 0}
+.c4-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.c4-actions button{margin:0;min-height:44px;font-size:13px}
+.c4-error{color:#ffd4d6;text-align:center;font-size:12px;padding:10px 0}
+@media(max-width:380px){.hero{height:175px}.c4-panel{padding:12px}.c4-board{gap:4px;padding:6px}.c4-player{padding:7px}.c4-player strong{font-size:11px}}
+
+/* Connect Four visual overrides */
+body.c4-active{padding:0}
+body.c4-active #page{padding-left:10px;padding-right:10px}
+.c4-shell{width:100%;max-width:none}
+.c4-board-wrap{width:100%;max-width:none}
+.c4-board{width:100%;aspect-ratio:7/6}
+.c4-slot .c4-disc{animation:none}
+.c4-slot .c4-disc.falling{animation:c4-real-drop .62s cubic-bezier(.18,.78,.25,1.18) both}
+.c4-disc.blue{background:radial-gradient(circle at 35% 25%,#c2e5ff,#278bff 52%,#0647a5)}
+.c4-slot .c4-disc.blue{background:radial-gradient(circle at 35% 25%,#c2e5ff,#278bff 52%,#0647a5)}
+.c4-arrow:disabled{opacity:.12;animation:none;cursor:default}
+@media(min-width:700px){.c4-board-wrap{max-width:760px}.c4-arrows{max-width:760px}}
+.mg-score{display:flex;justify-content:space-around;flex-wrap:wrap;gap:8px;margin:12px 0;font-size:12px;font-weight:800}.word-game-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 12px}.word-exit{flex:none;min-height:34px;padding:6px 12px;border:1px solid #ff9aa2;border-radius:10px;background:#b71928;color:#fff;font-size:12px;font-weight:900;box-shadow:0 3px 0 #5d0911}.word-hint-button{display:block;width:min(54%,230px);min-height:46px;margin:4px auto 12px;padding:9px 16px;border:1.5px solid #ffffffa8;border-radius:13px;background:linear-gradient(135deg,#f4f4f4,#c9c9c9);color:#171717;font-size:16px;font-weight:950;box-shadow:0 4px 0 #777,0 7px 16px #0005;cursor:pointer}.word-hint-button:disabled{opacity:.58;cursor:default;box-shadow:0 2px 0 #555}.word-hint-toast{position:fixed;z-index:100010;top:16%;left:50%;transform:translateX(-50%);width:min(88%,440px);padding:17px 20px;border:2px solid #050505;border-radius:17px;background:#171717;color:#fff;text-align:center;font-size:clamp(20px,5.5vw,27px);font-weight:950;line-height:1.5;box-shadow:0 12px 34px #000b;animation:word-hint-in .22s ease-out;pointer-events:none}.word-hint-toast b{display:block;font-size:12px;color:#ffffffa8;margin-bottom:3px}@keyframes word-hint-in{from{opacity:0;translate:0 -12px}to{opacity:1;translate:0 0}}.word-game-title{font-weight:950;font-size:18px}.word-history{display:grid;gap:9px;margin:14px 0}.word-guess-row{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}.word-tile{display:flex;align-items:center;justify-content:center;width:clamp(42px,11vw,52px);height:48px;border-radius:9px;font-size:21px;font-weight:950;color:#111;border:2px solid #ffffff55}.word-guess-number{width:100%;text-align:center;font-size:10px;color:#ffffff80;margin-bottom:-3px}.word-attempts{font-size:12px;font-weight:850;color:#ffe0e2;text-align:center;margin:8px 0}.mg-status{display:flex;justify-content:space-between;align-items:center;background:#ffffff12;padding:10px 12px;border-radius:12px;margin:8px 0}.mg-progress{height:6px;background:#ffffff1b;border-radius:9px;overflow:hidden;margin-bottom:12px}.mg-progress>div{height:100%;width:100%;background:linear-gradient(90deg,#ef4444,#3b82f6);transition:width .2s}.mg-board{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));grid-template-rows:repeat(9,minmax(0,1fr));gap:0;background:linear-gradient(145deg,#ffffff18,#070b16);padding:10px;border:1px solid #ffffff2b;border-radius:18px;max-width:min(92vw,520px);width:100%;margin:14px auto;aspect-ratio:1;box-shadow:inset 0 0 22px #0008,0 12px 28px #0005;overflow:hidden}.mg-board>div{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;width:100%;height:100%;position:relative}.mg-dot{width:clamp(6px,2.2vw,11px);height:clamp(6px,2.2vw,11px);border-radius:50%;background:#f8fafc;z-index:2;box-shadow:0 1px 5px #0008}.mg-edge{display:block;border:0;border-radius:999px;background:#ffffff24;padding:0;min-width:0;min-height:0;touch-action:manipulation;transition:background .15s,transform .15s}.mg-edge.horizontal{width:100%;height:clamp(5px,1.7vw,9px)}.mg-edge.vertical{height:100%;width:clamp(5px,1.7vw,9px)}.mg-edge:not(:disabled):active{transform:scale(.88);background:#ffffff70}.mg-edge.on.p1{background:#ef4444;box-shadow:0 0 8px #ef444477}.mg-edge.on.p2{background:#3b82f6;box-shadow:0 0 8px #3b82f677}.mg-box{border-radius:5px;transition:background .2s}.mg-box.p1{background:#ef444455;box-shadow:inset 0 0 12px #ef444433}.mg-box.p2{background:#3b82f655;box-shadow:inset 0 0 12px #3b82f433}.mg-edge.on.p3{background:#22c55e}.mg-edge.on.p4{background:#facc15}.mg-box.p3{background:#22c55e55}.mg-box.p4{background:#facc1555}.mg-memory{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:360px;margin:18px auto;position:relative}.mg-countdown{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;border-radius:22px;background:#050814b8;backdrop-filter:blur(3px);color:#fff;font-size:clamp(58px,18vw,100px);font-weight:1000;text-shadow:0 0 18px #ffffffaa,0 0 42px #ffffff77;pointer-events:none;animation:mg-count-pop .35s ease-out}.mg-countdown.go{font-size:clamp(42px,13vw,76px);color:#fff;letter-spacing:2px}@keyframes mg-count-pop{from{opacity:.25;transform:scale(.72)}to{opacity:1;transform:scale(1)}}.mg-memory-tile{aspect-ratio:1;border:3px solid #ffffff55;border-radius:22px;opacity:.75;transition:transform .12s,opacity .12s,filter .12s}.mg-memory-tile:disabled{opacity:.65}.mg-memory-tile.flash{opacity:1;filter:brightness(1.8);transform:scale(.96);box-shadow:0 0 24px #fff8}.mg-memory-tile:disabled.flash{opacity:1}.mg-memory-tile.pick-flash{opacity:1;filter:brightness(2.2);transform:scale(.94);border-color:#fff;box-shadow:0 0 0 3px #fff9,0 0 28px 10px #fff, inset 0 0 18px #ffffffaa}
+.music-widget{position:fixed;z-index:1000;top:12px;left:12px;direction:rtl}.music-toggle{width:43px;height:43px;border:1px solid #ffffff55;border-radius:50%;background:#16090dcc;color:#fff;font-size:19px;box-shadow:0 4px 18px #0008}.music-panel{display:none;position:absolute;top:51px;left:0;width:min(260px,calc(100vw - 28px));padding:13px;border:1px solid #ffffff35;border-radius:17px;background:#18090df2;box-shadow:0 12px 32px #0009;backdrop-filter:blur(14px)}.music-panel.open{display:block}.music-title{font-size:13px;font-weight:900;margin-bottom:9px}.music-choice{display:block;width:100%;padding:10px;margin:6px 0;border:1px solid #ffffff24;border-radius:11px;background:#ffffff10;color:#fff;text-align:right;font:700 13px inherit}.music-choice.active{border-color:#ff9ba3;background:#8f172455}.music-row{display:flex;align-items:center;gap:9px;margin-top:10px;font-size:12px;color:#ffffffc9}.music-row button{border:1px solid #ffffff35;border-radius:10px;background:#ffffff15;color:#fff;padding:8px 11px;font:700 12px inherit}.music-row input{width:100%;accent-color:#ff7d87}.music-search{display:flex;gap:6px;margin:8px 0}.music-search input{min-width:0;flex:1;border:1px solid #ffffff30;border-radius:9px;background:#ffffff12;color:#fff;padding:9px;font:12px inherit;outline:none}.music-search button{border:1px solid #ffffff35;border-radius:9px;background:#8f172455;color:#fff;padding:8px 10px;font:700 12px inherit}.music-results{max-height:190px;overflow:auto}.music-results .music-choice{font-size:12px}
+.online-end-overlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(5,3,7,.68);backdrop-filter:blur(15px) saturate(.72);-webkit-backdrop-filter:blur(15px) saturate(.72);animation:game-end-fade .28s ease-out}.online-end-card{width:min(100%,440px);padding:30px 20px 22px;border:1px solid #ffffff35;border-radius:28px;background:radial-gradient(ellipse at 50% 0%,#721a2d 0%,transparent 58%),linear-gradient(145deg,#281018,#0d080d);box-shadow:0 22px 85px #000d,0 0 38px #b5122030;text-align:center;animation:game-end-pop .34s cubic-bezier(.2,.85,.25,1.15)}.online-end-card h2{font-size:clamp(25px,7vw,34px);line-height:1.25;margin:0 0 13px;color:#fff;font-weight:1000}.online-end-winner{margin:8px auto 12px;padding:12px 14px;border:1px solid #e94a5b70;border-radius:17px;background:#080508a8;color:#ff5264;font-size:clamp(23px,6vw,31px);font-weight:1000;text-shadow:0 2px 16px #e11d4855;overflow-wrap:anywhere}.online-end-card p{color:#ffffffd1;font-size:15px;line-height:1.8;margin:0 0 24px}.online-end-actions{display:grid;gap:11px}.online-end-actions button{width:100%;min-height:58px;border:1px solid #ffffff20;border-radius:17px;font-size:17px;font-weight:950;color:#fff;background:linear-gradient(135deg,#ed4054,#94152a);box-shadow:0 8px 24px #0007}.online-end-actions button:last-child{background:linear-gradient(135deg,#45404a,#211d25)}.online-end-actions button:disabled{opacity:.6}@keyframes game-end-fade{from{opacity:0}to{opacity:1}}@keyframes game-end-pop{from{opacity:0;transform:translateY(12px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+.word-join-toast{position:fixed;z-index:100000;top:calc(env(safe-area-inset-top,0px) + 12px);left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 28px);padding:12px 20px;border:1px solid #ffffff28;border-radius:13px;background:#080808;color:#fff;text-align:center;font-size:14px;font-weight:850;box-shadow:0 8px 28px #0009;pointer-events:none;animation:word-toast-in .18s ease-out}@keyframes word-toast-in{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+
+.welcome-toast{position:fixed;z-index:100001;top:calc(env(safe-area-inset-top,0px) + 14px);left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 26px);padding:15px 22px;border:2px solid #000;border-radius:16px;background:#050505;color:#b51220;text-align:center;font-size:clamp(21px,6vw,27px);line-height:1.45;font-weight:1000;letter-spacing:.1px;text-shadow:0 1px 1px #ffffff40;box-shadow:0 8px 30px #000c;pointer-events:none;animation:welcome-toast-in .25s ease-out both}.welcome-toast[hidden]{display:none}@keyframes welcome-toast-in{from{opacity:0;transform:translate(-50%,-18px)}to{opacity:1;transform:translate(-50%,0)}}@keyframes welcome-toast-out{to{opacity:0;transform:translate(-50%,-12px)}}.welcome-toast.leaving{animation:welcome-toast-out .3s ease-in both}
+</style></head>
+<body><div id="welcome-toast" class="welcome-toast" role="status" aria-live="polite" hidden></div><div class="music-widget"><button class="music-toggle" id="music-toggle" aria-label="الموسيقى">♪</button><div class="music-panel" id="music-panel"><div class="music-title">اصوات الميني آب 🎧</div><div class="music-search"><input id="youtube-music-query" type="search" placeholder="ابحث في يوتيوب عن أغنية..."><button id="youtube-music-search">بحث</button></div><div id="youtube-music-results" class="music-results"></div><div id="custom-sound-player" style="margin-top:9px"></div><div id="custom-sound-choices"></div><div class="music-row"><button id="music-play">تشغيل</button><span id="music-state">متوقفة</span></div><div class="music-row" id="music-volume-row"><label for="music-volume">الصوت</label><input id="music-volume" type="range" min="0" max="1" step="0.01" value="0.5"></div><div style="font-size:10px;color:#ffffff70;margin-top:8px">الأصوات التي تضيفها من البوت تظهر هنا تلقائيًا.</div></div></div><main class="wrap">
+<div class="hero"><img id="banner" alt=""><video id="banner-video" muted autoplay loop playsinline webkit-playsinline></video></div>
+<div class="brand">Dev bot ~ نواف</div>
+<div id="home">
+<div class="section-title">القوائم</div>
+<div class="menu">
+<button data-action="points">توب النقاط</button><button data-action="active">توب المتفاعلين العام</button>
+<button data-action="robbers">توب الحرامية</button><button data-action="game-stats">🏆 توب الألعاب</button><button data-action="games">الألعاب</button>
+<button data-action="help">الأوامر</button>
+</div>
+<div class="section-title">إضافات</div><div class="custom" id="custom"></div>
+</div>
+<section id="page" hidden><div class="section-title" id="page-title"></div><div class="custom" id="page-content"></div><button id="back-home" class="back-button">↩ رجوع للقائمة الرئيسية</button></section>
+</main>
+<script src="/mini_app/ambient.js?v=20261106-7"></script>
+<script>
+const tg=window.Telegram?.WebApp;tg?.ready();tg?.expand();
+(function showWelcomeToast(){
+ const toast=document.getElementById('welcome-toast');
+ const user=tg?.initDataUnsafe?.user||{};
+ const name=[user.first_name,user.last_name].filter(Boolean).join(' ').trim()||user.username||'';
+ if(!toast||!name)return;
+ toast.textContent='اهلًا بك بالمجتمع يـ '+name;
+ toast.hidden=false;
+ window.setTimeout(()=>{toast.classList.add('leaving');window.setTimeout(()=>{toast.hidden=true;toast.classList.remove('leaving');},320);},3700);
+})();
+let botUsername='';
+const home=document.getElementById('home');
+const page=document.getElementById('page');
+const pageTitle=document.getElementById('page-title');
+const pageContent=document.getElementById('page-content');
+let miniAppColorMap={};
+function miniButtonText(el){const label=el.querySelector?.('.label');return String(label?.innerText||el.innerText||el.textContent||'').replace(/^[\p{S}\p{P}\s]+/u,'').replace(/\s+/g,' ').trim();}
+function miniButtonTextColor(hex){
+ const h=String(hex||'').replace('#','');if(!/^[0-9a-fA-F]{6}$/.test(h))return '#ffffff';
+ const n=parseInt(h,16),r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+ return (0.299*r+0.587*g+0.114*b)>160?'#171717':'#ffffff';
+}
+function applyMiniAppButtonColors(map){
+ if(map)miniAppColorMap=map;
+ document.querySelectorAll('button,.back-button,.custom-card').forEach(el=>{
+  const key=miniButtonText(el),color=miniAppColorMap[key];
+  if(!color)return;
+  el.style.setProperty('background',color,'important');
+  el.style.setProperty('background-color',color,'important');
+  el.style.setProperty('border-color',color,'important');
+  el.style.setProperty('color',miniButtonTextColor(color),'important');
+  el.style.setProperty('box-shadow','0 4px 0 '+color+'88','important');
+ });
+}
+const miniButtonColorObserver=new MutationObserver(()=>applyMiniAppButtonColors());
+miniButtonColorObserver.observe(document.body,{childList:true,subtree:true,characterData:true});
+function showHome(){stopC4Timer();stopMiniGameTimers();stopExtraGame();document.body.classList.remove('c4-active');page.hidden=true;home.hidden=false;}
+function telegramDisplayName(){const u=tg?.initDataUnsafe?.user||{};return [u.first_name,u.last_name].filter(Boolean).join(' ').trim()||u.username||'أنت';}
+function winnerDisplayName(game){const status=String(game?.status||'');const botName=String(game?.bot_name||'').trim();if(game?.game_mode!=='human'&&botName&&(status==='won'||status==='lost'))return status==='lost'?botName:telegramDisplayName();const name=String(game?.winner_name||'').trim();return (!name||name==='أحد اللاعبين'||name==='أنت'||(name.startsWith('اللاعب ')||name.startsWith('لاعب ')))?'الفائز':name;}
+function openBot(startParam=''){if(!botUsername)return;const link='https://t.me/'+botUsername+(startParam?'?start='+encodeURIComponent(startParam):'');if(tg?.openTelegramLink)tg.openTelegramLink(link);else location.href=link;}
+function showTop(kind,title){
+ home.hidden=true;page.hidden=false;pageTitle.textContent=title;pageContent.replaceChildren();
+ if(kind==='games'){
+  const chooser=document.createElement('div');chooser.className='c4-panel';chooser.style.display='grid';chooser.style.gap='10px';
+  const wins=document.createElement('button');wins.className='c4-secondary c4-win';wins.textContent='🏆 الأكثر فوزًا';
+  wins.onclick=()=>showTop('game_wins','🏆 توب الأكثر فوزًا');
+  const losses=document.createElement('button');losses.className='c4-secondary c4-loss';losses.textContent='💀 الأكثر خسارة';
+  losses.onclick=()=>showTop('game_losses','💀 توب الأكثر خسارة');
+  chooser.append(wins,losses);pageContent.appendChild(chooser);return;
+ }
+ const loading=document.createElement('div');loading.className='empty';loading.textContent='جاري تحميل الترتيب...';pageContent.appendChild(loading);
+ fetch('/api/mini-app?top='+encodeURIComponent(kind)).then(async r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(data=>{
+  pageContent.replaceChildren();
+  if(!Array.isArray(data.leaderboard))throw new Error('No leaderboard data');
+  if(!data.leaderboard.length){const e=document.createElement('div');e.className='empty';e.textContent='لا يوجد ترتيب حتى الآن';pageContent.appendChild(e);return;}
+  data.leaderboard.forEach((item,i)=>{const row=document.createElement('div');row.className='custom-card';const name=document.createElement('span');name.className='label';name.textContent=(i+1)+'  •  '+item.name+'  —  '+(kind==='active'?'( رسالة '+item.value+' )':item.value+' '+item.unit);row.appendChild(name);pageContent.appendChild(row);});
+ }).catch(()=>{pageContent.replaceChildren();const e=document.createElement('div');e.className='empty';e.textContent='تعذر تحميل الترتيب حاليًا، حاول مرة ثانية';pageContent.appendChild(e);});
+}
+
+function showGames(){
+ stopC4Timer();stopMiniGameTimers();stopExtraGame();document.body.classList.remove('c4-active');home.hidden=true;page.hidden=false;pageTitle.textContent='الألعاب 🎮';pageContent.replaceChildren();
+ const games=[
+  ['🔴','كونكت 4','العب ضد البوت أو تحدَّ لاعبًا','connect'],
+  ['🟦','المربعات','ارسم الخطوط واجمع المربعات','dots'],
+  ['🧠','اختبر ذاكرتك','احفظ التسلسل وتحدَّ لاعبًا آخر','memory'],
+  ['🔤','خمن الكلمة','تحدَّ حتى 10 لاعبين أو تدرب لحالك','word'],
+  ['🎯','الكيرم','صوّب واضرب الأقراص نحو الجيوب','carrom'],
+ ];
+ games.forEach(([emoji,name,hint,type])=>{
+  const card=document.createElement('button');card.className='custom-card game-card';card.type='button';card.style.width='100%';card.style.cursor='pointer';
+  const imageUrl=onlineGameImages[type];
+  if(imageUrl){
+   const image=document.createElement('img');image.className='game-cover';image.src=imageUrl;image.alt=name;image.loading='lazy';
+   image.onerror=()=>{image.remove();const placeholder=document.createElement('div');placeholder.className='game-cover-placeholder';placeholder.textContent=emoji;card.insertBefore(placeholder,label);};
+   card.appendChild(image);
+  }else{
+   const placeholder=document.createElement('div');placeholder.className='game-cover-placeholder';placeholder.textContent=emoji;card.appendChild(placeholder);
+  }
+  const label=document.createElement('span');label.className='label';label.textContent=name;card.appendChild(label);
+  card.onclick=()=>{if(type==='carrom'){location.href='/carrom';return;}if(type==='connect'){showConnect4Setup();return;}if(type==='word'){showWordSetup();return;}showMiniGameInstructions(type);};
+  pageContent.appendChild(card);
+ });
+}
+function showMiniGameInstructions(type){
+ stopMiniGameTimers();document.body.classList.add('c4-active');
+ const shell=c4Shell(),isDots=type==='dots',title=isDots?'المربعات 🟦':'اختبر ذاكرتك 🧠';
+ shell.innerHTML='<div class="c4-heading"><h2>'+title+'</h2><p>اختر طريقة اللعب</p></div><div class="c4-panel"><button class="c4-start" id="mg-solo">🤖 العب ضد البوت</button><button class="c4-secondary" id="mg-multi">👥 تحدَّ لاعبًا</button><div class="c4-result show">'+(isDots?'ارسم الخطوط وأكمل المربعات لتحصل على نقاط.':'احفظ تسلسل الألوان وكرره، وكل جولة يزيد التسلسل.')+'</div><button class="c4-secondary" id="mg-back">رجوع للألعاب</button></div>';
+ shell.querySelector('#mg-solo').onclick=()=>showMiniGameDifficulty(type);
+ shell.querySelector('#mg-multi').onclick=()=>showMiniGameMultiplayerInfo(type);
+ shell.querySelector('#mg-back').onclick=showGames;
+}
+function showMiniGameMultiplayerInfo(type){
+ const shell=c4Shell(),command=type==='dots'?'مربعات':'ذاكرة';
+ shell.innerHTML='<div class="c4-heading"><h2>تحدي لاعب 👥</h2></div><div class="c4-panel"><div class="c4-result show">رد على رسالة اللاعب في القروب واكتب <b>'+command+'</b>، أو أضف مبلغ الرهان مثل <b>'+command+' 50000</b>. الرهان الافتراضي 20,000 لكل لاعب.</div><button class="c4-secondary" id="mg-back">رجوع</button></div>';
+ shell.querySelector('#mg-back').onclick=()=>showMiniGameInstructions(type);
+}
+function showMiniGameDifficulty(type){
+ stopMiniGameTimers();const shell=c4Shell(),title=type==='dots'?'المربعات 🟦':'اختبر ذاكرتك 🧠';
+ const levels=[['سهل','مناسب للتجربة'],['متوسط','تحدي متوازن'],['صعب','خصم أذكى'],['مستحيل','أقوى مستوى']];
+ shell.innerHTML='<div class="c4-heading"><h2>'+title+'</h2><p>اختر مستوى البوت</p></div><div class="c4-levels" id="mg-difficulty"></div><button class="c4-secondary" id="mg-back">رجوع</button>';
+ const root=shell.querySelector('#mg-difficulty');
+ levels.forEach(([level,desc])=>{const b=document.createElement('button');b.className='c4-level';b.innerHTML='<b>'+level+'</b><small>'+desc+'</small>';b.onclick=()=>startMiniGameSolo(type,level);root.appendChild(b);});
+ shell.querySelector('#mg-back').onclick=()=>showMiniGameInstructions(type);
+}
+
+let c4Difficulty='متوسط',c4Game=null,c4Timer=null,c4Tick=null,c4Busy=false,c4Seconds=15,c4BotTimer=null,c4PollTimer=null,c4RpsChoice=null,c4ChallengePollTimer=null;
+const c4StartParam=tg?.initDataUnsafe?.start_param||'';
+const onlineConnectId=c4StartParam.startsWith('online_c4_')?c4StartParam.slice(10):'';
+const onlineMiniGameId=c4StartParam.startsWith('online_mg_')?c4StartParam.slice(10):'';
+const onlineLobbyId=c4StartParam.startsWith('online_lobby_')?c4StartParam.slice(13):'';
+const onlineMode=!!(onlineConnectId||onlineMiniGameId);
+let c4GameIdFromUrl=onlineConnectId||new URLSearchParams(window.location.search).get('game_id');
+const c4ChallengeIdFromStart=c4StartParam.startsWith('c4c_')?c4StartParam.slice(4):new URLSearchParams(window.location.search).get('challenge_id');
+const miniGameChallengeIdFromStart=onlineMiniGameId||(c4StartParam.startsWith('mg_')?c4StartParam.slice(3):new URLSearchParams(window.location.search).get('mini_game_id'));
+let miniGame=null,miniGamePollTimer=null,miniGameChallengePollTimer=null,miniGameTimer=null,miniGameTick=null,miniGameBusy=false,miniGameInputLocked=true;
+let memoryPlaybackTimers=[],memoryPresentationKey=null;
+let miniSoloGame=null,miniSoloId=null,miniSoloPoll=null,miniSoloBotTimer=null,miniSoloClock=null,miniSoloTick=null,miniSoloBusy=false;
+const c4Levels=[['سهل','مناسب للتجربة'],['متوسط','تحدي متوازن'],['صعب','يفكر قبل أن يلعب'],['مستحيل','أقوى تحدي']];
+function stopC4Timer(){if(c4Timer)clearTimeout(c4Timer);if(c4Tick)clearInterval(c4Tick);if(c4BotTimer)clearTimeout(c4BotTimer);if(c4PollTimer)clearTimeout(c4PollTimer);if(c4ChallengePollTimer)clearTimeout(c4ChallengePollTimer);c4Timer=null;c4Tick=null;c4BotTimer=null;c4PollTimer=null;c4ChallengePollTimer=null;}
+function c4Shell(){document.body.classList.add('c4-active');pageContent.innerHTML='<div class="c4-shell" id="c4-shell"></div>';return document.getElementById('c4-shell');}
+function showConnect4Setup(){
+ stopC4Timer();c4Game=null;c4Busy=false;c4RpsChoice=null;
+ const shell=c4Shell();
+ shell.innerHTML='<div class="c4-heading"><h2>كونكت 4 <span style="font-size:20px">🔴🔵</span></h2><p>كوّن أربعة أقراص متصلة قبل البوت</p></div><div class="c4-panel"><div class="c4-label">اختر مستوى البوت</div><div class="c4-levels" id="c4-levels"></div><div class="c4-label" style="margin-top:18px">حجر ورقة مقص — من يبدأ؟</div><div class="c4-levels" id="c4-rps"></div><button class="c4-start" id="c4-start">ابدأ التحدي ✦</button><div class="c4-hint">فرصة فوز البوت في حجر ورقة مقص 40٪</div></div>';
+ const levels=shell.querySelector('#c4-levels');
+ c4Levels.forEach(([name,desc])=>{const b=document.createElement('button');b.className='c4-level'+(c4Difficulty===name?' active':'');b.innerHTML=name+'<small>'+desc+'</small>';b.onclick=()=>{c4Difficulty=name;levels.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));};levels.appendChild(b);});
+ const rps=shell.querySelector('#c4-rps');
+ [['r','✊ حجر'],['p','✋ ورقة'],['s','✌️ مقص']].forEach(([value,label])=>{const b=document.createElement('button');b.className='c4-level';b.textContent=label;b.onclick=()=>{c4RpsChoice=value;rps.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));};rps.appendChild(b);});
+ shell.querySelector('#c4-start').onclick=()=>{if(!c4RpsChoice){shell.querySelector('.c4-hint').textContent='اختر حجر أو ورقة أو مقص أولًا';return;}startConnect4(c4RpsChoice);};
+}
+async function c4Request(path,payload){
+ const initData=tg?.initData||'';
+ if(!initData)throw new Error('افتح الميني آب من داخل تيليجرام حتى نتحقق من حسابك');
+ const requestPath=(onlineConnectId&&path==='/api/connect4/state')?'/api/online/spectate':path;
+ const requestPayload=requestPath==='/api/online/spectate'?{game_type:'connect',game_id:payload.game_id,initData}:{...payload,initData};
+ const response=await fetch(requestPath,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestPayload)});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok||!data.ok)throw new Error(data.error||'تعذر الاتصال بالسيرفر');
+ return requestPath==='/api/online/spectate'?data.result.game:data.game;
+}
+async function c4ChallengeRequest(path,payload={}){
+ const initData=tg?.initData||'';
+ if(!initData)throw new Error('افتح الميني آب من داخل تيليجرام حتى نتحقق من حسابك');
+ const requestPath=(onlineMiniGameId&&path==='/api/minigames/challenge/state')?'/api/online/spectate':path;
+ const requestPayload=requestPath==='/api/online/spectate'?{game_type:'mini',game_id:payload.challenge_id,initData}:{...payload,initData};
+ const response=await fetch(requestPath,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestPayload)});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok||!data.ok)throw new Error(data.error||'تعذر الاتصال بالسيرفر');
+ return requestPath==='/api/online/spectate'?{phase:'playing',game:data.result.game}:data.result;
+}
+function stopMiniGameTimers(){
+ if(miniSoloPoll)clearTimeout(miniSoloPoll);if(miniSoloBotTimer)clearTimeout(miniSoloBotTimer);if(miniSoloClock)clearTimeout(miniSoloClock);if(miniSoloTick)clearInterval(miniSoloTick);
+ miniSoloPoll=miniSoloBotTimer=miniSoloClock=miniSoloTick=null;miniSoloGame=null;miniSoloId=null;miniSoloBusy=false;
+ if(miniGamePollTimer)clearTimeout(miniGamePollTimer);
+ if(miniGameChallengePollTimer)clearTimeout(miniGameChallengePollTimer);
+ if(miniGameTimer)clearTimeout(miniGameTimer);
+ if(miniGameTick)clearInterval(miniGameTick);
+ memoryPlaybackTimers.forEach(clearTimeout);memoryPlaybackTimers=[];
+ miniGamePollTimer=miniGameChallengePollTimer=miniGameTimer=miniGameTick=null;memoryPresentationKey=null;miniGameInputLocked=true;
+}
+
+let onlineLobbyPoll=null, onlineLobbyState=null, onlineGameImages={};
+async function onlineLobbyRequest(action,settings={}){
+ const initData=tg?.initData||'';
+ if(!initData)throw new Error('افتح الغرفة من داخل تيليجرام');
+ const response=await fetch('/api/online/lobby',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData,lobby_id:onlineLobbyId,action,settings})});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok||!data.ok)throw new Error(data.error||'تعذر تحديث الغرفة');
+ return data.result;
+}
+function renderOnlineLobby(state){
+ onlineLobbyState=state;
+ const shell=c4Shell(),names={connect:'Connect Four 🔴',dots:'Dots and Boxes 🟦',memory:'Memory Match 🧠'};
+ const me=Number(tg?.initDataUnsafe?.user?.id||0),isCreator=state.is_creator;
+ const joined=state.players||[];
+ const slots=Array.from({length:state.player_count},(_,i)=>joined[i]?'<div class="c4-player"><strong>'+escapeLobbyText(joined[i].name)+'</strong><small>منضم ✓</small></div>':'<div class="c4-player"><strong>بانتظار لاعب</strong><small>المقعد '+(i+1)+'</small></div>').join('');
+ const canConfigure=isCreator&&state.status==='pending';
+ const cover=onlineGameImages[state.game_type]?'<img class="online-game-cover" src="'+escapeLobbyText(onlineGameImages[state.game_type])+'" alt="صورة اللعبة">':'';
+ shell.innerHTML=cover+'<div class="c4-heading"><h2>غرفة اللعبة 🎮</h2><p>'+names[state.game_type]+'</p></div><div class="c4-panel"><div class="c4-label">اللاعبون ('+joined.length+'/'+state.player_count+')</div><div class="c4-players" style="display:grid;grid-template-columns:1fr 1fr;gap:9px">'+slots+'</div><div class="c4-label" style="margin-top:18px">إعدادات الغرفة</div><div class="c4-levels" id="online-counts"></div><div class="c4-levels" id="online-modes"></div><div class="c4-result show" id="online-room-status"></div><button class="c4-start" id="online-join">انضمام إلى الغرفة 👥</button><button class="c4-secondary" id="online-start">بدء اللعبة 🚀</button><button class="c4-secondary" id="online-leave">مغادرة الغرفة</button></div>';
+ const status=shell.querySelector('#online-room-status');
+ const counts=shell.querySelector('#online-counts'),modes=shell.querySelector('#online-modes');
+ const supported=state.game_type==='dots'?[2,3,4]:[2];
+ supported.forEach(n=>{const b=document.createElement('button');b.className='c4-level'+(state.player_count===n?' active':'');b.textContent=n+' لاعبين';b.disabled=!canConfigure;b.onclick=()=>onlineLobbyRequest('configure',{player_count:n,team_mode:n===4?state.team_mode:'individual'}).then(loadOnlineLobby).catch(showOnlineLobbyError);counts.appendChild(b);});
+ if(state.game_type==='dots'&&state.player_count===4){
+  [['individual','كل لاعب لحاله'],['teams','فريقين 2 ضد 2']].forEach(([v,t])=>{const b=document.createElement('button');b.className='c4-level'+(state.team_mode===v?' active':'');b.textContent=t;b.disabled=!canConfigure;b.onclick=()=>onlineLobbyRequest('configure',{player_count:4,team_mode:v}).then(loadOnlineLobby).catch(showOnlineLobbyError);modes.appendChild(b);});
+ }else{modes.remove();}
+ const join=shell.querySelector('#online-join'),start=shell.querySelector('#online-start'),leave=shell.querySelector('#online-leave');
+ join.disabled=state.status!=='pending'||state.is_joined||joined.length>=state.player_count;
+ join.textContent=state.is_joined?'أنت منضم بالفعل ✓':'انضمام إلى الغرفة 👥';
+ join.onclick=()=>onlineLobbyRequest('join',{name:telegramDisplayName()}).then(loadOnlineLobby).catch(showOnlineLobbyError);
+ start.hidden=!isCreator||state.status!=='pending';
+ start.disabled=joined.length<state.player_count;
+ start.onclick=()=>onlineLobbyRequest('start').then(result=>{onlineLobbyState=result;loadOnlineLobby();}).catch(showOnlineLobbyError);
+ leave.hidden=state.status!=='pending'||!state.is_joined;
+ leave.onclick=()=>onlineLobbyRequest('leave').then(loadOnlineLobby).catch(showOnlineLobbyError);
+ if(state.status==='playing'){
+  status.textContent='بدأت المباراة! افتحوا اللعبة من الزر أدناه.';
+  const launch=document.createElement('button');launch.className='c4-start';launch.textContent='فتح اللعبة الآن 🎮';
+  launch.onclick=()=>{const param=state.game_type==='connect'?'online_c4_'+state.game_id:'online_mg_'+state.game_id;const url='https://t.me/'+botUsername+'?startapp='+param;if(tg?.openTelegramLink)tg.openTelegramLink(url);else location.href=url;};
+  shell.querySelector('.c4-panel').appendChild(launch);
+  start.hidden=true;join.hidden=true;leave.hidden=true;
+ }else if(state.status==='cancelled'){status.textContent='تم إلغاء الغرفة.';join.hidden=true;start.hidden=true;leave.hidden=true;}
+ else{status.textContent=isCreator?'أنت صاحب الغرفة. اضبط الإعدادات وانتظر انضمام اللاعبين.':'انضم للغرفة وانتظر بدء صاحبها.';}
+}
+function escapeLobbyText(value){return String(value||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+function showOnlineLobbyError(error){const el=document.getElementById('online-room-status');if(el)el.textContent=error?.message||'حدث خطأ';}
+async function loadOnlineLobby(){
+ const state=await onlineLobbyRequest('state');renderOnlineLobby(state);
+}
+function startOnlineLobby(){
+ home.hidden=true;page.hidden=false;pageTitle.textContent='غرفة اللعبة';pageContent.replaceChildren();
+ if(onlineLobbyPoll)clearInterval(onlineLobbyPoll);
+ loadOnlineLobby().catch(showOnlineLobbyError);
+ onlineLobbyPoll=setInterval(()=>loadOnlineLobby().catch(()=>{}),2200);
+}
+
+function clearOnlineEndOverlay(){document.querySelector('.online-end-overlay')?.remove();}
+async function restartOnlineGame(gameType,gameId){
+ const overlay=document.querySelector('.online-end-overlay'),button=overlay?.querySelector('[data-online-restart]');
+ if(button){button.disabled=true;button.textContent='جاري تجهيز جولة جديدة...';}
+ try{
+  const initData=tg?.initData||'';if(!initData)throw new Error('افتح اللعبة من تيليجرام أولًا');
+  const response=await fetch('/api/online/restart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData,game_type:gameType,game_id:gameId})});
+  const data=await response.json().catch(()=>({}));if(!response.ok||!data.ok)throw new Error(data.error||'تعذر إعادة اللعب');
+  clearOnlineEndOverlay();
+  if(gameType==='connect'){c4Game=data.result;renderConnect4();}
+  else{miniGame=data.result.game;renderMiniGame();}
+ }catch(e){if(button){button.disabled=false;button.textContent='↻ إعادة اللعب';}const msg=overlay?.querySelector('p');if(msg)msg.textContent=e.message;}
+}
+async function withdrawOnlineGame(gameType,gameId,button){
+  if(button){button.disabled=true;button.textContent='جاري الانسحاب...';}
+  try{
+   const initData=tg?.initData||'';if(!initData)throw new Error('افتح اللعبة من تيليجرام أولًا');
+   const response=await fetch('/api/online/withdraw',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData,game_type:gameType,game_id:gameId})});
+   const data=await response.json().catch(()=>({}));if(!response.ok||!data.ok)throw new Error(data.error||'تعذر الانسحاب');
+   if(gameType==='connect'){c4Game=data.result.game;renderConnect4();}
+   else{miniGame=data.result.game;renderMiniGame();}
+  }catch(e){if(button){button.disabled=false;button.textContent='انسحاب';}const status=document.getElementById('c4-status');if(status)status.textContent=e.message;}
+}
+function showGameEndOverlay({winnerName='',isDraw=false,title='',subtitle=''}={}){
+ const safeWinner=String(winnerName||'').trim();
+ const key=(isDraw?'draw':safeWinner||'winner')+'|'+String(title||'');
+ const existing=document.querySelector('.online-end-overlay');
+ if(existing&&existing.dataset.endKey===key)return;
+ clearOnlineEndOverlay();
+ const overlay=document.createElement('div');overlay.className='online-end-overlay';overlay.dataset.endKey=key;
+ const card=document.createElement('div');card.className='online-end-card';
+ const heading=document.createElement('h2');heading.textContent=title||(isDraw?'🤝 تعادل جميل!':'🎉 مبروك الفوز!');
+ const winner=document.createElement('div');winner.className='online-end-winner';winner.textContent=isDraw?'تعادل بين اللاعبين':(safeWinner||'الفائز');
+ const message=document.createElement('p');message.textContent=subtitle||(isDraw?'كانت مباراة حماسية! يعطيكم العافية على اللعب 👏':('أبدعت يا '+(safeWinner||'بطل')+'! تستاهل الفوز 🏆'));
+ const actions=document.createElement('div');actions.className='online-end-actions';
+ const close=document.createElement('button');close.textContent='قفل الصفحة';close.onclick=()=>{if(tg&&typeof tg.close==='function')tg.close();else{try{window.close();}catch(e){}showHome();}};
+ const homeButton=document.createElement('button');homeButton.textContent='الرجوع للقائمة الرئيسية';homeButton.onclick=()=>{clearOnlineEndOverlay();showHome();};
+ actions.append(close,homeButton);card.append(heading,winner,message,actions);overlay.appendChild(card);document.body.appendChild(overlay);
+}
+function showOnlineEndOverlay(gameType,gameId,resultText){
+ const draw=String(resultText||'').includes('تعادل');
+ const name=draw?'':String(resultText||'').replace(/^🏆\\s*فاز\\s*/,'').replace(/!$/,'');
+ showGameEndOverlay({winnerName:name,isDraw:draw});
+}
+async function miniGameRequest(path,payload={}){
+ const initData=tg?.initData||'';
+ if(!initData)throw new Error('افتح الميني آب من داخل تيليجرام حتى نتحقق من حسابك');
+ const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,initData})});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok||!data.ok)throw new Error(data.error||'تعذر الاتصال بالسيرفر');
+ return data.result;
+}
+function renderMiniGameRps(state){
+ stopMiniGameTimers();const shell=c4Shell();
+ const choices={r:'حجر ✊',p:'ورقة ✋',s:'مقص ✌️'};
+ shell.innerHTML='<div class="c4-heading"><h2>حجر ورقة مقص ✊</h2><p>اختاروا من يبدأ اللعبة</p></div><div class="c4-panel"><div class="c4-players"><div class="c4-player"><strong></strong><small>اللاعب الأول</small></div><span class="c4-vs">VS</span><div class="c4-player"><strong></strong><small>اللاعب الثاني</small></div></div><div class="c4-label" style="margin:18px 0 10px">اختر حركتك</div><div class="c4-levels" id="mg-rps"></div><div class="c4-result show" id="mg-rps-status"></div></div>';
+ const players=shell.querySelectorAll('.c4-player');players[0].querySelector('strong').textContent=state.player1_name||'مستخدم';players[1].querySelector('strong').textContent=state.player2_name||'مستخدم';
+ const controls=shell.querySelector('#mg-rps');
+ [['r','✊ حجر'],['p','✋ ورقة'],['s','✌️ مقص']].forEach(([value,label])=>{const b=document.createElement('button');b.className='c4-level';b.textContent=label;b.disabled=!!state.my_choice;if(state.my_choice===value)b.classList.add('active');b.onclick=()=>submitMiniGameChoice(value);controls.appendChild(b);});
+ shell.querySelector('#mg-rps-status').textContent=state.tie?'تعادل! اختاروا من جديد.':state.my_choice?'تم تسجيل اختيارك ('+choices[state.my_choice]+')، ننتظر اللاعب الآخر...':state.opponent_chosen?'اللاعب الآخر اختار، اختر حركتك.':'بانتظار اختيار اللاعبين...';
+}
+async function startMiniGameSolo(type,difficulty){
+ stopMiniGameTimers();const shell=c4Shell();shell.innerHTML='<div class="c4-heading"><h2>جاري تجهيز اللعبة...</h2></div>';
+ try{miniGameInputLocked=true;memoryPresentationKey=null;miniSoloGame=await miniGameRequest('/api/minigames/solo/new',{game_type:type,difficulty});miniSoloId=miniSoloGame.id;renderMiniGameSolo();}
+ catch(e){shell.innerHTML='<div class="c4-error"></div>';shell.querySelector('.c4-error').textContent=e.message;}
+}
+function renderMiniGameSolo(){
+ stopSoloMiniGameClock();const game=miniSoloGame;if(!game)return;
+ const shell=c4Shell(),state=game.state,isDots=game.game_type==='dots';
+ shell.innerHTML='<div class="c4-heading"><h2>'+(isDots?'المربعات 🟦':'اختبر ذاكرتك 🧠')+'</h2><p>أنت × البوت · المستوى '+game.difficulty+'</p></div><div class="mg-score" id="mg-score"></div><div class="mg-status"><span id="mg-status"></span><b id="mg-clock"></b></div><div class="mg-progress"><div id="mg-progress-bar"></div></div><div id="mg-board"></div><div class="c4-result" id="mg-result"></div><button class="c4-secondary" id="mg-again">لعب مرة ثانية</button><button class="c4-secondary" id="mg-back">رجوع للألعاب</button>';
+ shell.querySelector('#mg-back').onclick=showGames;shell.querySelector('#mg-again').onclick=()=>showMiniGameDifficulty(game.game_type);
+ if(game.status!=='playing'){
+  shell.querySelector('#mg-status').textContent='انتهت اللعبة';shell.querySelector('#mg-clock').textContent='—';
+  const draw=game.status==='draw';
+  const winnerName=draw?'':game.status==='won'?telegramDisplayName():game.status==='lost'?(game.bot_name||'البوت'):winnerDisplayName(game);
+  showGameEndOverlay({winnerName,isDraw:draw,subtitle:draw?'كانت مباراة حماسية! يعطيكم العافية 👏':('مبروك '+winnerName+'! تستاهل الفوز 🏆')});
+  return;
+ }
+ if(isDots){
+  const view={...game,player1_name:'أنت',player2_name:'البوت',my_player:1};
+  renderDotsBoard(shell,view,action=>submitMiniGameSoloAction(action));
+  shell.querySelector('#mg-status').textContent=game.your_turn?'دورك!':'🤖 البوت يفكر...';
+ }else{
+  shell.querySelector('#mg-score').innerHTML='<span>المستوى: '+state.level+'</span><span>تجاوزت: '+(state.rounds_won||0)+' جولة</span>';
+  const root=shell.querySelector('#mg-board');root.className='mg-memory';
+  const colors=['#ef4444','#3b82f6','#22c55e','#facc15'];
+  colors.forEach((color,index)=>{const b=document.createElement('button');b.className='mg-memory-tile';b.style.background=color;b.disabled=true;b.dataset.color=index;b.onclick=()=>{flashMemoryPick(b);submitMiniGameSoloAction({color:index});};root.appendChild(b);});
+  if(game.your_turn){const key='solo:'+game.id+':'+state.level+':'+state.sequence.length;presentMemorySequence(state.sequence.slice(0,state.level),key,()=>{if(miniSoloGame?.your_turn&&miniSoloGame.status==='playing')startSoloMiniGameClock(miniSoloGame);});}
+  else shell.querySelector('#mg-status').textContent='دور البوت...';
+ }
+ if(game.your_turn&&isDots)startSoloMiniGameClock(game);
+ else if(!game.your_turn){shell.querySelector('#mg-clock').textContent='';miniSoloBotTimer=setTimeout(playSoloMiniGameBotMove,700);}
+ scheduleSoloMiniGamePoll();
+}
+function stopSoloMiniGameClock(){if(miniSoloClock)clearTimeout(miniSoloClock);if(miniSoloTick)clearInterval(miniSoloTick);miniSoloClock=miniSoloTick=null;}
+function startSoloMiniGameClock(game,fromNow=false){
+ stopSoloMiniGameClock();const started=fromNow?Date.now():(Number(game.turn_started_at)||Date.now()),duration=Number(game.turn_seconds)||15;
+ const update=()=>{const left=Math.max(0,duration-(Date.now()-started)/1000),clock=document.getElementById('mg-clock'),bar=document.getElementById('mg-progress-bar');if(clock)clock.textContent=Math.ceil(left)+' ثانية';if(bar)bar.style.width=(left/duration*100)+'%';};
+ update();miniSoloTick=setInterval(update,200);miniSoloClock=setTimeout(()=>{submitMiniGameSoloAction({automatic:true});},Math.max(0,duration*1000-(Date.now()-started)));
+}
+function scheduleSoloMiniGamePoll(){if(miniSoloPoll)clearTimeout(miniSoloPoll);miniSoloPoll=setTimeout(pollSoloMiniGame,1000);}
+async function pollSoloMiniGame(){
+ miniSoloPoll=null;try{const next=await miniGameRequest('/api/minigames/solo/state',{game_id:miniSoloId});
+ const prev=miniSoloGame;const structural=!prev||next.status!==prev.status||next.turn_player_id!==prev.turn_player_id||next.turn_started_at!==prev.turn_started_at||(next.game_type==='memory'&&(next.state.level!==prev.state.level||next.state.sequence.length!==prev.state.sequence.length));
+ const progressOnly=prev&&next.game_type==='memory'&&next.state.progress!==prev.state.progress;
+ miniSoloGame=next;if(structural)renderMiniGameSolo();else{if(progressOnly){const score=document.getElementById('mg-score');if(score)score.innerHTML='<span>المستوى: '+next.state.level+'</span><span>تجاوزت: '+(next.state.rounds_won||0)+' جولة</span>';document.querySelectorAll('.mg-memory-tile').forEach(b=>b.disabled=miniGameInputLocked);}scheduleSoloMiniGamePoll();}
+ }catch(e){scheduleSoloMiniGamePoll();}
+}
+async function playSoloMiniGameBotMove(){
+ if(!miniSoloId||miniSoloBusy)return;miniSoloBusy=true;
+ try{miniSoloGame=await miniGameRequest('/api/minigames/solo/bot-move',{game_id:miniSoloId});miniSoloBusy=false;renderMiniGameSolo();}
+ catch(e){miniSoloBusy=false;scheduleSoloMiniGamePoll();}
+}
+async function submitMiniGameSoloAction(action){
+ if(miniSoloBusy||!miniSoloGame||!miniSoloGame.your_turn||miniSoloGame.status!=='playing'||(miniSoloGame.game_type==='memory'&&miniGameInputLocked))return;
+ miniSoloBusy=true;stopSoloMiniGameClock();document.querySelectorAll('.mg-edge,.mg-memory-tile').forEach(b=>b.disabled=true);
+ try{const prev=miniSoloGame;miniSoloGame=await miniGameRequest('/api/minigames/solo/action',{game_id:miniSoloId,action});miniSoloBusy=false;const next=miniSoloGame;const structural=next.game_type==='dots'||next.status!==prev.status||next.turn_player_id!==prev.turn_player_id||(next.game_type==='memory'&&(next.state.level!==prev.state.level||next.state.sequence.length!==prev.state.sequence.length));if(structural)renderMiniGameSolo();else{const score=document.getElementById('mg-score');if(score)score.innerHTML='<span>المستوى: '+next.state.level+'</span><span>تجاوزت: '+(next.state.rounds_won||0)+' جولة</span>';document.querySelectorAll('.mg-memory-tile').forEach(b=>b.disabled=miniGameInputLocked);if(next.your_turn)startSoloMiniGameClock(next);scheduleSoloMiniGamePoll();}}
+ catch(e){miniSoloBusy=false;const status=document.getElementById('mg-status');if(status)status.textContent=e.message;scheduleSoloMiniGamePoll();}
+}
+async function fetchOnlineMiniGameState(){
+ const result=await miniGameRequest('/api/online/spectate',{game_type:'mini',game_id:miniGameChallengeIdFromStart});
+ return result.phase?result:{phase:'playing',game:result.game};
+}
+async function startMiniGameChallenge(){
+ const shell=c4Shell();shell.innerHTML='<div class="c4-heading"><h2>جاري فتح التحدي...</h2></div>';
+ try{handleMiniGameResult(onlineMode?await fetchOnlineMiniGameState():await miniGameRequest('/api/minigames/challenge/state',{challenge_id:miniGameChallengeIdFromStart}));}
+ catch(e){shell.innerHTML='<div class="c4-error"></div>';shell.querySelector('.c4-error').textContent=e.message;}
+}
+function handleMiniGameResult(result){
+ if(result.phase==='playing'){const next=result.game;if(!miniGame||next.status!==miniGame.status||next.turn_player_id!==miniGame.turn_player_id||next.turn_started_at!==miniGame.turn_started_at||next.game_type==='dots'&&JSON.stringify(next.state)!==JSON.stringify(miniGame.state)){miniGame=next;renderMiniGame();return;}miniGame=next;updateMiniGameProgress();scheduleMiniGamePoll();return;}
+ renderMiniGameRps(result);miniGameChallengePollTimer=setTimeout(pollMiniGameChallenge,1200);
+}
+async function pollMiniGameChallenge(){miniGameChallengePollTimer=null;try{handleMiniGameResult(await miniGameRequest('/api/minigames/challenge/state',{challenge_id:miniGameChallengeIdFromStart}));}catch(e){miniGameChallengePollTimer=setTimeout(pollMiniGameChallenge,1800);}}
+async function submitMiniGameChoice(choice){document.querySelectorAll('#mg-rps button').forEach(b=>b.disabled=true);try{handleMiniGameResult(await miniGameRequest('/api/minigames/challenge/choice',{challenge_id:miniGameChallengeIdFromStart,choice}));}catch(e){const el=document.getElementById('mg-rps-status');if(el)el.textContent=e.message;document.querySelectorAll('#mg-rps button').forEach(b=>b.disabled=false);}}
+function renderMiniGame(){
+ clearOnlineEndOverlay();stopMiniGameTimers();const shell=c4Shell(),game=miniGame,state=game.state,humanTurn=!!game.your_turn;
+ const p1=game.player1_name||'مستخدم',p2=game.player2_name||'مستخدم';
+ const playerLabel=(game.player_names||[p1,p2]).join(' • ');
+ const heading=game.game_type==='dots'?'المربعات':'اختبر ذاكرتك';
+ const cover=onlineMode&&onlineGameImages[game.game_type]?'<img class="online-game-cover" src="'+escapeLobbyText(onlineGameImages[game.game_type])+'" alt="صورة اللعبة">':'';
+ shell.innerHTML=cover+'<div class="c4-heading"><h2>'+heading+'</h2><p>'+escapeLobbyText(playerLabel)+'</p></div><div class="mg-score" id="mg-score"></div><div class="mg-status"><span id="mg-status"></span><b id="mg-clock"></b></div><div class="mg-progress"><div id="mg-progress-bar"></div></div><div id="mg-board"></div><div class="c4-result" id="mg-result"></div><div class="c4-hint">'+(onlineMode?'وضع أونلاين — بدون نقاط':'الرهان لكل لاعب: '+game.wager.toLocaleString('en-US')+' نقطة')+'</div>'+(onlineMode?(game.status==='playing'&&!game.spectator?'<button class="c4-withdraw" id="mg-withdraw">انسحاب</button>':''):'<button class="c4-secondary" id="mg-back">رجوع للألعاب</button>');
+ if(!onlineMode)shell.querySelector('#mg-back').onclick=showGames;
+ else{const mainBack=document.getElementById('back-home');if(mainBack)mainBack.textContent='رجوع للقائمة الرئيسية';const withdraw=shell.querySelector('#mg-withdraw');if(withdraw)withdraw.onclick=()=>withdrawOnlineGame(game.game_type,game.id,withdraw);}
+ if(game.status!=='playing'){
+  shell.querySelector('#mg-result').classList.add('show');
+  shell.querySelector('#mg-result').textContent=game.status==='draw'?'🤝 انتهت المباراة بالتعادل':'🏆 فاز '+winnerDisplayName(game)+'!';
+  shell.querySelector('#mg-status').textContent='';shell.querySelector('#mg-clock').textContent='—';if(onlineMode){showOnlineEndOverlay(game.game_type,game.id,game.status==='draw'?'🤝 انتهت المباراة بالتعادل':'🏆 فاز '+winnerDisplayName(game)+'!');scheduleMiniGamePoll();}return;
+ }
+ if(game.game_type==='dots'){
+  renderDotsBoard(shell,game);
+  shell.querySelector('#mg-status').textContent=game.spectator?'👁 مشاهدة مباشرة — دور اللاعبين':humanTurn?'دورك!':'دور '+((game.player_names||[p1,p2])[(Number(game.turn_index)||1)-1]||p2);
+ }else{
+  shell.querySelector('#mg-status').textContent=game.spectator?'👁 وضع المشاهدة — تابع حركة اللاعبين':humanTurn?'احفظ التسلسل...':'دور '+((game.player_names||[p1,p2])[(Number(game.turn_index)||1)-1]||p2);
+  renderMemoryBoard(shell,game);
+ }
+ if(!game.spectator&&(game.game_type==='dots'||!humanTurn))startMiniGameTimer(game);
+ scheduleMiniGamePoll();
+}
+function renderDotsBoard(shell,game,onMove=submitMiniGameAction){
+ const state=game.state,root=shell.querySelector('#mg-board'),size=Number(state.board_size||state.boxes.length||4),grid=size*2+1;
+ root.className='mg-board';root.style.gridTemplateColumns='repeat('+grid+',minmax(0,1fr))';root.style.gridTemplateRows='repeat('+grid+',minmax(0,1fr))';
+ const names=game.player_names||[game.player1_name,game.player2_name],scores=state.scores||[],colors=['🔴','🔵','🟢','🟡'],score=shell.querySelector('#mg-score');
+ if(game.team_mode==='teams'&&names.length===4){const a=(scores[0]||0)+(scores[2]||0),b=(scores[1]||0)+(scores[3]||0);score.textContent='🔴 فريق 1: '+a+'  |  🔵 فريق 2: '+b;}
+ else{score.textContent=names.map((name,i)=>colors[i]+' '+name+': '+(scores[i]||0)).join('  •  ');}
+ for(let r=0;r<grid;r++)for(let c=0;c<grid;c++){
+  const cell=document.createElement('div');
+  if(r%2===0&&c%2===0){cell.className='mg-dot';}
+  else if(r%2===0&&c%2===1){const rr=r/2,cc=(c-1)/2,on=state.h[rr][cc],b=document.createElement('button');b.className='mg-edge horizontal'+(on?' on p'+on:'');b.disabled=!!game.spectator||!game.your_turn||!!on;b.onclick=()=>onMove({kind:'h',r:rr,c:cc});cell.appendChild(b);}
+  else if(r%2===1&&c%2===0){const rr=(r-1)/2,cc=c/2,on=state.v[rr][cc],b=document.createElement('button');b.className='mg-edge vertical'+(on?' on p'+on:'');b.disabled=!!game.spectator||!game.your_turn||!!on;b.onclick=()=>onMove({kind:'v',r:rr,c:cc});cell.appendChild(b);}
+  else{const rr=(r-1)/2,cc=(c-1)/2,owner=state.boxes[rr][cc];cell.className='mg-box'+(owner?' p'+owner:'');}
+  root.appendChild(cell);
+ }
+}
+
+function renderMemoryBoard(shell,game){
+ const state=game.state,root=shell.querySelector('#mg-board');root.className='mg-memory';
+ shell.querySelector('#mg-score').innerHTML='<span>المستوى: '+state.level+'</span><span>التقدم: '+state.progress+'/'+state.level+'</span>';
+ const colors=['#ef4444','#3b82f6','#22c55e','#facc15'];
+ colors.forEach((color,index)=>{const b=document.createElement('button');b.className='mg-memory-tile';b.style.background=color;b.disabled=!game.your_turn;b.dataset.color=index;b.onclick=()=>{flashMemoryPick(b);submitMiniGameAction({color:index});};root.appendChild(b);});
+ if(game.your_turn||game.spectator){const key='multi:'+game.id+':'+game.turn_player_id+':'+state.level+':'+state.sequence.length;presentMemorySequence(state.sequence.slice(0,state.level),key,()=>{if(miniGame?.your_turn&&miniGame.status==='playing')startMiniGameTimer(miniGame);});}
+ else shell.querySelector('#mg-status').textContent='اللاعب الآخر يلعب الآن';
+}
+function playMemorySequence(sequence){
+ presentMemorySequence(sequence,'legacy:'+sequence.join(','),null);
+}
+function flashMemoryPick(tile){if(!tile)return;tile.classList.remove('pick-flash');void tile.offsetWidth;tile.classList.add('pick-flash');setTimeout(()=>tile.classList.remove('pick-flash'),260);}
+function playMemoryTone(frequency=660,duration=0.11){
+  try{const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;const ctx=window.__mgAudio||(window.__mgAudio=new Ctx());if(ctx.state==='suspended')ctx.resume();const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='sine';osc.frequency.value=frequency;gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.13,ctx.currentTime+.015);gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+duration);osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+duration+.02);}catch(e){}
+ }
+ function presentMemorySequence(sequence,key,onDone){
+  if(memoryPresentationKey===key)return;
+  memoryPresentationKey=key;memoryPlaybackTimers.forEach(clearTimeout);memoryPlaybackTimers=[];
+  miniGameInputLocked=true;document.querySelectorAll('.mg-memory-tile').forEach(b=>b.disabled=true);
+  const status=document.getElementById('mg-status'),board=document.getElementById('mg-board');let count=1;
+  let overlay=board?.querySelector('.mg-countdown');if(!overlay&&board){overlay=document.createElement('div');overlay.className='mg-countdown';board.appendChild(overlay);}
+  const showCount=value=>{if(overlay){overlay.textContent=value;overlay.classList.toggle('go',value==='GO!');overlay.style.display='flex';}};
+  const countdown=()=>{if(memoryPresentationKey!==key)return;if(count<=3){showCount(String(count));if(status)status.textContent='استعد...';playMemoryTone(520,0.16);count++;memoryPlaybackTimers.push(setTimeout(countdown,850));return;}
+   showCount('GO!');if(status)status.textContent='انطلق!';playMemoryTone(880,0.24);
+   memoryPlaybackTimers.push(setTimeout(()=>{if(memoryPresentationKey!==key)return;if(overlay)overlay.style.display='none';if(status)status.textContent='احفظ التسلسل...';sequence.forEach((color,i)=>{
+    memoryPlaybackTimers.push(setTimeout(()=>{const tile=document.querySelector('.mg-memory-tile[data-color="'+color+'"]');if(tile)tile.classList.add('flash');playMemoryTone([392,494,587,784][color],.2);},i*720+250));
+    memoryPlaybackTimers.push(setTimeout(()=>{document.querySelectorAll('.mg-memory-tile').forEach(x=>x.classList.remove('flash'));if(i===sequence.length-1){miniGameInputLocked=false;const isSolo=key.startsWith('solo:');const activeGame=isSolo?miniSoloGame:miniGame;const canPlay=!!activeGame?.your_turn&&!activeGame?.spectator;document.querySelectorAll('.mg-memory-tile').forEach(b=>b.disabled=!canPlay);const s=document.getElementById('mg-status');if(s)s.textContent=activeGame?.spectator?'👁 اللاعب يشاهد التسلسل':canPlay?'دورك! كرر التسلسل':'بانتظار دور اللاعب';if(onDone)onDone();}},i*720+580));
+   });},650));
+  };countdown();
+ }
+function updateMiniGameProgress(){
+ if(!miniGame)return;
+ const game=miniGame,state=game.state;
+ const score=document.getElementById('mg-score');
+ if(score&&game.game_type==='memory')score.innerHTML='<span>المستوى: '+state.level+'</span><span>التقدم: '+state.progress+'/'+state.level+'</span>';
+ const status=document.getElementById('mg-status');
+ if(status&&game.game_type==='memory'&&game.your_turn&&!miniGameInputLocked)status.textContent='دورك! كرر التسلسل';
+}
+function startMiniGameTimer(game,fromNow=false){
+ if(miniGameTimer)clearTimeout(miniGameTimer);if(miniGameTick)clearInterval(miniGameTick);
+ const started=fromNow?Date.now():(Number(game.turn_started_at)||Date.now()),duration=Number(game.turn_seconds)||15;
+ const update=()=>{const left=Math.max(0,duration-(Date.now()-started)/1000),clock=document.getElementById('mg-clock'),bar=document.getElementById('mg-progress-bar');if(clock)clock.textContent=Math.ceil(left)+' ثانية';if(bar)bar.style.width=(left/duration*100)+'%';};
+ update();miniGameTick=setInterval(update,200);miniGameTimer=setTimeout(update,duration*1000+100);
+}
+function scheduleMiniGamePoll(){if(miniGamePollTimer)clearTimeout(miniGamePollTimer);miniGamePollTimer=setTimeout(pollMiniGameState,1100);}
+async function pollMiniGameState(){
+ miniGamePollTimer=null;
+ try{
+  const result=onlineMode?await fetchOnlineMiniGameState():await miniGameRequest('/api/minigames/challenge/state',{challenge_id:miniGameChallengeIdFromStart});
+  if(result.phase==='playing'){
+   const next=result.game,changed=!miniGame||next.status!==miniGame.status||next.turn_player_id!==miniGame.turn_player_id||next.turn_started_at!==miniGame.turn_started_at||(next.game_type==='dots'&&JSON.stringify(next.state)!==JSON.stringify(miniGame.state));
+   const progressChanged=miniGame&&next.game_type==='memory'&&next.state.progress!==miniGame.state.progress;
+   miniGame=next;if(changed)renderMiniGame();else{if(progressChanged)updateMiniGameProgress();scheduleMiniGamePoll();}
+  }else{renderMiniGameRps(result);miniGameChallengePollTimer=setTimeout(pollMiniGameChallenge,1200);}
+ }catch(e){scheduleMiniGamePoll();}
+}
+async function submitMiniGameAction(action){
+ if(miniGameBusy||!miniGame?.your_turn||miniGame.status!=='playing'||(miniGame.game_type==='memory'&&miniGameInputLocked))return;
+ miniGameBusy=true;document.querySelectorAll('.mg-edge,.mg-memory-tile').forEach(b=>b.disabled=true);
+ try{
+  const result=await miniGameRequest('/api/minigames/action',{challenge_id:miniGameChallengeIdFromStart,action});
+  const next=result.game,changed=next.status!==miniGame.status||next.turn_player_id!==miniGame.turn_player_id||next.turn_started_at!==miniGame.turn_started_at;
+  miniGame=next;miniGameBusy=false;if(changed)renderMiniGame();else{updateMiniGameProgress();document.querySelectorAll('.mg-memory-tile').forEach(b=>b.disabled=false);scheduleMiniGamePoll();}
+ }catch(e){miniGameBusy=false;const status=document.getElementById('mg-status');if(status)status.textContent=e.message;document.querySelectorAll('.mg-edge,.mg-memory-tile').forEach(b=>b.disabled=false);}
+}
+function renderC4ChallengeRps(state){
+ stopC4Timer();const shell=c4Shell();
+ const names=[state.challenger_name||'مستخدم',state.opponent_name||'مستخدم'];
+ const choiceNames={r:'حجر ✊',p:'ورقة ✋',s:'مقص ✌️'};
+ shell.innerHTML='<div class="c4-heading"><h2>حجر ورقة مقص ✊</h2><p>اختاروا من يبدأ مباراة كونكت 4</p></div><div class="c4-panel"><div class="c4-players"><div class="c4-player"><strong></strong><small>اللاعب الأول</small></div><span class="c4-vs">VS</span><div class="c4-player"><strong></strong><small>اللاعب الثاني</small></div></div><div class="c4-label" style="margin:18px 0 10px">اختر حركتك</div><div class="c4-levels" id="c4-challenge-rps"></div><div class="c4-result show" id="c4-rps-status"></div><div class="c4-hint">لا تظهر حركة أي لاعب للآخر حتى يختار الاثنان</div></div>';
+ const players=shell.querySelectorAll('.c4-player');players[0].querySelector('strong').textContent=names[0];players[1].querySelector('strong').textContent=names[1];
+ const controls=shell.querySelector('#c4-challenge-rps');
+ [['r','✊ حجر'],['p','✋ ورقة'],['s','✌️ مقص']].forEach(([value,label])=>{
+  const b=document.createElement('button');b.className='c4-level';b.textContent=label;b.disabled=!!state.my_choice;
+  if(state.my_choice===value)b.classList.add('active');
+  b.onclick=()=>submitC4ChallengeChoice(value);controls.appendChild(b);
+ });
+ const status=shell.querySelector('#c4-rps-status');
+ status.textContent=state.tie?'تعادل! اختاروا من جديد.':state.my_choice
+  ?'تم تسجيل اختيارك ('+choiceNames[state.my_choice]+')، ننتظر اختيار اللاعب الآخر...'
+  :state.opponent_chosen?'اللاعب الآخر اختار، اختر حركتك الآن.':'بانتظار اختيار اللاعبين...';
+ if(state.my_choice)controls.querySelectorAll('button').forEach(b=>b.disabled=true);
+}
+async function startConnect4Challenge(){
+ const shell=c4Shell();shell.innerHTML='<div class="c4-heading"><h2>جاري فتح التحدي...</h2></div>';
+ try{const state=await c4ChallengeRequest('/api/connect4/challenge/state',{challenge_id:c4ChallengeIdFromStart});handleC4ChallengeResult(state);}
+ catch(e){shell.innerHTML='<div class="c4-error"></div>';shell.querySelector('.c4-error').textContent=e.message;}
+}
+function handleC4ChallengeResult(result){
+ if(result.phase==='playing'){c4Game=result.game;renderConnect4();return;}
+ renderC4ChallengeRps(result);
+ if(c4ChallengePollTimer)clearTimeout(c4ChallengePollTimer);
+ c4ChallengePollTimer=setTimeout(pollC4ChallengeState,1200);
+}
+async function pollC4ChallengeState(){
+ c4ChallengePollTimer=null;
+ try{const state=await c4ChallengeRequest('/api/connect4/challenge/state',{challenge_id:c4ChallengeIdFromStart});handleC4ChallengeResult(state);}
+ catch(e){c4ChallengePollTimer=setTimeout(pollC4ChallengeState,1800);}
+}
+async function submitC4ChallengeChoice(choice){
+ document.querySelectorAll('#c4-challenge-rps button').forEach(b=>b.disabled=true);
+ try{const result=await c4ChallengeRequest('/api/connect4/challenge/choice',{challenge_id:c4ChallengeIdFromStart,choice});handleC4ChallengeResult(result);}
+ catch(e){const status=document.getElementById('c4-rps-status');if(status)status.textContent=e.message;document.querySelectorAll('#c4-challenge-rps button').forEach(b=>b.disabled=false);}
+}
+async function startConnect4(rpsChoice=null){
+ const btn=document.getElementById('c4-start');if(btn){btn.disabled=true;btn.textContent='جاري تجهيز اللوحة...';}
+ try{
+  c4Game=c4GameIdFromUrl
+   ? await c4Request('/api/connect4/state',{game_id:c4GameIdFromUrl})
+   : await c4Request('/api/connect4/new',{difficulty:c4Difficulty,rps_choice:rpsChoice||'r'});
+  renderConnect4();
+ }catch(e){const shell=document.getElementById('c4-shell');if(shell){const error=document.createElement('div');error.className='c4-error';error.textContent=e.message;shell.appendChild(error);if(btn){btn.disabled=false;btn.textContent='ابدأ التحدي ✦';}}}
+}
+function renderConnect4(previousBoard=null){
+ clearOnlineEndOverlay();stopC4Timer();const shell=c4Shell();
+ const human=c4Game.game_mode==='human';
+ const p1=human?(c4Game.player1_name||'اللاعب الأول'):'أنت';
+ const p2=human?(c4Game.player2_name||'اللاعب الثاني'):(c4Game.bot_name||'البوت');
+ const myPiece=c4Game.my_piece||1;
+ const cover=onlineMode&&onlineGameImages.connect?'<img class="online-game-cover" src="'+escapeLobbyText(onlineGameImages.connect)+'" alt="صورة اللعبة">':'';
+ const actions=onlineMode&&human?(c4Game.status==='playing'&&!c4Game.spectator?'<button class="c4-withdraw" id="c4-withdraw">انسحاب</button>':''):'<div class="c4-actions"><button class="c4-secondary" id="c4-again">مباراة جديدة ↻</button><button class="c4-secondary" id="c4-level-back">رجوع</button></div>';
+ shell.innerHTML=cover+'<div class="c4-heading"><h2>كونكت 4</h2><p>'+(human?'مباراة بين لاعبين':'المستوى: '+c4Game.difficulty)+'</p></div><div class="c4-players"><div class="c4-player"><i class="c4-disc red"></i><div><strong></strong><small>الأحمر</small></div></div><span class="c4-vs">VS</span><div class="c4-player"><i class="c4-disc blue"></i><div><strong></strong><small>الأزرق</small></div></div></div><div class="c4-status"><div class="c4-statusline"><span id="c4-status">...</span><span class="c4-clock" id="c4-clock">15 ثانية</span></div><div class="c4-track"><div class="c4-progress" id="c4-progress"></div></div></div><div class="c4-board-wrap"><div class="c4-board" id="c4-board"></div><svg class="c4-win-svg" id="c4-win-svg" viewBox="0 0 700 600" preserveAspectRatio="none"></svg></div><div class="c4-result" id="c4-result"></div>'+actions+'<div class="c4-hint">اضغط على أي خانة في العمود لإسقاط القرص</div>';
+ const players=shell.querySelectorAll('.c4-player');
+ players[0].querySelector('strong').textContent=p1;players[1].querySelector('strong').textContent=p2;
+ const board=shell.querySelector('#c4-board');
+ const myTurn=!!c4Game.your_turn;
+ const activeIndex=human?(myTurn?(myPiece===1?0:1):(myPiece===1?1:0)):(c4Game.bot_move_pending?1:0);
+ const arrowRow=document.createElement('div');arrowRow.className='c4-arrows';
+ for(let col=0;col<7;col++){const arrow=document.createElement('button');arrow.type='button';arrow.className='c4-arrow'+(myTurn&&c4Game.status==='playing'?' active':'');arrow.textContent='↓';arrow.setAttribute('aria-label','العب في العمود '+(col+1));arrow.disabled=!myTurn||c4Game.board[0][col]!==0||c4Game.status!=='playing';arrow.onclick=()=>submitConnect4Move(col);arrowRow.appendChild(arrow);}
+ board.parentElement.insertBefore(arrowRow,board);
+ c4Game.board.forEach((row,r)=>row.forEach((piece,col)=>{
+  const slot=document.createElement('button');slot.className='c4-slot';slot.type='button';slot.setAttribute('aria-label','العمود '+(col+1));
+  if(piece){const disc=document.createElement('span');const isNew=previousBoard&&previousBoard[r][col]===0;disc.className='c4-disc '+(piece===1?'red':'blue')+(isNew?' falling':'');if(isNew)disc.style.animationDelay=(r*.035)+'s';slot.appendChild(disc);}
+  slot.disabled=!myTurn||c4Game.status!=='playing'||c4Game.board[0][col]!==0;
+  slot.onclick=()=>submitConnect4Move(col);board.appendChild(slot);
+ }));
+ const mainBack=document.getElementById('back-home');if(mainBack)mainBack.textContent='رجوع للقائمة الرئيسية';
+  if(onlineMode&&human){const withdraw=shell.querySelector('#c4-withdraw');if(withdraw)withdraw.onclick=()=>withdrawOnlineGame('connect',c4Game.id,withdraw);}
+  else{shell.querySelector('#c4-again').onclick=()=>{c4GameIdFromUrl=null;showConnect4Setup();};shell.querySelector('#c4-level-back').onclick=()=>{c4GameIdFromUrl=null;showConnect4Setup();};}
+ if(c4Game.winning_cells?.length===4){
+  const first=c4Game.winning_cells[0],last=c4Game.winning_cells[3];
+  const svg=shell.querySelector('#c4-win-svg'),boardEl=shell.querySelector('#c4-board');
+  const center=(cell)=>{const slot=boardEl.children[cell[0]*7+cell[1]],rect=slot.getBoundingClientRect(),base=svg.getBoundingClientRect();return {x:(rect.left+rect.width/2-base.left)/base.width*700,y:(rect.top+rect.height/2-base.top)/base.height*600};};
+  const a=center(first),b=center(last),line=document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',a.x);line.setAttribute('y1',a.y);line.setAttribute('x2',b.x);line.setAttribute('y2',b.y);line.setAttribute('pathLength','1');svg.appendChild(line);
+ }
+ if(c4Game.status!=='playing'){
+  shell.querySelector('#c4-status').textContent='';shell.querySelector('#c4-clock').textContent='—';shell.querySelector('#c4-progress').style.width='0%';
+  const draw=c4Game.status==='draw',winnerName=draw?'':winnerDisplayName(c4Game);
+  showGameEndOverlay({winnerName,isDraw:draw,subtitle:draw?'كانت مباراة حماسية! يعطيكم العافية 👏':('مبروك '+winnerName+'! تستاهل الفوز 🏆')});
+ }else if(!myTurn){
+  if(c4Game.spectator){shell.querySelector('#c4-status').textContent='👁 وضع المشاهدة — تابع اللعب مباشرة';shell.querySelector('#c4-clock').textContent='مباشر';pollConnect4State();}
+  else {
+  const rpsLine=human&&c4Game.challenge_starter_name
+   ? '✊ حجر ورقة مقص: يبدأ '+c4Game.challenge_starter_name
+   : c4Game.rps_result
+    ? (c4Game.rps_result==='bot_starts'
+       ? '✊ حجر ورقة مقص: البوت فاز ('+({r:'حجر',p:'ورقة',s:'مقص'}[c4Game.rps_bot_choice]||'')+')'
+       : '✊ حجر ورقة مقص: أنت فزت ('+({r:'حجر',p:'ورقة',s:'مقص'}[c4Game.rps_bot_choice]||'')+')')
+    : '';
+  shell.querySelector('#c4-status').textContent=rpsLine?(rpsLine+' — '+(c4Game.bot_move_pending?'البوت يبدأ الآن':'انتظر دورك')):(c4Game.bot_move_pending?'البوت يستعد للحركة...':'دور '+(human?(myPiece===1?p2:p1):p2));
+  shell.querySelector('#c4-clock').textContent='انتظار';
+  players.forEach((el,i)=>el.classList.toggle('active',i===activeIndex));
+  if(c4Game.bot_move_pending){
+   let fallDelay=0;
+   if(previousBoard){for(let r=0;r<6;r++){for(let col=0;col<7;col++){if(previousBoard[r][col]===0&&c4Game.board[r][col]!==0)fallDelay=Math.max(fallDelay,r*35);}}}
+   c4BotTimer=setTimeout(runC4BotMove,1620+fallDelay);
+  }
+  else if(human){startC4Timer();pollConnect4State();}
+  }
+ }else{
+  shell.querySelector('#c4-status').textContent=human&&c4Game.challenge_starter_name
+   ? '✊ حجر ورقة مقص: يبدأ '+c4Game.challenge_starter_name+' — دورك! اختر عمودًا'
+   : c4Game.rps_result?(c4Game.rps_result==='bot_starts'?'✊ حجر ورقة مقص: فاز '+p2+' ('+({r:'حجر',p:'ورقة',s:'مقص'}[c4Game.rps_bot_choice]||'')+') ويبدأ أولًا':'✊ حجر ورقة مقص: فزت ('+({r:'حجر',p:'ورقة',s:'مقص'}[c4Game.rps_bot_choice]||'')+') وتبدأ أولًا'):'دورك! اختر عمودًا';
+  players.forEach((el,i)=>{el.classList.toggle('active',i===(human?(myPiece===1?0:1):0));el.style.setProperty('--turn-color',i===(human?(myPiece===1?0:1):0)?'#ff3448':'#278bff');});
+  shell.querySelectorAll('.c4-arrow').forEach(el=>el.style.setProperty('--turn-color',myPiece===1?'#ff3448':'#278bff'));
+  startC4Timer();
+ }
+}
+async function runC4BotMove(){
+ if(c4Busy||!c4Game||!c4Game.bot_move_pending)return;
+ c4Busy=true;const previous=c4Game.board.map(row=>row.slice());
+ try{
+  const rpsInfo={rps_result:c4Game.rps_result,rps_player_choice:c4Game.rps_player_choice,rps_bot_choice:c4Game.rps_bot_choice};
+  c4Game=await c4Request('/api/connect4/bot-move',{game_id:c4Game.id});
+  Object.assign(c4Game,Object.fromEntries(Object.entries(rpsInfo).filter(([,v])=>v!==undefined)));
+  c4Busy=false;renderConnect4(previous);
+ }
+ catch(e){c4Busy=false;const s=document.getElementById('c4-status');if(s)s.textContent=e.message;c4BotTimer=setTimeout(runC4BotMove,1500);}
+}
+async function pollConnect4State(){
+ if(c4PollTimer||!c4Game||c4Game.game_mode!=='human'||c4Game.status!=='playing')return;
+ c4PollTimer=setTimeout(async()=>{
+  c4PollTimer=null;
+  try{const next=await c4Request('/api/connect4/state',{game_id:c4Game.id});
+   if(JSON.stringify(next.board)!==JSON.stringify(c4Game.board)||next.status!==c4Game.status||next.your_turn!==c4Game.your_turn){const previous=c4Game.board.map(row=>row.slice());c4Game=next;renderConnect4(previous);}
+   else pollConnect4State();
+  }catch(e){pollConnect4State();}
+ },1300);
+}
+let extraStartParam=tg?.initDataUnsafe?.start_param||'';
+let extraGameId=extraStartParam.startsWith('word_')?extraStartParam.slice(5):'';
+let extraGameType=extraStartParam.startsWith('word_')?'word':'';
+let extraGame=null,extraPoll=null,extraBusy=false,extraStartedAt=0,extraElapsedTimer=null,extraLastRevealKey='',extraAdvancing=false,extraKnownPlayerIds=null,wordJoinToastTimer=null,extraLastWithdrawalKey='';
+async function extraGameRequest(action,game_type,extra={}){
+ const initData=tg?.initData||'';
+ if(!initData)throw new Error('افتح اللعبة من داخل تيليجرام');
+ const response=await fetch('/api/extra-games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData,action,game_type,game_id:extraGameId,...extra})});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok||!data.ok)throw new Error(data.error||'تعذر الاتصال بالسيرفر');
+ return data.result;
+}
+function stopExtraGame(){
+ if(extraPoll)clearTimeout(extraPoll);if(extraElapsedTimer)clearInterval(extraElapsedTimer);
+ extraPoll=extraElapsedTimer=null;extraBusy=false;extraGame=null;extraKnownPlayerIds=null;if(wordJoinToastTimer)clearTimeout(wordJoinToastTimer);document.querySelector('.word-join-toast')?.remove();
+}
+function showWordSetup(){
+ stopExtraGame();const shell=c4Shell();
+ shell.innerHTML='<div class="c4-heading"><h2>خمن الكلمة 🔤</h2><p>اكتشف الكلمة قبل انتهاء محاولاتك أو وقت الجولة</p></div><div class="c4-panel"><label class="c4-label">عدد الكلمات في اللعبة</label><input id="word-count" type="number" min="1" max="15" value="5" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit"><label class="c4-label" style="display:block;margin-top:15px">طول الكلمة</label><div class="c4-levels" id="word-length-options"><button type="button" class="c4-level active" data-length="5">5 أحرف</button><button type="button" class="c4-level" data-length="4">4 أحرف</button><button type="button" class="c4-level" data-length="0">كلهم 4 و 5</button></div><label class="c4-label" style="display:block;margin-top:15px">عدد المحاولات لكل كلمة</label><input id="word-attempts" type="number" min="1" max="12" value="6" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit"><label class="c4-label" style="display:block;margin-top:15px">مدة الجولة بالثواني</label><input id="word-seconds" type="number" min="15" max="3600" value="180" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit"><label class="c4-label" style="display:block;margin-top:15px">عدد الكلمات الصحيحة للفوز</label><input id="word-target" type="number" min="1" max="15" value="3" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit"><button class="c4-start" id="word-training">🤖 العب ضد البوت</button><button class="c4-secondary" id="word-online">👥 أنشئ غرفة أونلاين</button><div class="c4-result show" style="text-align:right;line-height:2;font-size:13px">🟩 أخضر: الحرف صحيح بمكانه<br>🟧 برتقالي: الحرف موجود بمكان آخر<br>⬜ أبيض: الحرف غير موجود<br>🟪 الإطار البنفسجي: اختلاف إملائي مقبول<br><small>قائمة الكلمات تحتوي كلمات عربية من 4 أو 5 أحرف فقط.</small></div><button class="c4-secondary" id="word-back">رجوع للألعاب</button></div>';
+ let wordLength=5;
+ const lengthOptions=shell.querySelector('#word-length-options');
+ lengthOptions.querySelectorAll('button').forEach(b=>b.onclick=()=>{wordLength=Number(b.dataset.length);lengthOptions.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));});
+ shell.querySelector('#word-back').onclick=showGames;
+ shell.querySelector('#word-training').onclick=()=>createWordGame('training',wordLength);
+ shell.querySelector('#word-online').onclick=()=>createWordGame('online',wordLength);
+}
+async function createWordGame(mode,wordLength){
+ const shell=document.getElementById('c4-shell');
+ const count=Math.max(1,Math.min(15,Number(shell.querySelector('#word-count').value)||5));
+ const target=Math.max(1,Math.min(count,Number(shell.querySelector('#word-target').value)||count));
+ const attempts=Math.max(1,Math.min(12,Number(shell.querySelector('#word-attempts').value)||6));
+ const seconds=Math.max(15,Math.min(3600,Number(shell.querySelector('#word-seconds').value)||180));
+ try{
+  extraGameType='word';
+  extraGame=await extraGameRequest('create','word',{mode,word_count:count,win_target:target,word_length:wordLength,attempts_limit:attempts,round_seconds:seconds});
+  extraGameId=extraGame.id;extraStartedAt=Date.now();
+  if(mode==='online')renderWordLobby();else renderWordGame();
+ }catch(e){showExtraError(e);}
+}
+function showWordJoinToast(name){
+ const old=document.querySelector('.word-join-toast');if(old)old.remove();
+ if(wordJoinToastTimer)clearTimeout(wordJoinToastTimer);
+ const toast=document.createElement('div');toast.className='word-join-toast';
+ toast.textContent='انضم اللاعب ~ '+(name||'مستخدم');
+ document.body.appendChild(toast);
+ wordJoinToastTimer=setTimeout(()=>{toast.remove();wordJoinToastTimer=null;},2500);
+}
+function showWordWithdrawToast(name){
+ const old=document.querySelector('.word-join-toast');if(old)old.remove();
+ if(wordJoinToastTimer)clearTimeout(wordJoinToastTimer);
+ const toast=document.createElement('div');toast.className='word-join-toast';
+ toast.textContent='انسحب اللاعب ~ '+(name||'مستخدم');
+ document.body.appendChild(toast);
+ wordJoinToastTimer=setTimeout(()=>{toast.remove();wordJoinToastTimer=null;},2500);
+}
+function renderWordLobby(){
+ const g=extraGame,shell=c4Shell(),players=g.players||[],owner=!!g.is_owner;
+ if(extraKnownPlayerIds===null)extraKnownPlayerIds=new Set(players.map(p=>String(p.id)));
+ const locked=!owner;
+ shell.innerHTML='<div class="c4-heading"><h2>غرفة خمن الكلمة 🔤</h2><p>إعدادات الغرفة واللاعبون</p></div><div class="c4-panel"><div class="c4-label">إعدادات اللعبة</div><label class="c4-label">عدد الكلمات في اللعبة</label><input id="word-count" type="number" min="1" max="15" value="'+g.word_limit+'" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit" '+(locked?'disabled':'')+'><label class="c4-label" style="display:block;margin-top:13px">طول الكلمة</label><div class="c4-levels" id="word-length-options"><button type="button" class="c4-level '+(Number(g.word_length)===5?'active':'')+'" data-length="5" '+(locked?'disabled':'')+'>5 أحرف</button><button type="button" class="c4-level '+(Number(g.word_length)===4?'active':'')+'" data-length="4" '+(locked?'disabled':'')+'>4 أحرف</button><button type="button" class="c4-level '+(Number(g.word_length)===0?'active':'')+'" data-length="0" '+(locked?'disabled':'')+'>كلهم 4 و 5</button></div><label class="c4-label" style="display:block;margin-top:13px">عدد المحاولات لكل كلمة</label><input id="word-attempts" type="number" min="1" max="12" value="'+g.attempts_limit+'" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit" '+(locked?'disabled':'')+'><label class="c4-label" style="display:block;margin-top:13px">مدة الجولة بالثواني</label><input id="word-seconds" type="number" min="15" max="3600" value="'+g.round_seconds+'" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit" '+(locked?'disabled':'')+'><label class="c4-label" style="display:block;margin-top:13px">عدد الكلمات الصحيحة للفوز</label><input id="word-target" type="number" min="1" max="'+g.word_limit+'" value="'+g.win_target+'" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit" '+(locked?'disabled':'')+'>'+(owner?'<button class="c4-secondary" id="word-save-settings">حفظ الإعدادات</button>':'<div class="c4-hint">صاحب الغرفة هو المسؤول عن تعديل الإعدادات</div>')+'<div class="c4-label" style="margin-top:18px">اللاعبون ('+players.length+'/10)</div><div class="mg-score" id="word-players">'+players.map(p=>'<span>'+escapeLobbyText(p.name)+'</span>').join('')+'</div><button class="c4-start" id="word-share">مشاركة رابط الغرفة</button><button class="c4-start" id="word-start" '+(!owner||players.length<2?'disabled':'')+' '+(!owner?'hidden':'')+'>ابدأ اللعبة</button><div class="c4-hint" id="word-waiting">'+(players.length<2?'بانتظار انضمام لاعب آخر...':'الغرفة جاهزة، يمكنك بدء اللعبة')+'</div><button class="c4-secondary" id="word-back">رجوع للألعاب</button></div>';
+ let wordLength=Number(g.word_length??5);
+ const lengthOptions=shell.querySelector('#word-length-options');
+ lengthOptions.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(locked)return;wordLength=Number(b.dataset.length);lengthOptions.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));});
+ const countInput=shell.querySelector('#word-count'),targetInput=shell.querySelector('#word-target');
+ countInput?.addEventListener('input',()=>{targetInput.max=countInput.value||15;if(Number(targetInput.value)>Number(targetInput.max))targetInput.value=targetInput.max;});
+ const save=shell.querySelector('#word-save-settings');
+ if(save)save.onclick=async()=>{if(extraBusy)return;extraBusy=true;save.disabled=true;save.textContent='جاري حفظ الإعدادات...';try{extraGame=await extraGameRequest('configure','word',{word_count:Number(countInput.value)||5,win_target:Number(targetInput.value)||1,attempts_limit:Number(shell.querySelector('#word-attempts').value)||6,word_length:wordLength,round_seconds:Number(shell.querySelector('#word-seconds').value)||180});renderWordLobby();}catch(e){showExtraError(e);save.disabled=false;save.textContent='حفظ الإعدادات';}finally{extraBusy=false;}};
+ shell.querySelector('#word-share').onclick=()=>shareExtraGame(g.id);
+ const start=shell.querySelector('#word-start');if(start)start.onclick=async()=>{try{extraGame=await extraGameRequest('start','word');extraKnownPlayerIds=null;renderWordGame();}catch(e){showExtraError(e);}};
+ shell.querySelector('#word-back').onclick=()=>{stopExtraGame();showGames();};
+ scheduleExtraPoll();
+}
+function shareExtraGame(id){
+ const deep='https://t.me/Lewadbot?startapp=word_'+id;
+ const url='https://t.me/share/url?url='+encodeURIComponent(deep);
+ if(tg?.openTelegramLink)tg.openTelegramLink(url);else if(navigator.clipboard)navigator.clipboard.writeText(deep).then(()=>alert('تم نسخ رابط الغرفة'));
+}
+function formatWordTime(seconds){
+ const n=Math.max(0,Number(seconds)||0);
+ return n>=60?Math.floor(n/60)+' دقيقة'+(n%60?' و'+(n%60)+' ثانية':''):n+' ثانية';
+}
+async function confirmWordExit(){
+ const leave=async()=>{
+  const button=document.getElementById('word-exit');if(button)button.disabled=true;
+  try{
+   await extraGameRequest('leave','word');
+   stopExtraGame();
+   if(tg?.close)tg.close();else showGames();
+  }catch(e){showExtraError(e);if(button)button.disabled=false;}
+ };
+ if(tg?.showConfirm){tg.showConfirm('هل أنت متأكد من الانسحاب من اللعبة؟',ok=>{if(ok)leave();});}
+ else if(window.confirm('هل أنت متأكد من الانسحاب من اللعبة؟'))leave();
+}
+function renderWordGame(){
+ if(extraElapsedTimer)clearInterval(extraElapsedTimer);
+ const g=extraGame;if(!g)return;
+ const shell=c4Shell(),finished=g.status==='finished',training=g.mode==='training';
+ shell.innerHTML='<div class="word-game-top"><button class="word-exit" id="word-exit">انسحاب</button><span class="word-game-title">خمن الكلمة 🔤</span></div>'+(g.mode==='online'&&g.is_player&&g.status==='playing'?'<button class="word-hint-button" id="word-hint">هنت · '+(g.hint_votes_count||0)+'/'+(g.hint_votes_needed||2)+'</button>':'')+'<div class="c4-heading"><p id="word-round-label">الكلمة '+Math.min(g.current_index+1,g.total)+' من '+g.total+'</p></div><div class="mg-score" id="word-scores"></div><div class="c4-panel"><div class="c4-result show" id="word-message">'+(finished?'انتهت اللعبة!':'اكتب تخمينك')+'</div><div class="word-attempts" id="word-attempts-left"></div><div class="word-history" id="word-history"></div><input id="word-guess" autocomplete="off" maxlength="'+(g.current_word_length||g.word_length)+'" placeholder="الكلمة من '+(g.current_word_length||g.word_length)+' أحرف" style="width:100%;padding:15px;border-radius:12px;border:1px solid #ffffff45;background:#100709;color:white;font:700 20px inherit;text-align:center"><button class="c4-start" id="word-submit">تأكيد الإجابة</button><div class="c4-hint" id="word-clock"></div><div id="word-end-actions"></div></div>';
+ shell.querySelector('#word-exit').onclick=confirmWordExit;
+ const hintButton=shell.querySelector('#word-hint');
+ if(hintButton)hintButton.onclick=async()=>{
+  if(extraBusy||hintButton.disabled)return;
+  extraBusy=true;hintButton.disabled=true;
+  try{extraGame=await extraGameRequest('hint','word');updateWordHintButton(extraGame);showWordHintForState(extraGame);}
+  catch(e){showExtraError(e);hintButton.disabled=false;}
+  finally{extraBusy=false;}
+ };
+ showWordHintForState(g);updateWordHintButton(g);
+ const scores=shell.querySelector('#word-scores');
+ scores.innerHTML=(g.players||[]).map(p=>'<span>'+escapeLobbyText(p.name)+': '+p.score+' كلمة'+(g.mode==='online'?' · محاولات '+(p.attempts_used||0)+'/'+g.attempts_limit+' · باقي '+(p.attempts_left??g.attempts_limit):'')+'</span>').join('');
+ const input=shell.querySelector('#word-guess'),submit=shell.querySelector('#word-submit');
+ const message=shell.querySelector('#word-message');
+ renderWordHistory(shell.querySelector('#word-history'),g.my_guesses||[]);
+ shell.querySelector('#word-attempts-left').textContent=g.is_player?'المحاولات المتبقية: '+g.attempts_left+' من '+g.attempts_limit:'';
+ if(training){shell.querySelector('#word-round-label').textContent='الكلمة '+(g.current_index+1)+' من '+g.total+' · '+g.my_score+'/'+g.win_target+' كلمة صحيحة';}
+ if(g.mode==='online'&&!g.is_player){input.disabled=true;submit.disabled=true;input.placeholder='أنت متفرج — المشاهدة فقط';message.textContent='👀 أنت تشاهد اللعبة فقط';}
+ if(finished){
+  if(extraPoll)clearTimeout(extraPoll);extraPoll=null;
+  input.remove();submit.remove();shell.querySelector('#word-attempts-left').remove();
+  shell.querySelector('#word-clock').textContent='انتهت '+g.total+' كلمات';
+  const draw=!training&&g.winner==='تعادل';
+  const winnerName=training?(g.my_score>=g.win_target?telegramDisplayName():'البوت'):(draw?'':(g.winner||''));
+  const subtitle=training
+   ?(g.my_score>=g.win_target?'أحسنت! حققت '+g.my_score+' كلمات صحيحة وفزت على البوت 🎉':'انتهت اللعبة، حققت '+g.my_score+' من '+g.win_target+' كلمات. حاول مرة ثانية 💪')
+   :(draw?'نتيجة متقاربة! يعطيكم العافية على اللعب 👏':('مبروك '+(winnerName||'الفائز')+'! حصل على أعلى نتيجة 🏆'));
+  showGameEndOverlay({winnerName,isDraw:draw,subtitle});
+  return;
+ }
+ const myOut=g.attempts_left<=0;
+ if(myOut){input.disabled=true;submit.disabled=true;input.placeholder='انتهت محاولاتك لهذه الكلمة';message.textContent=g.mode==='online'?'انتهت محاولاتك، انتظر بقية اللاعبين أو نهاية الوقت':'انتهت محاولاتك';}
+ if(g.round_until){
+  input.disabled=true;submit.disabled=true;
+  if(g.round_end_reason==='timeout')message.textContent='⏰ انتهى وقت الجولة — لم يجب أحد';
+  else if(g.round_end_reason==='attempts')message.textContent='ما أحد عرف الكلمة — انتهت محاولات الجميع';
+  else message.textContent='🏆 '+(g.round_winner||'لاعب')+' عرف الكلمة!';
+  const revealKey=String(g.current_index)+':'+String(g.round_until);
+  if(extraLastRevealKey!==revealKey){
+   extraLastRevealKey=revealKey;
+   const title=g.round_end_reason==='timeout'?'انتهى وقت الجولة':g.round_end_reason==='attempts'?'ما أحد عرف الكلمة':'🎉 '+(g.round_winner||'لاعب')+' عرف الكلمة!';
+   showWordReveal(title,g.round_word||'',()=>{},g.last_guess||'',g.last_feedback||[]);
+  }
+ }
+ submit.onclick=async()=>{
+  if(extraBusy||input.disabled)return;
+  const guessed=input.value.trim();
+  if(!guessed)return;
+  extraBusy=true;submit.disabled=true;
+  try{
+   const res=await extraGameRequest('guess','word',{guess:guessed});
+   extraGame=res.state||extraGame;
+   renderWordGame();
+  }catch(e){showExtraError(e);submit.disabled=false;}
+  finally{extraBusy=false;}
+ };
+ shell.querySelector('#word-back')?.remove();
+ if(g.round_deadline&&!g.round_until){
+  const updateClock=()=>{
+   const left=Math.max(0,Math.ceil((g.round_deadline-Date.now())/1000));
+   const el=document.getElementById('word-clock');
+   if(el)el.textContent='الوقت المتبقي للجولة: '+String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');
+  };
+  updateClock();extraElapsedTimer=setInterval(updateClock,500);
+ }
+ scheduleExtraPoll();
+}
+function renderWordHistory(root,guesses){
+ if(!root)return;root.replaceChildren();
+ (guesses||[]).forEach((item,index)=>{
+  const number=document.createElement('div');number.className='word-guess-number';number.textContent='المحاولة '+(index+1);
+  const row=document.createElement('div');row.className='word-guess-row';
+  Array.from(String(item.guess||'')).forEach((ch,i)=>{
+   const code=(item.feedback||[])[i]||'white',tile=document.createElement('span');tile.className='word-tile';tile.textContent=ch;
+   tile.style.background=({green:'#22c55e',orange:'#f97316',white:'#fff',green_purple:'#22c55e',yellow_purple:'#eab308'}[code]||'#fff');
+   if(code.includes('purple'))tile.style.borderColor='#a855f7';
+   row.appendChild(tile);
+  });
+  root.append(number,row);
+ });
+}
+function renderWordTiles(root,guess,feedback){
+ if(!root)return;root.replaceChildren();
+ Array.from(String(guess||'')).forEach((ch,i)=>{
+  const code=(feedback||[])[i]||'white',tile=document.createElement('span');tile.className='word-tile';tile.textContent=ch;
+  tile.style.background=({green:'#22c55e',orange:'#f97316',white:'#fff',green_purple:'#22c55e',yellow_purple:'#eab308'}[code]||'#fff');
+  if(code.includes('purple'))tile.style.borderColor='#a855f7';
+  root.appendChild(tile);
+ });
+}
+function showWordReveal(title,word,done,guess='',feedback=[]){
+ const overlay=document.createElement('div');overlay.className='online-end-overlay';overlay.style.zIndex='100001';
+ const card=document.createElement('div');card.className='online-end-card';
+ card.innerHTML='<h2>'+escapeLobbyText(title)+'</h2><p>الكلمة كانت: <b>'+escapeLobbyText(word)+'</b></p><div id="word-reveal-tiles" style="display:flex;justify-content:center;gap:5px;flex-wrap:wrap;margin:12px 0"></div><div style="font-size:55px;font-weight:1000" id="word-countdown">3</div>';
+ overlay.appendChild(card);renderWordTiles(card.querySelector('#word-reveal-tiles'),guess,feedback);document.body.appendChild(overlay);
+ let n=3;const timer=setInterval(()=>{n--;const el=card.querySelector('#word-countdown');if(el)el.textContent=n;if(n<=0){clearInterval(timer);overlay.remove();if(done)done();}},1000);
+}
+async function advanceWord(){
+ if(extraAdvancing)return;
+ extraAdvancing=true;
+ try{extraGame=await extraGameRequest('next','word');extraLastRevealKey='';renderWordGame();}
+ catch(e){showExtraError(e);}
+ finally{extraAdvancing=false;}
+}
+function showWordHintToast(hint){
+ const toast=document.createElement('div');toast.className='word-hint-toast';
+ const label=document.createElement('b');label.textContent='تلميح الكلمة';
+ const value=document.createElement('div');value.textContent=hint;
+ toast.append(label,value);document.body.appendChild(toast);
+ setTimeout(()=>toast.remove(),5000);
+}
+function showWordHintForState(g){
+ if(!g?.hint||!g.hint_id||!g.hint_until||Date.now()>Number(g.hint_until))return;
+ const key=String(g.hint_id);
+ if(window.__wordHintShownKey===key)return;
+ window.__wordHintShownKey=key;showWordHintToast(g.hint);
+}
+function updateWordHintButton(g){
+ const button=document.querySelector('#c4-shell #word-hint');
+ if(!button)return;
+ const count=Number(g.hint_votes_count)||0,needed=Number(g.hint_votes_needed)||2;
+ button.textContent=g.hint?'تم استخدام الهنت':'هنت · '+count+'/'+needed;
+ button.disabled=g.status!=='playing'||!!g.hint||!!g.my_hint_vote||!!g.round_until||!g.is_player;
+}
+function wordRoundKey(g){
+ return [g?.status,g?.current_index,g?.round_winner,g?.round_until,g?.round_deadline,
+  g?.attempts_left,(g?.my_guesses||[]).map(x=>x.guess+':'+(x.feedback||[]).join(',')).join(';')].join('|');
+}
+function wordPlayerStatsKey(g){
+ return (g?.players||[]).map(p=>p.id+':'+p.name+':'+p.score+':'+(p.attempts_used||0)+':'+(p.attempts_left??'')).join(',');
+}
+function updateWordScoreboard(g){
+ const scores=document.querySelector('#c4-shell #word-scores');
+ if(!scores)return;
+ scores.innerHTML=(g.players||[]).map(p=>'<span>'+escapeLobbyText(p.name)+': '+p.score+' كلمة'+(g.mode==='online'?' · محاولات '+(p.attempts_used||0)+'/'+g.attempts_limit+' · باقي '+(p.attempts_left??g.attempts_limit):'')+'</span>').join('');
+}
+function scheduleExtraPoll(){
+ if(extraPoll)clearTimeout(extraPoll);
+ extraPoll=setTimeout(async()=>{
+  try{
+   if(extraGameType==='word'&&extraGame){
+    const previous=extraGame,roundBefore=wordRoundKey(previous),statsBefore=wordPlayerStatsKey(previous),next=await extraGameRequest('state','word');
+    const roundChanged=wordRoundKey(next)!==roundBefore,statsChanged=wordPlayerStatsKey(next)!==statsBefore;
+    const previousIds=new Set((previous.players||[]).map(p=>String(p.id)));
+    const nextIds=new Set((next.players||[]).map(p=>String(p.id)));
+    const joined=(next.players||[]).filter(p=>!previousIds.has(String(p.id)));
+    const left=(previous.players||[]).filter(p=>!nextIds.has(String(p.id)));
+    joined.forEach(p=>showWordJoinToast(p.name));
+    left.forEach(p=>showWordWithdrawToast(p.name));
+    const withdrawal=next.last_withdrawal;
+    if(withdrawal&&left.some(p=>String(p.id)===String(withdrawal.id)))extraLastWithdrawalKey=String(withdrawal.at);
+    if(withdrawal&&String(withdrawal.id)!==String(tg?.initDataUnsafe?.user?.id||'')&&
+       !left.some(p=>String(p.id)===String(withdrawal.id))&&
+       extraLastWithdrawalKey!==String(withdrawal.at)){
+      extraLastWithdrawalKey=String(withdrawal.at);showWordWithdrawToast(withdrawal.name);
+    }
+    extraGame=next;
+    showWordHintForState(next);updateWordHintButton(next);
+    if(next.status==='finished'){if(roundChanged||statsChanged)renderWordGame();extraPoll=null;return;}
+    if(next.round_until&&Date.now()>=next.round_until&&next.is_player){await advanceWord();return;}
+    if(next.status==='waiting'&&joined.length){renderWordLobby();}
+    else if(roundChanged){renderWordGame();}
+    else if(statsChanged){updateWordScoreboard(next);}
+   }
+  }catch(e){}
+  if(extraGame&&extraGame.status!=='finished')scheduleExtraPoll();
+ },1000);
+}
+function showExtraError(error){const shell=document.getElementById('c4-shell');if(shell){let el=shell.querySelector('.c4-error');if(!el){el=document.createElement('div');el.className='c4-error';shell.appendChild(el);}el.textContent=error?.message||'حدث خطأ';}}
+function startC4Timer(){
+ stopC4Timer();if(!c4Game||c4Game.status!=='playing')return;
+ c4Seconds=15;const started=Number(c4Game.turn_started_at)||Date.now();
+ const update=()=>{const left=Math.max(0,15-(Date.now()-started)/1000);const clock=document.getElementById('c4-clock'),bar=document.getElementById('c4-progress');if(clock)clock.textContent=Math.ceil(left)+' ثانية';if(bar)bar.style.width=(left/15*100)+'%';if(left<=0){stopC4Timer();if(c4Game.your_turn){const legal=c4Game.board[0].map((v,i)=>v===0?i:null).filter(v=>v!==null);if(legal.length)submitConnect4Move(legal[Math.floor(Math.random()*legal.length)],true);}else if(c4Game.game_mode==='human'){pollConnect4State();}}};
+ update();c4Tick=setInterval(update,200);c4Timer=setTimeout(update,15100);
+}
+async function submitConnect4Move(col,automatic=false){
+ if(c4Busy||!c4Game||c4Game.status!=='playing'||!c4Game.your_turn)return;
+ const previousBoard=c4Game.board.map(row=>row.slice());c4Busy=true;stopC4Timer();
+ document.querySelectorAll('.c4-slot,.c4-arrow').forEach(x=>x.disabled=true);
+ const status=document.getElementById('c4-status');if(status)status.textContent=automatic?'انتهى الوقت! اخترنا لك حركة عشوائية':'جاري إسقاط القرص...';
+ try{c4Game=await c4Request('/api/connect4/move',{game_id:c4Game.id,column:col});c4Busy=false;renderConnect4(previousBoard);}
+ catch(e){c4Busy=false;const s=document.getElementById('c4-status');if(s)s.textContent=e.message;startC4Timer();pollConnect4State();}
+}
+document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{
+ const a=b.dataset.action;
+ if(a==='help'){openBot('help');return;}
+ if(a==='games'){
+  try{showGames();}
+  catch(err){
+   console.error('Open games failed:',err);
+   home.hidden=true;page.hidden=false;pageTitle.textContent='الألعاب 🎮';pageContent.replaceChildren();
+   const e=document.createElement('div');e.className='empty';e.textContent='تعذر فتح قائمة الألعاب: '+(err?.message||'خطأ غير معروف');pageContent.appendChild(e);
+  }
+  return;
+ }
+ if(a==='game-stats'){showTop('games','🏆 توب الألعاب');return;}
+ const names={points:'توب النقاط',active:'توب المتفاعلين العام',robbers:'توب الحرامية'};
+ showTop(a,names[a]||'التوب');
+});
+document.getElementById('back-home').onclick=showHome;
+(async()=>{
+ try{
+  const r=await fetch('/api/mini-app');const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||('HTTP '+r.status));botUsername=data.bot_username||'';onlineGameImages=data.online_game_images||{};applyMiniAppButtonColors(data.button_colors||{});
+  if(data.banner){
+   if(data.banner_type==='video'){
+    const video=document.getElementById('banner-video');video.src=data.banner;video.style.display='block';video.muted=true;video.loop=true;video.autoplay=true;video.playsInline=true;video.play().catch(()=>{});
+   }else{
+    const im=document.getElementById('banner');im.src=data.banner;im.style.display='block';
+   }
+  }
+  const root=document.getElementById('custom');
+  for(const b of data.buttons||[]){
+   const a=document.createElement('a');a.className='custom-card'+(b.type==='large'?' large':'');a.href=b.target;a.target='_blank';a.rel='noopener';a.style.background=b.color||'#fff';
+   if(b.type==='large'){if(b.image){let media;if(b.media_kind==='video'){media=document.createElement('video');media.className='large-video';media.muted=true;media.autoplay=true;media.loop=true;media.playsInline=true;media.setAttribute('playsinline','');media.setAttribute('webkit-playsinline','');media.addEventListener('loadedmetadata',()=>media.play().catch(()=>{}));}else{media=document.createElement('img');media.className='large-image';media.alt=b.title;}media.src=b.image;a.appendChild(media);}const name=document.createElement('span');name.className='label';name.textContent=b.title;a.appendChild(name);}
+   else{if(b.image){const im=document.createElement('img');im.className='thumb';im.src=b.image;a.appendChild(im);}const name=document.createElement('span');name.className='label';name.textContent=b.title;a.appendChild(name);const dots=document.createElement('span');dots.className='dots';dots.textContent='⋮';a.appendChild(dots);}
+   root.appendChild(a);
+  }
+  if(extraGameType&&extraGameId){
+    home.hidden=true;page.hidden=false;pageTitle.textContent='خمن الكلمة';
+    extraGame=await extraGameRequest('join','word');if(extraGame.status==='waiting')renderWordLobby();else renderWordGame();
+  }
+  else if(onlineLobbyId){startOnlineLobby();}
+  else if(miniGameChallengeIdFromStart){home.hidden=true;page.hidden=false;pageTitle.textContent='الألعاب';startMiniGameChallenge();}
+  else if(c4ChallengeIdFromStart){home.hidden=true;page.hidden=false;pageTitle.textContent='كونكت 4';startConnect4Challenge();}
+  else if(c4GameIdFromUrl){home.hidden=true;page.hidden=false;pageTitle.textContent='كونكت 4';startConnect4();}
+ }catch(e){console.error('Mini App extensions load failed:',e);const box=document.createElement('div');box.className='empty';box.textContent='تعذر تحميل الإضافات: '+(e?.message||'خطأ غير معروف');document.getElementById('custom').replaceChildren(box);}
+
+})();
+</script></body></html>
