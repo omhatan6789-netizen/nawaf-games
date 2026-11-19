@@ -21,6 +21,7 @@ import { handleStartCommand, handleStartEditorCommand, handleStartEditorCallback
 import { handleDeveloperPanelCommand, handleDeveloperPanelCallback, handleDeveloperPanelMessage, trackDeveloperBotChat } from "./developer-panel.js";
 import { handleGamesManagerMessage } from "./handlers/games-manager.js";
 import { handleInlineGamesQuery } from "./inline-games.js";
+import { handleCustomCommandManagement, resolveCustomAlias } from "./custom-commands.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -82,7 +83,12 @@ export function createBot() {
   });
 
   bot.on("message", async (ctx) => {
+    const incomingText = ctx.message?.text;
+    let aliasText = null;
     try {
+      if (await handleCustomCommandManagement(ctx)) return;
+      if (typeof incomingText === "string") aliasText = await resolveCustomAlias(incomingText);
+      if (aliasText && ctx.update?.message) ctx.update.message.text = aliasText;
       if (await handleDeveloperPanelMessage(ctx)) return;
       if (await handleStartEditorMessage(ctx)) return;
       if (await handleDeveloperPanelCommand(ctx)) return;
@@ -122,6 +128,8 @@ export function createBot() {
     } catch (error) {
       console.error("Message handler failed:", error);
       try { await ctx.reply("❌ حصل خطأ أثناء تنفيذ الأمر، حاول مرة ثانية."); } catch {}
+    } finally {
+      if (aliasText && ctx.update?.message) ctx.update.message.text = incomingText;
     }
   });
 
