@@ -1,6 +1,6 @@
 import { InlineKeyboard } from "grammy";
 import { pool } from "./db.js";
-import { OWNER_ID, getDeveloperType, getRank } from "./ranks.js";
+import { OWNER_ID, getRank } from "./ranks.js";
 
 const sessions = new Map();
 const MAX_IMAGES = 10;
@@ -32,7 +32,7 @@ function imagesKeyboard() {
 }
 async function isAllowed(user) {
   if (!user) return false;
-  if (user.id === OWNER_ID || await getDeveloperType(user.id)) return true;
+  if (user.id === OWNER_ID) return true;
   const result = await db().query(
     "SELECT 1 FROM start_access WHERE user_id=$1 OR (username IS NOT NULL AND lower(username)=lower($2)) LIMIT 1",
     [String(user.id), user.username || null]
@@ -154,7 +154,7 @@ async function sendConfiguredStart(ctx) {
   try { rank=await getRank(user.id); } catch {}
   const data={messages:Number(userRow.rows[0]?.messages||0),points:Number(pointsRow.rows[0]?.points||0)};
   const baseText=setting?.message_text || `حياك الله #الاسم 🤍\nفي البوت الجديد ⭐`;
-  let entities=Array.isArray(setting?.message_entities) ? setting.message_entities : [];
+  let entities=setting?.message_entities || [];\n  if (typeof entities === "string") { try { entities = JSON.parse(entities); } catch { entities = []; } }\n  if (!Array.isArray(entities)) entities = [];
   const built=replaceVariables(baseText,entities,getReplacements(user,data,rank),user);
   const keyboardRows=[];
   for(let i=0;i<buttons.length;i+=2){
@@ -250,6 +250,7 @@ export async function handleStartEditorMessage(ctx) {
   if(!privateChat(ctx) || !(await isAllowed(ctx.from))) return false;
   const session=sessions.get(ctx.from.id);
   if(!session) return false;
+  if(!(await isAllowed(ctx.from))) { sessions.delete(ctx.from.id); return false; }
   const msg=ctx.message;
   const text=msg.text?.trim() || "";
   const userId=ctx.from.id;
@@ -258,7 +259,7 @@ export async function handleStartEditorMessage(ctx) {
     const value=msg.text || msg.caption || "";
     if(!value){await reply("الرسالة ما تحتوي على نص أو كابشن.");return true;}
     const entities=msg.text?msg.entities:msg.caption_entities;
-    await db().query("UPDATE start_settings SET message_text=$1,message_entities=$2::jsonb,updated_at=NOW() WHERE id=1",[value,JSON.stringify(entities||[])]);
+    await db().query("UPDATE start_settings SET message_text=$1,message_entities=$2,updated_at=NOW() WHERE id=1",[value,JSON.stringify(entities||[])]);
     sessions.delete(userId); await reply("تم تعديل رسالة البدء بنجاح ✅"); return true;
   }
   if(session.action==="button_text"){
