@@ -66,8 +66,8 @@ export function createBot() {
       if (await handleReplyManagement(ctx)) return;
 
       if (await handleRepetitionCommand(ctx)) return;
-      if (await handleModerationCommand(ctx)) return;
       await handleRoleManagementCommand(ctx);
+      if (await handleModerationCommand(ctx)) return;
       await handleResetCommand(ctx);
       await handleRankCommand(ctx);
       await handleActivityCommand(ctx);
