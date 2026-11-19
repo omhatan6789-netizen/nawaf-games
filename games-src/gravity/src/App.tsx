@@ -91,7 +91,11 @@ function getInitialRoomCodeFromUrl(): string {
   const queryRoom = params.get('room') || params.get('lobby');
   if (queryRoom) return queryRoom.trim().toUpperCase();
 
-  const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param || '';
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param
+    || hashParams.get('tgWebAppStartParam')
+    || params.get('tgWebAppStartParam')
+    || '';
   if (startParam.startsWith('gravity_')) {
     return startParam.slice(8).trim().toUpperCase();
   }
