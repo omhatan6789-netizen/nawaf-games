@@ -9,9 +9,11 @@ import { checkDatabase } from "./db.js";
 import { flushPendingActivity } from "./activity.js";
 import { ensureModerationSchema } from "./moderation-schema.js";
 import { ensureProfileRepliesSchema } from "./profile-replies-schema.js";
+import { ensureEconomySchema } from "./economy-schema.js";
 
 ensureModerationSchema().catch(error => console.error("Moderation schema initialization failed:", error));
 ensureProfileRepliesSchema().catch(error => console.error("Profile replies schema initialization failed:", error));
+ensureEconomySchema().catch(error => console.error("Economy schema initialization failed:", error));
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
