@@ -1,7 +1,7 @@
 import { pool } from "../db.js";
 import {
   RANK_LEVELS, getRank, getRankLevel, getDeveloperType,
-  getCommandLocks, setCommandLock, removeCommandLock, setUserPermission,
+  getCommandLocks, getUserPermissions, setCommandLock, removeCommandLock, setUserPermission,
 } from "../ranks.js";
 
 const RANKS = ["Dev", "المالك", "نائب المالك", "ادمن اساسي", "ادمن", "مميز"];
@@ -106,17 +106,31 @@ export async function handleCommandLockFlow(ctx) {
 export async function enforceCommandLock(ctx) {
   const text = ctx.message?.text?.trim();
   const actor = ctx.from;
-  if (!text || !actor || /^(منع|سماح)(?:\s|$)/.test(text) || /^(قفل امر|فتح امر)\s/.test(text)) return false;
+  if (!text || !actor || !isGroup(ctx) || /^(منع|سماح)(?:\\s|$)/.test(text) || /^(قفل امر|فتح امر)\\s/.test(text)) return false;
 
-  const locks = await getCommandLocks();
-  const command = Object.keys(locks)
-    .filter(name => text === name || text.startsWith(name + " "))
-    .sort((a, b) => b.length - a.length)[0];
+  const [locks, overrides] = await Promise.all([
+    getCommandLocks(),
+    getUserPermissions(ctx.chat.id, actor.id),
+  ]);
+  const candidates = [
+    ...Object.keys(locks).map(command => ({ command, allowed: null, source: "lock" })),
+    ...overrides.map(item => ({ ...item, source: "user" })),
+  ];
+  const command = candidates
+    .filter(item => text === item.command || text.startsWith(item.command + " "))
+    .sort((a, b) => b.command.length - a.command.length)[0];
   if (!command) return false;
 
+  // A personal permission explicitly overrides the rank lock for this command.
+  if (command.source === "user") {
+    if (command.allowed) return false;
+    await ctx.reply(`🚫 ليس لديك صلاحية استخدام الأمر: ${command.command}`);
+    return true;
+  }
+
   if (await getDeveloperType(actor.id)) return false;
-  const level = await getRankLevel(actor.id, ctx.chat?.id ?? null);
-  const required = locks[command];
+  const level = await getRankLevel(actor.id, ctx.chat.id);
+  const required = locks[command.command];
   if (level >= (RANK_LEVELS[required] ?? 0)) return false;
 
   const messages = {
