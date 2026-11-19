@@ -116,8 +116,19 @@ function payloadFromMessage(message) {
   return null;
 }
 
-function markup(buttons) {
-  return buttons?.length ? new InlineKeyboard(buttons.map(row => row.map(b => ({ text: b.text, url: b.url })))) : undefined;
+function normalizeButtons(value) {
+  if (typeof value === "string") {
+    try { value = JSON.parse(value); } catch { return []; }
+  }
+  if (!Array.isArray(value)) return [];
+  return value.filter(Array.isArray).map(row => row.filter(button =>
+    button && typeof button.text === "string" && typeof button.url === "string"
+  ));
+}
+
+function markup(value) {
+  const buttons = normalizeButtons(value);
+  return buttons.length ? new InlineKeyboard(buttons.map(row => row.map(b => ({ text: b.text, url: b.url })))) : undefined;
 }
 
 async function sendPayload(api, chatId, payload, buttons) {
@@ -208,7 +219,7 @@ export async function handleTemporaryMessageCallback(ctx) {
     .text("تعديل الأزرار", "tmp:buttons:" + scope + ":" + chatId + ":" + rowId)
     .row()
     .text("رجوع للقائمة", "tmp:list:" + scope + ":" + chatId + ":" + rowId);
-  await ctx.editMessageText(("الرسالة: " + content + "\n\nالأزرار: " + (row.buttons?.flat()?.map(b => b.text).join("، ") || "لا توجد")).slice(0, 3900), { reply_markup: keyboard });
+  await ctx.editMessageText(("الرسالة: " + content + "\n\nالأزرار: " + (normalizeButtons(row.buttons).flat().map(b => b.text).join("، ") || "لا توجد")).slice(0, 3900), { reply_markup: keyboard });
   return true;
 }
 
