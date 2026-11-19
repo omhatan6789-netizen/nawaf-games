@@ -67,9 +67,9 @@ export function createBot() {
         return;
       }
 
+      if (await handleEconomyExtraMessage(ctx)) return;
       if (typeof ctx.message?.text !== "string") return;
       if (await handleUserPermissionCommand(ctx)) return;
-      if (await handleEconomyExtraMessage(ctx)) return;
       if (await handleEconomyMessage(ctx)) return;
       if (await handleProfileReplies(ctx)) return;
       if (await enforceCommandLock(ctx)) return;
