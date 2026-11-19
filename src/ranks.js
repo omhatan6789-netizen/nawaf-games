@@ -228,6 +228,15 @@ export async function setUserPermission(chatId, userId, command, allowed) {
   );
 }
 
+
+export async function getUserPermissions(chatId, userId) {
+  const result = await db().query(
+    "SELECT permission, allowed FROM group_user_permissions WHERE chat_id=$1 AND user_id=$2",
+    [String(chatId), String(userId)]
+  );
+  return result.rows.map(row => ({ command: row.permission, allowed: Boolean(row.allowed) }));
+}
+
 export async function getUserPermission(chatId, userId, command) {
   const result = await db().query(
     "SELECT allowed FROM group_user_permissions WHERE chat_id=$1 AND user_id=$2 AND permission=$3",
