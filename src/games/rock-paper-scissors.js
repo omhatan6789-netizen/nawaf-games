@@ -103,7 +103,7 @@ function scheduleTimeout(bot, g, seconds, reason) {
     g.finished = true;
     activeGames.delete(g.id);
     try {
-      await bot.api.editMessageText(g.chatId, g.messageId,
+      await bot.editMessageText(g.chatId, g.messageId,
         `<b>انتهت مهلة لعبة حجرة ورقة مقص ⏰</b>
 
 <b>• ${esc(reason)}</b>`,
@@ -120,11 +120,9 @@ async function finish(ctx, g, winnerId) {
   g.finished = true;
   activeGames.delete(g.id);
   if (!transferred) {
-    await ctx.answerCallbackQuery();
     await edit(ctx, "<b>انتهت اللعبة، لكن رصيد الخاسر لم يعد يكفي لتحويل المبلغ المحدد.</b>");
     return;
   }
-  await ctx.answerCallbackQuery();
   await edit(ctx, finalText(g, winnerId));
 }
 export async function handleRpsMessage(ctx) {
