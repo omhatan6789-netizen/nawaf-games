@@ -3,18 +3,48 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>بوت نواف</title>
+  <meta name="theme-color" content="#250008">
+  <title>بوت نواف 🎖️</title>
   <style>
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:system-ui,sans-serif;color:#fff;background:linear-gradient(145deg,#a60016 0%,#250008 48%,#080808 100%);display:grid;place-items:center;padding:24px}
-    main{width:min(100%,520px);text-align:center}h1{font-size:32px;margin:0 0 10px}p{color:#e8cdd1;line-height:1.8}
-    .panel{margin-top:28px;padding:22px;border:1px solid #ffffff24;border-radius:22px;background:#ffffff0d}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,sans-serif;color:#fff;background:radial-gradient(ellipse at 50% -15%,#c4142b 0%,transparent 52%),linear-gradient(145deg,#53000d 0%,#1b0006 52%,#080808 100%);padding:28px 18px}
+    main{width:min(100%,680px);margin:0 auto}
+    header{text-align:center;padding:34px 12px 28px}
+    h1{font-size:clamp(30px,7vw,42px);margin:0 0 8px;letter-spacing:-1px}
+    header p{color:#e8cdd1;margin:0;line-height:1.8}
+    h2{font-size:19px;margin:10px 2px 16px}
+    .games{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+    .game{display:flex;flex-direction:column;min-height:190px;padding:20px;text-decoration:none;color:#fff;border:1px solid #ffffff25;border-radius:22px;background:linear-gradient(145deg,#ffffff16,#ffffff08);box-shadow:0 12px 35px #0005;transition:transform .18s,border-color .18s}
+    .game:active{transform:scale(.98)}
+    .emoji{font-size:38px;margin-bottom:14px}
+    .game strong{font-size:20px}
+    .game span.desc{color:#e4cbd0;font-size:13px;line-height:1.7;margin-top:7px}
+    .open{margin-top:auto;padding-top:16px;color:#ffb8c1;font-size:13px;font-weight:700}
+    footer{text-align:center;color:#a98b90;font-size:12px;margin:26px 0 8px}
   </style>
 </head>
 <body>
   <main>
-    <h1>بوت نواف 🎖️</h1>
-    <p>الميني آب الموحد — يتم تجهيز النسخة الجديدة ونقل الألعاب والمميزات إليها تدريجيًا.</p>
-    <section class="panel"><strong>قريبًا</strong><p>ستظهر هنا قائمة الألعاب والخدمات بعد ربط ملفات المشروع الأساسي.</p></section>
+    <header>
+      <h1>بوت نواف 🎖️</h1>
+      <p>الميني آب الموحد للألعاب</p>
+    </header>
+    <h2>الألعاب</h2>
+    <section class="games" aria-label="قائمة الألعاب">
+      <a class="game" href="/carrom/">
+        <div class="emoji" aria-hidden="true">🎯</div>
+        <strong>الكيرم</strong>
+        <span class="desc">ادخل الطاولة والعب مع أصدقائك.</span>
+        <span class="open">العب الآن ←</span>
+      </a>
+      <a class="game" href="/gravity/">
+        <div class="emoji" aria-hidden="true">⚡</div>
+        <strong>ساحة السقوط</strong>
+        <span class="desc">تحدَّ الجاذبية وتنافس في المراحل.</span>
+        <span class="open">العب الآن ←</span>
+      </a>
+    </section>
+    <footer>بوت نواف · يتم إضافة الألعاب والمميزات تدريجيًا</footer>
   </main>
 </body>
 </html>
