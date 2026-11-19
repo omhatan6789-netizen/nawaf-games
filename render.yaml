@@ -3,6 +3,7 @@ services:
     name: nawaf-bot-node
     runtime: node
     plan: free
+    region: frankfurt
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /health
