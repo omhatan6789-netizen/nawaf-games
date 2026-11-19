@@ -277,6 +277,11 @@ export async function handleGamesManagerMessage(ctx) {
     if(!await canManage(ctx)) { await ctx.reply("هذا الأمر للمشرفين فقط."); return true; }
     await deleteGame(ctx,deleteMatch[1]); return true;
   }
+  const deleteQuestion=text.match(/^حذف\s+(.+)$/);
+  if(deleteQuestion && ctx.message.reply_to_message) {
+    if(!await canManage(ctx)) { await ctx.reply("هذا الأمر للمشرفين فقط."); return true; }
+    return deleteQuestionByReply(ctx,deleteQuestion[1]);
+  }
   const enable=text.match(/^(تفعيل|تعطيل) لعبة\s+(.+)$/);
   if(enable) {
     if(!await canManage(ctx)) { await ctx.reply("هذا الأمر للمشرفين فقط."); return true; }
