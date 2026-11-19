@@ -2,6 +2,7 @@ import { Bot } from "grammy";
 import { handlePointsMessage } from "./handlers/points.js";
 import { recordGroupTextMessage } from "./activity.js";
 import { handleActivityCommand, handleTopCallback } from "./handlers/activity-commands.js";
+import { handleRankCommand } from "./handlers/ranks.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -42,6 +43,7 @@ export function createBot() {
       console.error("Message activity tracking failed:", error);
     }
     try {
+      await handleRankCommand(ctx);
       await handleActivityCommand(ctx);
       await handlePointsMessage(ctx);
     } catch (error) {
