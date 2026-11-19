@@ -9,8 +9,8 @@
   "scripts": {
     "start": "node src/server.js",
     "check": "node --check src/server.js && node --check src/bot.js && node --check src/db.js",
-    "inspect:games": "node scripts/inspect-game-archives.js",
-    "postinstall": "npm run inspect:games"
+    "postinstall": "npm run build:games",
+    "build:games": "npm install --prefix games-src/carrom && npm run build --prefix games-src/carrom && npm install --prefix games-src/gravity && npm run build --prefix games-src/gravity"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
@@ -19,6 +19,6 @@
     "grammy": "^1.38.3",
     "helmet": "^8.1.0",
     "pg": "^8.16.3",
-    "adm-zip": "^0.5.16"
+    "http-proxy": "^1.18.1"
   }
 }
