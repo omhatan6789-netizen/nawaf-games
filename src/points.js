@@ -24,6 +24,48 @@ export async function getPoints(userId) {
   return Number(result.rows[0]?.points ?? 0);
 }
 
+export async function transferPointsAtomic(senderId, recipientId, amount) {
+  if (!Number.isSafeInteger(amount) || amount <= 0 || senderId === recipientId) return false;
+  const client = await db().connect();
+  try {
+    await client.query("BEGIN");
+    for (const id of [senderId, recipientId]) {
+      await client.query(
+        "INSERT INTO users (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING",
+        [id]
+      );
+      await client.query(
+        "INSERT INTO points (user_id, points) VALUES ($1, 0) ON CONFLICT (user_id) DO NOTHING",
+        [id]
+      );
+    }
+    const ids = [senderId, recipientId].sort((a, b) => a - b);
+    await client.query(
+      "SELECT user_id FROM points WHERE user_id = ANY($1::bigint[]) ORDER BY user_id FOR UPDATE",
+      [ids]
+    );
+    const debit = await client.query(
+      "UPDATE points SET points = points - $2 WHERE user_id = $1 AND points >= $2 RETURNING user_id",
+      [senderId, amount]
+    );
+    if (!debit.rowCount) {
+      await client.query("ROLLBACK");
+      return false;
+    }
+    await client.query(
+      "UPDATE points SET points = points + $2 WHERE user_id = $1",
+      [recipientId, amount]
+    );
+    await client.query("COMMIT");
+    return true;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 export async function addPoints(user, amount) {
   if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error("Invalid points amount");
   await ensureUser(user);
