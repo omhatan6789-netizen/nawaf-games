@@ -494,9 +494,7 @@ export default function App() {
                 showToast('افتح اللعبة من داخل تيليجرام لاختيار المحادثة');
                 return;
               }
-              showToast('نظام اختيار المحادثة ونتائج اللعبة بالصور قيد ربط بوت Node');
-
-            }}
+              webApp.switchInlineQuery('جري الجاذبية', ['users', 'groups', 'channels']);            }}
             className="nawaf-secondary w-full py-4 text-base font-black"
           >
             👥 لعب ضد شخص بالتيليجرام
@@ -788,7 +786,7 @@ export default function App() {
               تحدي الجاذبية — يمين ويسار
             </h1>
             <p className="text-sm text-white/75 m-0 mt-1.5">
-              العب ضد البوت أو أونلاين مع 2 إلى 5 لاعبين من أجهزتهم بنفس الشاشة!
+              {mode === 'bot' ? 'تحدَّ بوت نواف وحاول الوصول إلى نقاط الفوز أولًا.' : 'انضم إلى غرفة اللعبة والعب مع بقية اللاعبين.'}
             </p>
           </div>
 
