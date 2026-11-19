@@ -18,6 +18,7 @@ import { handleEconomyExtraMessage, handleEconomyExtraCallback } from "./handler
 import { handleMandatorySubscriptionCommand, enforceMandatorySubscription, recordPrivateStart } from "./mandatory-subscription.js";
 import { handleEmojiReactionsMessage } from "./emoji-reactions.js";
 import { handleStartCommand, handleStartEditorCommand, handleStartEditorCallback, handleStartEditorMessage } from "./start-editor.js";
+import { handleDeveloperPanelCommand, handleDeveloperPanelCallback, handleDeveloperPanelMessage, trackDeveloperBotChat } from "./developer-panel.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -56,6 +57,8 @@ export function createBot() {
   bot.callbackQuery(/^moderation:clear:/, handleModerationCallback);
   bot.callbackQuery(/^repetition_punish:/, handleRepetitionPunishmentCallback);
   bot.callbackQuery(/^startedit:/, handleStartEditorCallback);
+  bot.callbackQuery(/^devpanel:/, handleDeveloperPanelCallback);
+  bot.on("my_chat_member", trackDeveloperBotChat);
   bot.hears("تعديل ستارت", handleStartEditorCommand);
 
   bot.command("ping", async (ctx) => {
@@ -64,7 +67,9 @@ export function createBot() {
 
   bot.on("message", async (ctx) => {
     try {
+      if (await handleDeveloperPanelMessage(ctx)) return;
       if (await handleStartEditorMessage(ctx)) return;
+      if (await handleDeveloperPanelCommand(ctx)) return;
       if (await handleMandatorySubscriptionCommand(ctx)) return;
       if (await enforceMandatorySubscription(ctx)) return;
       if (await handleEmojiReactionsMessage(ctx)) return;
