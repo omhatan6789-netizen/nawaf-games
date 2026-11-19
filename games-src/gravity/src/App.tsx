@@ -494,7 +494,7 @@ export default function App() {
                 showToast('افتح اللعبة من داخل تيليجرام لاختيار المحادثة');
                 return;
               }
-              showToast('اختيار المحادثة جاهز، لكن نتائج جري الجاذبية بالصور تنتظر نقل معالج الألعاب إلى بوت Node');
+              showToast('نظام اختيار المحادثة ونتائج اللعبة بالصور قيد ربط بوت Node');
 
             }}
             className="nawaf-secondary w-full py-4 text-base font-black"
