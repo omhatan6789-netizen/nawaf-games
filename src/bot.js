@@ -14,6 +14,7 @@ import { handleDeleteMessages } from "./handlers/delete-messages.js";
 import { handleUserIdCommand } from "./handlers/user-id.js";
 import { handleProfileReplies } from "./profile-replies.js";
 import { handleEconomyMessage, handleEconomyCallback } from "./handlers/economy.js";
+import { handleEconomyExtraMessage, handleEconomyExtraCallback } from "./handlers/economy-extra.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -42,6 +43,7 @@ export function createBot() {
   });
 
   bot.callbackQuery(/^tasliyat:bank:/, handleEconomyCallback);
+  bot.callbackQuery(/^tasliyat:transfer_message:/, handleEconomyExtraCallback);
   bot.callbackQuery(/^topmenu:/, handleTopCallback);
   bot.callbackQuery(/^statsreset:/, handleResetCallback);
   bot.callbackQuery(/^roles_clear:/, handleRolesClearCallback);
@@ -67,6 +69,8 @@ export function createBot() {
 
       if (typeof ctx.message?.text !== "string") return;
       if (await handleUserPermissionCommand(ctx)) return;
+      if (await handleEconomyExtraMessage(ctx)) return;
+      if (await handleEconomyMessage(ctx)) return;
       if (await handleProfileReplies(ctx)) return;
       if (await enforceCommandLock(ctx)) return;
       if (await handleReplyManagement(ctx)) return;
