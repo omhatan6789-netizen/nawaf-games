@@ -3,14 +3,22 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22" },
-  "scripts": { "start": "node src/server.js", "check": "node --check src/server.js && node --check src/bot.js && node --check src/db.js" },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "check": "node --check src/server.js && node --check src/bot.js && node --check src/db.js",
+    "inspect:games": "node scripts/inspect-game-archives.js",
+    "postinstall": "npm run inspect:games"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
     "grammy": "^1.38.3",
     "helmet": "^8.1.0",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "adm-zip": "^0.5.16"
   }
 }
