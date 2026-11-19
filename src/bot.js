@@ -179,6 +179,6 @@ export function createBot() {
   startTemporaryMessageScheduler(bot.api);
   cleanupBlockedWarningsLoop().catch(error => console.error("Blocked warnings loop failed:", error));
   moderationExpiryLoop(bot).catch(error => console.error("Moderation expiry loop failed:", error));
-  bot.catch((err) => console.error("Telegram bot error:", err));
+  bot.catch((err) => {\n    const cause = err?.error;\n    console.error("Telegram bot error:", cause?.description || cause?.message || err?.message || "Unknown Telegram error");\n  });
   return bot;
 }
