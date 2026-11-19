@@ -73,7 +73,7 @@ async function createBank(targetId, bankKey) {
     if (existing.rowCount) { await client.query("COMMIT"); return existing.rows[0]; }
     let result;
     for (let i=0;i<8;i++) {
-      const number = String(randomInt(10_000_000_000_000_000, 99_999_999_999_999_999));
+      const number = Array.from({length:17}, (_, i) => String(randomInt(i === 0 ? 1 : 0, 10))).join("");
       result = await client.query(
         "INSERT INTO bank_accounts(user_id,account_number,bank,card_type) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING RETURNING user_id,account_number,bank,card_type,robbery_balance",
         [String(targetId),number,info.name,info.card]
@@ -114,7 +114,7 @@ async function gamble(id, kind, amount, outcome, percent=0) {
     if (remaining) { await client.query("COMMIT"); return {status:"cooldown",remaining,before,after:before}; }
     if (amount <= 0 || before < amount) { await client.query("COMMIT"); return {status:"insufficient",before,after:before}; }
     let delta;
-    if (kind === "invest") delta = outcome ? Math.floor(amount*percent/100) : -amount;
+    if (kind === "invest") delta = outcome ? Math.floor(amount*percent/100) : 0;
     else delta = outcome ? amount : -amount;
     const upd = await client.query("UPDATE points SET points=points+$2 WHERE user_id=$1 RETURNING points",[String(id),delta]);
     await client.query(`UPDATE tasliyat_cooldowns SET ${column}=$2 WHERE user_id=$1`,[String(id),now+1200]);
