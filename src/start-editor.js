@@ -192,7 +192,12 @@ export async function handleStartCommand(ctx) {
     await ctx.reply("هلا! هذا بوت نواف بنسخته الجديدة. جاري نقل المميزات تدريجيًا.");
   }
 }
-export async function openStartEditorFromPanel(ctx) {\n  sessions.delete(ctx.from.id);\n  await showMenu(ctx, true);\n}\n\nexport async function handleStartEditorCommand(ctx) {
+export async function openStartEditorFromPanel(ctx) {
+  sessions.delete(ctx.from.id);
+  await showMenu(ctx, true);
+}
+
+export async function handleStartEditorCommand(ctx) {
   if(!privateChat(ctx)) return;
   if(!(await isAllowed(ctx.from))) return;
   sessions.delete(ctx.from.id);
