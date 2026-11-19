@@ -36,6 +36,23 @@ export async function ensureEconomySchema() {
       PRIMARY KEY(user_id,item_key)
     );
 
+    CREATE TABLE IF NOT EXISTS scratch_codes (
+      id BIGSERIAL PRIMARY KEY,
+      code VARCHAR(12) UNIQUE NOT NULL,
+      amount BIGINT NOT NULL CHECK (amount >= 70),
+      hour_key BIGINT NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      used BOOLEAN NOT NULL DEFAULT FALSE,
+      used_by BIGINT
+    );
+
+    CREATE TABLE IF NOT EXISTS scratch_limits (
+      user_id BIGINT PRIMARY KEY REFERENCES users(user_id) ON DELETE CASCADE,
+      last_scratched_at TIMESTAMPTZ NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_scratch_codes_active ON scratch_codes(expires_at, used);
+
     CREATE TABLE IF NOT EXISTS store_prices (
       item_key TEXT PRIMARY KEY,
       price BIGINT NOT NULL CHECK(price >= 0),
