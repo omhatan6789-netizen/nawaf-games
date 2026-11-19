@@ -22,6 +22,7 @@ import { handleDeveloperPanelCommand, handleDeveloperPanelCallback, handleDevelo
 import { handleGamesManagerMessage } from "./handlers/games-manager.js";
 import { handleInlineGamesQuery } from "./inline-games.js";
 import { handleCustomCommandManagement, resolveCustomAlias } from "./custom-commands.js";
+import { handleTemporaryMessages, handleTemporaryMessageCallback, startTemporaryMessageScheduler } from "./temporary-messages.js";
 
 const aliasExecutionKeys = new Set();
 
@@ -88,6 +89,7 @@ export function createBot() {
   });
 
   bot.on("inline_query", handleInlineGamesQuery);
+  bot.callbackQuery(/^tmp:/, handleTemporaryMessageCallback);
 
   bot.command("start", async (ctx) => {
     try { await recordPrivateStart(ctx); }
@@ -115,6 +117,7 @@ export function createBot() {
   bot.on("message", async (ctx) => {
     try {
       if (await handleCustomCommandManagement(ctx)) return;
+      if (await handleTemporaryMessages(ctx)) return;
       if (await handleDeveloperPanelMessage(ctx)) return;
       if (await handleStartEditorMessage(ctx)) return;
       if (await handleDeveloperPanelCommand(ctx)) return;
@@ -157,6 +160,7 @@ export function createBot() {
     }
   });
 
+  startTemporaryMessageScheduler(bot.api);
   cleanupBlockedWarningsLoop().catch(error => console.error("Blocked warnings loop failed:", error));
   moderationExpiryLoop(bot).catch(error => console.error("Moderation expiry loop failed:", error));
   bot.catch((err) => console.error("Telegram bot error:", err));
