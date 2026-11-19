@@ -21,7 +21,7 @@ import { handleStartCommand, handleStartEditorCommand, handleStartEditorCallback
 import { handleDeveloperPanelCommand, handleDeveloperPanelCallback, handleDeveloperPanelMessage, trackDeveloperBotChat } from "./developer-panel.js";
 import { handleGamesManagerMessage } from "./handlers/games-manager.js";
 import { handleInlineGamesQuery } from "./inline-games.js";
-import { handleCustomCommandManagement, resolveCustomAlias } from "./custom-commands.js";
+import { handleCustomCommandManagement, resolveCustomAlias, hasCustomCommandSession } from "./custom-commands.js";
 import { handleTemporaryMessages, handleTemporaryMessageCallback, startTemporaryMessageScheduler } from "./temporary-messages.js";
 
 const aliasExecutionKeys = new Set();
@@ -65,6 +65,11 @@ export function createBot() {
   bot.use(async (ctx, next) => {
     const message = ctx.message;
     if (!message?.text || !ctx.chat?.id || !message.message_id) return next();
+    // A pending add/delete flow must receive the exact text the user sends,
+    // even when that text happens to match an existing alias.
+    if (hasCustomCommandSession(ctx.from?.id)) return next();
+    const managementText = message.text.trim().replace(/\\s+/g, " ");
+    if (["اضف امر", "مسح امر", "الاوامر المضافة", "مسح الاوامر المضافة"].includes(managementText)) return next();
     const key = `${ctx.chat.id}:${message.message_id}`;
     if (aliasExecutionKeys.has(key)) return next();
 
