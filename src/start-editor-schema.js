@@ -12,7 +12,7 @@ export async function ensureStartEditorSchema() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     INSERT INTO start_settings(id,message_text,message_entities)
-    VALUES(1,NULL,'[]'::jsonb) ON CONFLICT(id) DO NOTHING;
+    VALUES(1,'حياك الله #الاسم 🤍\\nفي البوت الجديد ⭐','[]'::jsonb) ON CONFLICT(id) DO NOTHING;
 
     CREATE TABLE IF NOT EXISTS start_buttons (
       id BIGSERIAL PRIMARY KEY,
