@@ -338,7 +338,7 @@ export function startTemporaryMessageScheduler(api) {
       await ensureTemporaryMessagesSchema();
       const now = Date.now() / 1000;
       const due = await db().query(
-        "UPDATE temporary_messages SET next_run_at=$1 + interval_seconds WHERE id IN (SELECT id FROM temporary_messages WHERE interval_seconds IS NOT NULL AND next_run_at <= $1 ORDER BY next_run_at FOR UPDATE SKIP LOCKED LIMIT 100) RETURNING id,scope,chat_id,payload,buttons",
+        "UPDATE temporary_messages SET next_run_at=$1 + interval_seconds WHERE id IN (SELECT id FROM temporary_messages WHERE interval_seconds IS NOT NULL AND next_run_at <= $1 ORDER BY next_run_at LIMIT 100 FOR UPDATE SKIP LOCKED) RETURNING id,scope,chat_id,payload,buttons",
         [now]
       );
       for (const row of due.rows) {
