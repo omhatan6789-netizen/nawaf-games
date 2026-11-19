@@ -494,7 +494,8 @@ export default function App() {
                 showToast('افتح اللعبة من داخل تيليجرام لاختيار المحادثة');
                 return;
               }
-              webApp.switchInlineQuery('جري الجاذبية', ['users', 'bots', 'groups', 'channels']);
+              showToast('اختيار المحادثة جاهز، لكن نتائج جري الجاذبية بالصور تنتظر نقل معالج الألعاب إلى بوت Node');
+
             }}
             className="nawaf-secondary w-full py-4 text-base font-black"
           >
