@@ -1,5 +1,5 @@
-import { pool } from "./db.js";
-import { getRankLevel } from "./ranks.js";
+import { pool } from "../db.js";
+import { getRankLevel } from "../ranks.js";
 
 const sessions = new Map();
 const OWNER_ID = 8453977662;
