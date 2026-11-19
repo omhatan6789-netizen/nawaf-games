@@ -84,8 +84,11 @@ export async function handleCustomCommandManagement(ctx) {
   if (session?.step === "delete") {
     try {
       await ensureCustomCommandsSchema();
-      const result = await database().query("DELETE FROM custom_commands WHERE new_command=$1", [text]);
-      aliases.delete(text);
+      const result = await database().query(
+        "DELETE FROM custom_commands WHERE new_command=$1 OR lower(btrim(new_command))=lower(btrim($1)) RETURNING new_command",
+        [text]
+      );
+      for (const row of result.rows) aliases.delete(row.new_command.trim());
       sessions.delete(userId);
       await ctx.reply(result.rowCount
         ? "✅ تم حذف الأمر المضاف"
