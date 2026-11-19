@@ -1102,7 +1102,7 @@ export default function App() {
                 type="button"
                 onClick={() => {
                   downloadZipFromEndpoint(
-                    '/${game}/api/export/project.zip',
+                    '/gravity/api/export/project.zip',
                     'gravity-game-project.zip'
                   ).catch(() => showToast('تعذر تحميل ملف ZIP'));
                 }}
@@ -1115,7 +1115,7 @@ export default function App() {
                 type="button"
                 onClick={() => {
                   downloadZipFromEndpoint(
-                    '/${game}/api/export/nawaf-addon.zip',
+                    '/gravity/api/export/nawaf-addon.zip',
                     'nawaf-bot-v2-gravity-addon.zip'
                   ).catch(() => showToast('تعذر تحميل ملف ZIP'));
                 }}
