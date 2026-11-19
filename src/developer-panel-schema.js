@@ -61,18 +61,22 @@ export async function ensureDeveloperPanelSchema() {
           WHERE table_schema=current_schema() AND table_name='developer_bot_chats'
             AND column_name='active' AND data_type <> 'boolean'
         ) THEN
+          ALTER TABLE developer_bot_chats ALTER COLUMN active DROP DEFAULT;
           ALTER TABLE developer_bot_chats
             ALTER COLUMN active TYPE BOOLEAN
             USING (active::text IN ('1','true','t'));
+          ALTER TABLE developer_bot_chats ALTER COLUMN active SET DEFAULT TRUE;
         END IF;
         IF EXISTS (
           SELECT 1 FROM information_schema.columns
           WHERE table_schema=current_schema() AND table_name='developer_broadcast_targets'
             AND column_name='success' AND data_type <> 'boolean'
         ) THEN
+          ALTER TABLE developer_broadcast_targets ALTER COLUMN success DROP DEFAULT;
           ALTER TABLE developer_broadcast_targets
             ALTER COLUMN success TYPE BOOLEAN
             USING (success::text IN ('1','true','t'));
+          ALTER TABLE developer_broadcast_targets ALTER COLUMN success SET DEFAULT FALSE;
         END IF;
       END $;
       CREATE INDEX IF NOT EXISTS idx_developer_bot_chats_active
