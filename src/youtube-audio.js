@@ -6,7 +6,6 @@ import { pipeline } from "node:stream/promises";
 import { Readable, Transform } from "node:stream";
 import { createWriteStream } from "node:fs";
 
-const BOT_USERNAME = "lnll0bot";
 const RESULT_COUNT = 4;
 const MAX_AUDIO_BYTES = 49 * 1024 * 1024;
 const searches = new Map();
@@ -173,12 +172,14 @@ export async function handleYouTubeAudioCallback(ctx) {
     const title = (downloadedTitle && downloadedTitle !== "صوت من يوتيوب" ? downloadedTitle : video.title).slice(0, 64);
     const duration = Number(video.duration || 0);
     const caption = `• Nawaf${duration ? ` . ↠ ${formatDuration(duration)}` : ""}`;
+    const currentBot = await ctx.api.getMe();
+    const currentBotUsername = currentBot.username;
     await ctx.api.sendAudio(chatId, new InputFile(filePath), {
       title,
       performer: "Nawaf",
       ...(duration ? { duration } : {}),
       caption,
-      reply_markup: { inline_keyboard: [[{ text: "🌷", url: `https://t.me/${BOT_USERNAME}` }]] },
+      reply_markup: currentBotUsername ? { inline_keyboard: [[{ text: `@${currentBotUsername}`, url: `https://t.me/${currentBotUsername}` }]] } : undefined,
     });
     await ctx.api.deleteMessage(chatId, status.message_id);
   } catch (error) {
