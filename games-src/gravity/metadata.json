@@ -1,0 +1,6 @@
+{
+  "name": "ساحة السقوط — بوت نواف",
+  "description": "لعبة ساحة السقوط ثلاثية الأبعاد لبوت نواف — مراحل متتالية بشخصية أحمر وأزرق، واللي يطيح يخسر.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

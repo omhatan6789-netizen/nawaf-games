@@ -1,0 +1,6 @@
+{
+  "name": "الكيرم — بوت نواف",
+  "description": "لعبة كيرم احترافية لبوت نواف — العب ضد بوت نواف أو مع أصدقائك أونلاين أو على نفس الجهاز بقواعد الكيرم الأصلية.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

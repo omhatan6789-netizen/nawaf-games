@@ -1,0 +1,246 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --red: #b81728;
+  --crimson: #ed4054;
+  --crimson-dark: #94152a;
+  --gold: #e5bb76;
+  --bg-top: #78121b;
+  --bg-mid: #24090d;
+  --bg-bot: #100709;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100dvh;
+  width: 100%;
+  background: radial-gradient(ellipse at 50% 0%, #78121b, #24090d 58%, #100709);
+  color: #ffffff;
+  font-family: "Cairo", "Tajawal", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body {
+  overflow-x: hidden;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Nawaf Bot Mini App exact shared UI styling */
+.nawaf-panel {
+  border: 1px solid #ffffff22;
+  background: linear-gradient(145deg, #ffffff13, #09040670);
+  border-radius: 20px;
+  box-shadow: 0 12px 30px #00000055;
+}
+
+.nawaf-choice {
+  border: 1px solid #ffffff35;
+  border-radius: 15px;
+  background: #17090c;
+  color: #ffffff;
+  font-weight: 800;
+  transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+  cursor: pointer;
+}
+
+.nawaf-choice:hover {
+  border-color: #ffffff66;
+}
+
+.nawaf-choice.active {
+  border-color: #ff9ba3;
+  background: linear-gradient(135deg, #a81321, #4d0a11);
+  box-shadow: 0 0 0 2px #ff5b672b;
+}
+
+.nawaf-primary {
+  width: 100%;
+  border: 0;
+  border-radius: 14px;
+  min-height: 54px;
+  font-size: 17px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ef4858, #9e0d1c);
+  color: #ffffff;
+  box-shadow: 0 4px 0 #560811;
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.nawaf-primary:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #560811;
+}
+
+.nawaf-secondary {
+  width: 100%;
+  border: 1px solid #ffffff30;
+  border-radius: 14px;
+  min-height: 48px;
+  font-size: 15px;
+  font-weight: 800;
+  background: #ffffff13;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+
+.nawaf-secondary:hover {
+  background: #ffffff1f;
+  border-color: #ffffff4d;
+}
+
+.nawaf-pill {
+  border: 1px solid #ffffff30;
+  background: #ffffff12;
+  color: #ffffff;
+  border-radius: 30px;
+  padding: 8px 14px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.14s ease;
+}
+
+.nawaf-pill:hover {
+  background: #ffffff22;
+}
+
+/* Exact online-end-overlay win/loss card from nawaf-bot-v2/mini_app/index.html */
+.online-end-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  background: rgba(5, 3, 7, 0.72);
+  animation: game-end-fade 0.28s ease-out;
+}
+
+.online-end-card {
+  width: min(100%, 440px);
+  padding: 30px 20px 22px;
+  border: 1px solid #ffffff35;
+  border-radius: 28px;
+  background: radial-gradient(ellipse at 50% 0%, #721a2d 0%, transparent 58%),
+    linear-gradient(145deg, #281018, #0d080d);
+  box-shadow: 0 22px 85px #000000dd, 0 0 38px #b5122030;
+  text-align: center;
+  animation: game-end-pop 0.34s cubic-bezier(0.2, 0.85, 0.25, 1.15);
+}
+
+.online-end-card h2 {
+  font-size: clamp(25px, 7vw, 34px);
+  line-height: 1.25;
+  margin: 0 0 13px;
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.online-end-winner {
+  margin: 8px auto 12px;
+  padding: 12px 14px;
+  border: 1px solid #e94a5b70;
+  border-radius: 17px;
+  background: #080508a8;
+  color: #ff5264;
+  font-size: clamp(22px, 6vw, 30px);
+  font-weight: 900;
+  text-shadow: 0 2px 16px #e11d4855;
+  overflow-wrap: anywhere;
+}
+
+.online-end-winner.is-blue {
+  border-color: #3b82f680;
+  color: #60a5fa;
+  text-shadow: 0 2px 16px #2563eb55;
+}
+
+.online-end-card p {
+  color: #ffffffd1;
+  font-size: 15px;
+  line-height: 1.8;
+  margin: 0 0 24px;
+}
+
+.online-end-actions {
+  display: grid;
+  gap: 11px;
+}
+
+.online-end-actions button {
+  width: 100%;
+  min-height: 56px;
+  border: 1px solid #ffffff20;
+  border-radius: 17px;
+  font-size: 17px;
+  font-weight: 900;
+  color: #ffffff;
+  background: linear-gradient(135deg, #ed4054, #94152a);
+  box-shadow: 0 8px 24px #00000077;
+  cursor: pointer;
+}
+
+.online-end-actions button.secondary-end {
+  background: linear-gradient(135deg, #45404a, #211d25);
+}
+
+.nawaf-toast {
+  position: fixed;
+  left: 50%;
+  top: calc(env(safe-area-inset-top, 0px) + 64px);
+  transform: translateX(-50%);
+  background: #16090cf0;
+  border: 1px solid #ffffff3d;
+  border-radius: 14px;
+  padding: 10px 18px;
+  z-index: 90;
+  box-shadow: 0 8px 30px #00000099;
+  max-width: 90%;
+  text-align: center;
+  font-weight: 800;
+  font-size: 14px;
+  pointer-events: none;
+  animation: toast-pop 0.2s ease-out;
+}
+
+@keyframes game-end-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes game-end-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
