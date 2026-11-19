@@ -689,7 +689,7 @@ export default function App() {
             onClick={() => { window.location.href = '/miniapp/'; }}
             className="nawaf-pill whitespace-nowrap shrink-0"
           >
-            القائمة الرئيسية
+            القائمة
           </button>
 
           <div className="text-center leading-tight">
