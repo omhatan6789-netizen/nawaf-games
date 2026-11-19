@@ -121,7 +121,7 @@ function getStableClientId(): string {
 }
 
 export default function App() {
-  const initialRoomCode = useMemo(() => getInitialRoomCodeFromUrl(), []);
+  const [initialRoomCode, setInitialRoomCode] = useState(() => getInitialRoomCodeFromUrl());
   const clientId = useMemo(() => getStableClientId(), []);
 
   const [screen, setScreen] = useState<'choice' | 'setup' | 'playing'>(initialRoomCode ? 'setup' : 'choice');
@@ -130,6 +130,7 @@ export default function App() {
   );
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('سهل');
   const [targetScore, setTargetScore] = useState<number>(3);
+  const [maxPlayers, setMaxPlayers] = useState<number>(5);
   const [playerName, setPlayerName] = useState<string>(
     () => getTelegramPlayerName() || 'اللاعب الأول'
   );
@@ -170,6 +171,17 @@ export default function App() {
   useEffect(() => {
     window.Telegram?.WebApp?.ready?.();
     window.Telegram?.WebApp?.expand?.();
+    const readRoomLaunch = () => {
+      const code = getInitialRoomCodeFromUrl();
+      if (!code) return;
+      setInitialRoomCode(code);
+      setJoinCodeInput(code);
+      setMode('online');
+      setScreen('setup');
+    };
+    readRoomLaunch();
+    const retry = window.setTimeout(readRoomLaunch, 350);
+    return () => window.clearTimeout(retry);
   }, []);
 
   const showToast = useCallback((msg: string) => {
@@ -817,6 +829,11 @@ export default function App() {
                 maxLength={24}
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
+                onBlur={() => {
+                  if (mode === 'online' && onlineRoom && isHost) {
+                    sendWs({ type: 'update_settings', name: playerName.trim() || 'اللاعب الأول' });
+                  }
+                }}
                 placeholder="اكتب اسمك..."
                 className="w-full rounded-xl border border-white/25 bg-[#12070a] px-3.5 py-2.5 text-sm font-bold text-white outline-none focus:border-[#ff9ba3]"
               />
@@ -839,6 +856,22 @@ export default function App() {
                     }`}
                   >
                     {lvl}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {mode === 'online' && (!onlineRoom || isHost) && (
+            <div>
+              <div className="text-xs font-bold text-white/75 mb-2">عدد اللاعبين في الغرفة</div>
+              <div className="grid grid-cols-4 gap-2">
+                {[2, 3, 4, 5].map((count) => (
+                  <button key={count} type="button" onClick={() => {
+                    setMaxPlayers(count);
+                    if (onlineRoom && isHost) sendWs({ type: 'update_settings', maxPlayers: count });
+                  }} className={`nawaf-choice py-3 px-2 text-sm font-black ${(onlineRoom?.maxPlayers ?? maxPlayers) === count ? 'active' : ''}`}>
+                    {count} لاعبين
                   </button>
                 ))}
               </div>
@@ -931,7 +964,7 @@ export default function App() {
                       </div>
                     </div>
                     <div className="rounded-full bg-white/10 border border-white/20 px-3 py-1 text-xs font-black tabular-nums">
-                      اللاعبون ({onlineRoom.players.length}/5)
+                      اللاعبون ({onlineRoom.players.length}/{onlineRoom.maxPlayers})
                     </div>
                   </div>
 
