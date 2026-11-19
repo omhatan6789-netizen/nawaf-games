@@ -134,6 +134,31 @@ export async function handleEconomyExtraMessage(ctx) {
     return true;
   }
   if(!text)return false;
+  if (text === "عرض الاكواد") {
+    await ensureScratchCodes();
+    const rows = await db().query("SELECT code FROM scratch_codes WHERE used=FALSE AND expires_at>NOW() ORDER BY id");
+    const body = rows.rows.map((x, i) => (i + 1) + "- <code>" + x.code + "</code>").join("\n\n");
+    await ctx.reply("• اكواد الكشط الموجوده بالبوت :\n\n" + body, { parse_mode: "HTML" });
+    return true;
+  }
+  if (/^كشط\s+[A-Za-z0-9]+$/i.test(text)) {
+    await ensureScratchCodes();
+    const result = await scratchCode(id, text.split(/\s+/)[1].toUpperCase());
+    if (result.status === "cooldown") {
+      const remaining = [Math.floor(result.remaining / 3600), Math.floor(result.remaining % 3600 / 60), result.remaining % 60].map(x => String(x).padStart(2, "0")).join(":");
+      await ctx.reply("• مب حلى هو مايمديك تكشط اي كود الحين .\n• الوقت المتبقي: " + remaining + " ⏰");
+    } else if (result.status === "invalid") {
+      await ctx.reply("• للأسف الكود انتهى وقته او فيه شخص استعمله قبلك");
+    } else {
+      await ctx.reply("• تم كشط الكود بنجاح 🎉 .\n\n- الاسم ↤︎ " + mention(user) + "\n- المبلغ ↤︎ " + result.amount + " نقطة 💸 \n-", { parse_mode: "HTML" });
+    }
+    return true;
+  }
+  if (text === "رست الكشط" && id === OWNER_ID && msg.reply_to_message?.from) {
+    await db().query("DELETE FROM scratch_limits WHERE user_id=$1", [String(msg.reply_to_message.from.id)]);
+    await ctx.reply("• تم صفرت وقت الكشط لـ  " + mention(msg.reply_to_message.from) + " ✅", { parse_mode: "HTML" });
+    return true;
+  }
   if(/^تحويل\s+\d+$/.test(text)){
     if(!await bank(id)){await ctx.reply("• ماعندك حساب بنكي .");return true;}
     const amount=Number(text.split(/\s+/)[1]);
