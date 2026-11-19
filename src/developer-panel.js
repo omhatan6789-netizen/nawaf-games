@@ -2,6 +2,7 @@ import { InlineKeyboard } from "grammy";
 import { pool } from "./db.js";
 import { OWNER_ID } from "./ranks.js";
 import { getSanctionRows, clearSanctionTable } from "./moderation-store.js";
+import { openStartEditorFromPanel } from "./start-editor.js";
 
 const sessions = new Map();
 const LISTS = {
@@ -119,8 +120,7 @@ export async function handleDeveloperPanelCallback(ctx) {
     else if(data==="devpanel:stats") await showStats(ctx);
     else if(data==="devpanel:startedit") {
       sessions.delete(user.id);
-      // The start editor has its own access check; panel-authorized users are admitted there too.
-      await ctx.editMessageText("افتح محرر الستارت من الأمر: تعديل ستارت",{reply_markup:back()});
+      await openStartEditorFromPanel(ctx);
     }
     else if(data==="devpanel:access" && user.id===OWNER_ID) await showAccess(ctx);
     else if(data==="devpanel:access:add" && user.id===OWNER_ID) {
