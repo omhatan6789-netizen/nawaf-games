@@ -23,6 +23,7 @@ import { handleGamesManagerMessage } from "./handlers/games-manager.js";
 import { handleInlineGamesQuery } from "./inline-games.js";
 import { handleCustomCommandManagement, resolveCustomAlias, hasCustomCommandSession } from "./custom-commands.js";
 import { handleTemporaryMessages, handleTemporaryMessageCallback, startTemporaryMessageScheduler } from "./temporary-messages.js";
+import { handleWhisperMessage, handleWhisperStart, handleWhisperCallback } from "./whispers.js";
 
 const aliasExecutionKeys = new Set();
 
@@ -95,8 +96,10 @@ export function createBot() {
 
   bot.on("inline_query", handleInlineGamesQuery);
   bot.callbackQuery(/^tmp:/, handleTemporaryMessageCallback);
+  bot.callbackQuery(/^wh_(temp|open):/, handleWhisperCallback);
 
   bot.command("start", async (ctx) => {
+    if (await handleWhisperStart(ctx)) return;
     try { await recordPrivateStart(ctx); }
     catch (error) { console.error("Recording private /start failed:", error); }
     await handleStartCommand(ctx);
@@ -123,6 +126,7 @@ export function createBot() {
     try {
       if (await handleCustomCommandManagement(ctx)) return;
       if (await handleTemporaryMessages(ctx)) return;
+      if (await handleWhisperMessage(ctx)) return;
       if (await handleDeveloperPanelMessage(ctx)) return;
       if (await handleStartEditorMessage(ctx)) return;
       if (await handleDeveloperPanelCommand(ctx)) return;
