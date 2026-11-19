@@ -60,6 +60,103 @@ export async function handleProfileReplies(ctx) {
   const key = `${chatId}:${userId}`;
   const session = pending.get(key);
 
+  if (session === "developer_username" || session === "owner_username") {
+    pending.delete(key);
+    if (!/^@[A-Za-z0-9_]{5,32}$/.test(text)) {
+      await ctx.reply("• اليوزر غير صحيح، تم إلغاء العملية.");
+      return true;
+    }
+    const found = await db().query(
+      "SELECT user_id FROM users WHERE LOWER(username)=$1 LIMIT 1",
+      [text.slice(1).toLowerCase()]
+    );
+    if (!found.rowCount) {
+      await ctx.reply("• اليوزر غير موجود في المجموعة، تم إلغاء العملية.");
+      return true;
+    }
+    const targetId = Number(found.rows[0].user_id);
+    try {
+      const member = await ctx.api.getChatMember(chatId, targetId);
+      if (["left", "kicked"].includes(member.status)) {
+        await ctx.reply("• اليوزر غير موجود في المجموعة، تم إلغاء العملية.");
+        return true;
+      }
+      if (session === "developer_username") {
+        await db().query(
+          "INSERT INTO profile_settings(profile_type,user_id,username) VALUES('developer',$1,$2) ON CONFLICT(profile_type) DO UPDATE SET user_id=EXCLUDED.user_id,username=EXCLUDED.username",
+          [String(targetId), text]
+        );
+        await ctx.reply("• تم تغيير يوزر المطور بنجاح.");
+      } else {
+        await db().query(
+          "INSERT INTO group_profile_settings(chat_id,owner_user_id,owner_username) VALUES($1,$2,$3) ON CONFLICT(chat_id) DO UPDATE SET owner_user_id=EXCLUDED.owner_user_id,owner_username=EXCLUDED.owner_username",
+          [String(chatId), String(targetId), text]
+        );
+        await ctx.reply("• تم تغيير يوزر المالك بنجاح.");
+      }
+    } catch (error) {
+      console.warn("Saving profile username failed:", error?.description || error?.message);
+      await ctx.reply("• تعذر التحقق من عضوية اليوزر، تم إلغاء العملية.");
+    }
+    return true;
+  }
+
+  if (text === "تغيير يوزر المطور") {
+    if (userId !== OWNER_ID) { await ctx.reply("• هذا الأمر للمطور الأساسي فقط."); return true; }
+    pending.set(key, "developer_username");
+    await ctx.reply("حسنًا، ارسل يوزر المطور الجديد.");
+    return true;
+  }
+
+  if (text === "تغيير يوزر المالك") {
+    if (!await isOwner(ctx)) { await ctx.reply("• هذا الأمر للمالك ومن فوق."); return true; }
+    pending.set(key, "owner_username");
+    await ctx.reply("حسنًا، ارسل يوزر المالك الجديد.");
+    return true;
+  }
+
+  if (text === "المطور") {
+    const saved = await db().query("SELECT user_id FROM profile_settings WHERE profile_type='developer'");
+    const devId = Number(saved.rows[0]?.user_id || OWNER_ID);
+    try {
+      const dev = await ctx.api.getChat(devId);
+      const botInfo = await ctx.api.getMe();
+      const bio = esc(dev.bio || "لا يوجد بايو.");
+      const name = esc(dev.first_name || "المطور");
+      const caption = `Dev Bot ↦ ${esc(botInfo.first_name || "البوت")}\\n━━━━━━━━━━━━━━\\nDev ↦ <a href="tg://user?id=${devId}">${name}</a>\\nBio ↦ ${bio}`;
+      const photos = await ctx.api.getUserProfilePhotos(devId, { limit: 1 });
+      const photo = photos.photos?.[0]?.at(-1);
+      if (photo) await ctx.replyWithPhoto(photo.file_id, { caption, parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: dev.first_name || "الحساب", url: `tg://user?id=${devId}` }]] } });
+      else await ctx.reply(caption, { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: dev.first_name || "الحساب", url: `tg://user?id=${devId}` }]] } });
+    } catch { await ctx.reply("• تعذر العثور على حساب المطور."); }
+    return true;
+  }
+
+  if (text === "المالك") {
+    let ownerId = null;
+    const cfg = await settings(chatId);
+    if (cfg?.owner_user_id) ownerId = Number(cfg.owner_user_id);
+    if (!ownerId) {
+      try {
+        const admins = await ctx.api.getChatAdministrators(chatId);
+        ownerId = admins.find(item => item.status === "creator")?.user?.id || null;
+      } catch {}
+    }
+    if (!ownerId) { await ctx.reply("• تعذر العثور على مالك المجموعة."); return true; }
+    try {
+      const owner = await ctx.api.getChat(ownerId);
+      const groupName = esc(ctx.chat.title || "المجموعة");
+      const bio = esc(owner.bio || "لا يوجد بايو.");
+      const name = esc(owner.first_name || "المالك");
+      const caption = `Owner group ↦ ${groupName}\\n━━━━━━━━━━━━━━\\nUSE ↦ <a href="tg://user?id=${ownerId}">${name}</a>\\nbio ↦ ${bio}`;
+      const photos = await ctx.api.getUserProfilePhotos(ownerId, { limit: 1 });
+      const photo = photos.photos?.[0]?.at(-1);
+      if (photo) await ctx.replyWithPhoto(photo.file_id, { caption, parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: owner.first_name || "الحساب", url: `tg://user?id=${ownerId}` }]] } });
+      else await ctx.reply(caption, { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: owner.first_name || "الحساب", url: `tg://user?id=${ownerId}` }]] } });
+    } catch { await ctx.reply("• تعذر العثور على مالك المجموعة."); }
+    return true;
+  }
+
   if (session === "add") {
     pending.delete(key);
     if (!text || text.includes("\n")) { await ctx.reply("• اسم الرد غير صحيح، تم إلغاء العملية."); return true; }
