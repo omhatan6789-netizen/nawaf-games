@@ -28,7 +28,8 @@ const server = app.listen(port, "0.0.0.0", () => {
   console.log(`HTTP server listening on port ${port}`);
 });
 
-const bot = createBot();
+const bot = process.env.ENABLE_TELEGRAM_BOT === "true" ? createBot() : null;
+if (!bot) console.log("Telegram polling is disabled until cutover.");
 if (bot) {
   bot.start().then(() => console.log("Telegram polling started."))
     .catch((error) => console.error("Telegram polling failed:", error));
