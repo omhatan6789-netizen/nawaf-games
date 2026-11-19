@@ -3,6 +3,7 @@ import { handlePointsMessage } from "./handlers/points.js";
 import { recordGroupTextMessage } from "./activity.js";
 import { handleActivityCommand, handleTopCallback } from "./handlers/activity-commands.js";
 import { handleRankCommand } from "./handlers/ranks.js";
+import { handleResetCommand, handleResetCallback } from "./handlers/reset-stats.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -31,6 +32,7 @@ export function createBot() {
   });
 
   bot.callbackQuery(/^topmenu:/, handleTopCallback);
+  bot.callbackQuery(/^statsreset:/, handleResetCallback);
 
   bot.command("ping", async (ctx) => {
     await ctx.reply("البوت يعمل ✅");
@@ -43,6 +45,7 @@ export function createBot() {
       console.error("Message activity tracking failed:", error);
     }
     try {
+      await handleResetCommand(ctx);
       await handleRankCommand(ctx);
       await handleActivityCommand(ctx);
       await handlePointsMessage(ctx);
