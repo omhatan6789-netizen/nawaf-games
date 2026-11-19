@@ -15,6 +15,7 @@ import { handleUserIdCommand } from "./handlers/user-id.js";
 import { handleProfileReplies } from "./profile-replies.js";
 import { handleEconomyMessage, handleEconomyCallback } from "./handlers/economy.js";
 import { handleEconomyExtraMessage, handleEconomyExtraCallback } from "./handlers/economy-extra.js";
+import { handleMandatorySubscriptionCommand, enforceMandatorySubscription, recordPrivateStart } from "./mandatory-subscription.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -39,6 +40,8 @@ export function createBot() {
   });
 
   bot.command("start", async (ctx) => {
+    try { await recordPrivateStart(ctx); }
+    catch (error) { console.error("Recording private /start failed:", error); }
     await ctx.reply("هلا! هذا بوت نواف بنسخته الجديدة. جاري نقل المميزات تدريجيًا.");
   });
 
@@ -57,6 +60,8 @@ export function createBot() {
 
   bot.on("message", async (ctx) => {
     try {
+      if (await handleMandatorySubscriptionCommand(ctx)) return;
+      if (await enforceMandatorySubscription(ctx)) return;
       recordGroupTextMessage(ctx);
       if (await handleMutedMessage(ctx)) return;
       if (hasBlockedWordSession(ctx.from?.id, ctx.chat?.id) || await handleBlockedWords(ctx)) return;
