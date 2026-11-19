@@ -52,7 +52,7 @@ export async function handleCustomCommandManagement(ctx) {
     if (!text) return true;
     session.oldCommand = text;
     session.step = "new";
-    await ctx.reply("حسناً، أرسل الأمر الجديد");
+    await ctx.reply("حسنًا، أرسل الأمر الجديد");
     return true;
   }
   if (session?.step === "new") {
@@ -100,7 +100,7 @@ export async function handleCustomCommandManagement(ctx) {
       return true;
     }
     sessions.set(userId, { step: "old" });
-    await ctx.reply("حسناً، أرسل الأمر القديم");
+    await ctx.reply("حسنًا، أرسل الأمر القديم");
     return true;
   }
   if (text === "الاوامر المضافة") {
