@@ -74,7 +74,7 @@ export async function handleMiniAppPanelCallback(ctx) {
       const kb = new InlineKeyboard().text("➕ إضافة زر صغير", "minipanel:add:small").text("➕ إضافة زر كبير", "minipanel:add:large").row();
       for (const r of rows) kb.text("🗑️ " + String(r.title).slice(0,28), "minipanel:delbutton:" + r.id).row();
       kb.text("↩️ لوحة الميني", "minipanel:menu");
-      await ctx.editMessageText(lines.join("\\n"), { parse_mode: "HTML", reply_markup: kb });
+      await ctx.editMessageText(lines.join("\n"), { parse_mode: "HTML", reply_markup: kb });
     } else if (data.startsWith("minipanel:add:")) {
       const kind = data.split(":").at(-1);
       if (!["small","large"].includes(kind)) return true;
@@ -91,7 +91,7 @@ export async function handleMiniAppPanelCallback(ctx) {
       const kb = new InlineKeyboard().text("➕ إضافة صوت", "minipanel:addsound").row();
       for (const r of rows) kb.text("🗑️ " + String(r.title).slice(0,28), "minipanel:delsound:" + r.id).row();
       kb.text("↩️ لوحة الميني", "minipanel:menu");
-      await ctx.editMessageText(lines.join("\\n"), { parse_mode: "HTML", reply_markup: kb });
+      await ctx.editMessageText(lines.join("\n"), { parse_mode: "HTML", reply_markup: kb });
     } else if (data === "minipanel:addsound") {
       sessions.set(ctx.from.id, { action: "add_sound", step: "media" });
       await ctx.editMessageText("ارسل ملف صوت أو فيديو (حتى 20 ميجابايت):", { reply_markup: back() });
@@ -164,7 +164,7 @@ export async function handleMiniAppPanelMessage(ctx) {
   if (session.action === "banner") {
     const msg = ctx.message;
     let media = msg.photo?.at(-1) || msg.video || msg.animation;
-    if (msg.document && /^(image|video)\\//.test(msg.document.mime_type || "")) media = msg.document;
+    if (msg.document && /^(image|video)\//.test(msg.document.mime_type || "")) media = msg.document;
     if (!media) { await ctx.reply("ارسل صورة أو فيديو أو GIF، أو اكتب إلغاء."); return true; }
     if ((media.file_size || 0) > 20 * 1024 * 1024) { await ctx.reply("الملف أكبر من 20 ميجابايت."); return true; }
     const mime = media.mime_type || (msg.photo ? "image/jpeg" : "video/mp4");
@@ -182,8 +182,8 @@ export async function handleMiniAppPanelMessage(ctx) {
     } else if (session.step === "target") {
       let target = text;
       if (/^@[A-Za-z0-9_]{5,32}$/.test(target)) target = "https://t.me/" + target.slice(1);
-      else if (/^(https?:\\/\\/)?t\\.me\\//i.test(target) && !/^https?:\\/\\//i.test(target)) target = "https://" + target;
-      if (!/^https?:\\/\\//i.test(target)) { await ctx.reply("الرابط غير صحيح. ارسل رابطًا يبدأ بـ https:// أو @username."); return true; }
+      else if (/^(https?:\/\/)?t\.me\//i.test(target) && !/^https?:\/\//i.test(target)) target = "https://" + target;
+      if (!/^https?:\/\//i.test(target)) { await ctx.reply("الرابط غير صحيح. ارسل رابطًا يبدأ بـ https:// أو @username."); return true; }
       session.target = target; session.step = "color";
       await ctx.reply("ارسل لون خلفية الزر بصيغة HEX مثل #ffffff.");
     } else if (session.step === "color") {
@@ -193,7 +193,7 @@ export async function handleMiniAppPanelMessage(ctx) {
     } else if (session.step === "image") {
       const msg = ctx.message;
       let media = msg.photo?.at(-1) || msg.video || msg.animation;
-      if (msg.document && /^(image|video)\\//.test(msg.document.mime_type || "")) media = msg.document;
+      if (msg.document && /^(image|video)\//.test(msg.document.mime_type || "")) media = msg.document;
       let fileId = null, mediaKind = "image", mime = null;
       if (text.toLowerCase() !== "تخطي") {
         if (session.type === "large" && !media) { await ctx.reply("ارسل صورة أو فيديو أو GIF، أو اكتب تخطي."); return true; }
@@ -218,7 +218,7 @@ export async function handleMiniAppPanelMessage(ctx) {
     if (session.step === "media") {
       const msg = ctx.message;
       let media = msg.audio || msg.voice || msg.video;
-      if (msg.document && /^(audio|video)\\//.test(msg.document.mime_type || "")) media = msg.document;
+      if (msg.document && /^(audio|video)\//.test(msg.document.mime_type || "")) media = msg.document;
       if (!media) { await ctx.reply("ارسل ملف صوتي أو فيديو."); return true; }
       if ((media.file_size || 0) > 20 * 1024 * 1024) { await ctx.reply("الملف أكبر من 20 ميجابايت."); return true; }
       const mime = media.mime_type || (msg.video ? "video/mp4" : msg.voice ? "audio/ogg" : "audio/mpeg");
