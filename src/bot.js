@@ -24,6 +24,7 @@ import { handleInlineGamesQuery } from "./inline-games.js";
 import { handleCustomCommandManagement, resolveCustomAlias, hasCustomCommandSession } from "./custom-commands.js";
 import { handleTemporaryMessages, handleTemporaryMessageCallback, startTemporaryMessageScheduler } from "./temporary-messages.js";
 import { handleWhisperMessage, handleWhisperStart, handleWhisperCallback } from "./whispers.js";
+import { handleYouTubeAudioMessage, handleYouTubeAudioCallback } from "./youtube-audio.js";
 
 const aliasExecutionKeys = new Set();
 
@@ -97,6 +98,7 @@ export function createBot() {
   bot.on("inline_query", handleInlineGamesQuery);
   bot.callbackQuery(/^tmp:/, handleTemporaryMessageCallback);
   bot.callbackQuery(/^wh_(temp|open):/, handleWhisperCallback);
+  bot.callbackQuery(/^ytpick:/, handleYouTubeAudioCallback);
 
   bot.command("start", async (ctx) => {
     if (await handleWhisperStart(ctx)) return;
@@ -127,6 +129,7 @@ export function createBot() {
       if (await handleCustomCommandManagement(ctx)) return;
       if (await handleTemporaryMessages(ctx)) return;
       if (await handleWhisperMessage(ctx)) return;
+      if (await handleYouTubeAudioMessage(ctx)) return;
       if (await handleDeveloperPanelMessage(ctx)) return;
       if (await handleStartEditorMessage(ctx)) return;
       if (await handleDeveloperPanelCommand(ctx)) return;
