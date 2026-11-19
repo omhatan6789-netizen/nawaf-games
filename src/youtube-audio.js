@@ -1,9 +1,10 @@
-import { Bot, InputFile } from "grammy";
+import { InputFile } from "grammy";
 import { mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
-import { Readable } from "node:stream";
+import { Readable, Transform } from "node:stream";
+import { createWriteStream } from "node:fs";
 
 const BOT_USERNAME = "lnll0bot";
 const RESULT_COUNT = 4;
@@ -98,14 +99,14 @@ async function downloadSamplecut(videoUrl, folder) {
   if (length > MAX_AUDIO_BYTES) throw new Error("حجم الصوت أكبر من الحد المسموح");
   const filePath = join(folder, "audio.mp3");
   let total = 0;
-  const limiter = new (await import("node:stream")).Transform({
+  const limiter = new Transform({
     transform(chunk, encoding, callback) {
       total += chunk.length;
       if (total > MAX_AUDIO_BYTES) callback(new Error("حجم الصوت أكبر من الحد المسموح"));
       else callback(null, chunk);
     },
   });
-  await pipeline(Readable.fromWeb(response.body), limiter, (await import("node:fs")).createWriteStream(filePath));
+  await pipeline(Readable.fromWeb(response.body), limiter, createWriteStream(filePath));
   const info = await stat(filePath);
   if (!info.size) throw new Error("ملف الصوت فارغ");
   const encodedTitle = response.headers.get("X-Samplecut-Title");
@@ -178,7 +179,6 @@ export async function handleYouTubeAudioCallback(ctx) {
       ...(duration ? { duration } : {}),
       caption,
       reply_markup: { inline_keyboard: [[{ text: "🌷", url: `https://t.me/${BOT_USERNAME}` }]] },
-      reply_parameters: { message_id: message.message_id },
     });
     await ctx.api.deleteMessage(chatId, status.message_id);
   } catch (error) {
