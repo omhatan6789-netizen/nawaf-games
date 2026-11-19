@@ -7,6 +7,9 @@ import { handleResetCommand, handleResetCallback } from "./handlers/reset-stats.
 import { handleRoleManagementCommand, handleRolesClearCallback } from "./handlers/role-management.js";
 import { handleCommandLockFlow, enforceCommandLock, handleUserPermissionCommand } from "./handlers/command-permissions.js";
 import { handleReplyManagement, checkAutoReplies, hasReplySession } from "./replies.js";
+import { handleBlockedWords, handleBlockedWordCallback, hasBlockedWordSession, cleanupBlockedWarningsLoop } from "./handlers/blocked-words.js";
+import { handleModerationCommand, handleModerationCallback, handleRepetitionPunishmentCallback, handleMutedMessage, moderationExpiryLoop } from "./handlers/moderation.js";
+import { handleRepetitionCommand, handleRepetitionMessage } from "./handlers/repetition.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -37,6 +40,9 @@ export function createBot() {
   bot.callbackQuery(/^topmenu:/, handleTopCallback);
   bot.callbackQuery(/^statsreset:/, handleResetCallback);
   bot.callbackQuery(/^roles_clear:/, handleRolesClearCallback);
+  bot.callbackQuery(/^bw:/, handleBlockedWordCallback);
+  bot.callbackQuery(/^moderation:clear:/, handleModerationCallback);
+  bot.callbackQuery(/^repetition_punish:/, handleRepetitionPunishmentCallback);
 
   bot.command("ping", async (ctx) => {
     await ctx.reply("البوت يعمل ✅");
@@ -45,6 +51,8 @@ export function createBot() {
   bot.on("message", async (ctx) => {
     try {
       recordGroupTextMessage(ctx);
+      await handleMutedMessage(ctx);
+      if (hasBlockedWordSession(ctx.from?.id, ctx.chat?.id) || await handleBlockedWords(ctx)) return;
       if (await handleCommandLockFlow(ctx)) return;
 
       if (hasReplySession(ctx.from?.id)) {
@@ -57,18 +65,23 @@ export function createBot() {
       if (await enforceCommandLock(ctx)) return;
       if (await handleReplyManagement(ctx)) return;
 
+      if (await handleRepetitionCommand(ctx)) return;
+      if (await handleModerationCommand(ctx)) return;
       await handleRoleManagementCommand(ctx);
       await handleResetCommand(ctx);
       await handleRankCommand(ctx);
       await handleActivityCommand(ctx);
       await handlePointsMessage(ctx);
       await checkAutoReplies(ctx);
+      await handleRepetitionMessage(ctx);
     } catch (error) {
       console.error("Message handler failed:", error);
       try { await ctx.reply("❌ حصل خطأ أثناء تنفيذ الأمر، حاول مرة ثانية."); } catch {}
     }
   });
 
+  cleanupBlockedWarningsLoop().catch(error => console.error("Blocked warnings loop failed:", error));
+  moderationExpiryLoop(bot).catch(error => console.error("Moderation expiry loop failed:", error));
   bot.catch((err) => console.error("Telegram bot error:", err));
   return bot;
 }
