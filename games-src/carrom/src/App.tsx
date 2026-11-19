@@ -91,7 +91,7 @@ function getInitialRoomCodeFromUrl(): string {
   if (startParam.startsWith('carrom_')) {
     return startParam.slice(7).trim().toUpperCase();
   }
-  if (startParam.startsWith('carrom_')) {\n    return startParam.slice(7).trim().toUpperCase();\n  }\n  if (startParam.startsWith('online_lobby_')) {
+  if (startParam.startsWith('online_lobby_')) {
     return startParam.slice(13).trim().toUpperCase();
   }
   return '';
