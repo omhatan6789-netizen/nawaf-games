@@ -54,6 +54,27 @@ export async function ensureDeveloperPanelSchema() {
         error TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+      DO $
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema=current_schema() AND table_name='developer_bot_chats'
+            AND column_name='active' AND data_type <> 'boolean'
+        ) THEN
+          ALTER TABLE developer_bot_chats
+            ALTER COLUMN active TYPE BOOLEAN
+            USING (active::text IN ('1','true','t'));
+        END IF;
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema=current_schema() AND table_name='developer_broadcast_targets'
+            AND column_name='success' AND data_type <> 'boolean'
+        ) THEN
+          ALTER TABLE developer_broadcast_targets
+            ALTER COLUMN success TYPE BOOLEAN
+            USING (success::text IN ('1','true','t'));
+        END IF;
+      END $;
       CREATE INDEX IF NOT EXISTS idx_developer_bot_chats_active
         ON developer_bot_chats(active,chat_type);
       CREATE INDEX IF NOT EXISTS idx_developer_broadcast_targets_broadcast
