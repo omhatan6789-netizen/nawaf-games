@@ -336,12 +336,12 @@ export async function handleStartEditorMessage(ctx) {
       const username=normalizeUsername(text);
       if(!username){await reply("اليوزر غير صحيح.");return true;}
       if(session.action==="access_add"){
-        await db().query("INSERT INTO start_access(username) VALUES($1) ON CONFLICT(username) DO NOTHING",[username]);
+        await db().query("INSERT INTO start_access(username) SELECT $1 WHERE NOT EXISTS (SELECT 1 FROM start_access WHERE lower(username)=lower($1))",[username]);
       }else await db().query("DELETE FROM start_access WHERE lower(username)=lower($1)",[username]);
     }else{
       if(!/^\d{5,20}$/.test(text)){await reply("ارسل أيدي صحيح أو يوزر يبدأ بـ @.");return true;}
       if(session.action==="access_add"){
-        await db().query("INSERT INTO start_access(user_id) VALUES($1) ON CONFLICT(user_id) DO NOTHING",[text]);
+        await db().query("INSERT INTO start_access(user_id) SELECT $1 WHERE NOT EXISTS (SELECT 1 FROM start_access WHERE user_id=$1)",[text]);
       }else await db().query("DELETE FROM start_access WHERE user_id=$1",[text]);
     }
     sessions.delete(userId);
