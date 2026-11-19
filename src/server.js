@@ -7,6 +7,9 @@ import httpProxy from "http-proxy";
 import { createBot } from "./bot.js";
 import { checkDatabase } from "./db.js";
 import { flushPendingActivity } from "./activity.js";
+import { ensureModerationSchema } from "./moderation-schema.js";
+
+ensureModerationSchema().catch(error => console.error("Moderation schema initialization failed:", error));
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
