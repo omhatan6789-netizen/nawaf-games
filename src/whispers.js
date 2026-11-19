@@ -277,7 +277,6 @@ export async function handleWhisperMessage(ctx) {
       JSON.stringify(content.pages || []), content.mediaType || null, content.mediaFileId || null, content.caption || null]
   );
   drafts.delete(active.id);
-  drafts.delete(replyId);
   try { await ctx.deleteMessage(); } catch {}
   await ctx.reply(`تمام، ارسلت همستك لـ ${active.targetName} بنجاح .`);
   return true;
