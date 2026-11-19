@@ -19,7 +19,7 @@ async function targetOf(ctx){
 }
 async function act(ctx,action,target,seconds,reason){
  const until=seconds?new Date(Date.now()+seconds*1000):null,table={mute:"bot_mutes",restrict:"restrictions",ban:"moderation_bans"}[action];
- if(action==="restrict")await ctx.api.restrictChatMember(ctx.chat.id,target.id,{can_send_messages:false},until?{until_date:until}:{});
+ if(action==="restrict")await ctx.api.restrictChatMember(ctx.chat.id,target.id,{can_send_messages:false},until?{until_date:Math.floor(until.getTime()/1000)}:{});
  if(action==="ban")await ctx.api.banChatMember(ctx.chat.id,target.id,{...(until?{until_date:until}:{})});
  await saveSanction(table,ctx.chat.id,target,until,reason,ctx.from.id);
  const label={mute:"كتم",restrict:"تقييد",ban:"حظر"}[action];
@@ -106,7 +106,7 @@ export async function handleRepetitionPunishmentCallback(ctx){
  if(await getWarningCount(chat,userId)<3||userId===OWNER_ID||(await getRankLevel(userId,chat))>=(await getRankLevel(ctx.from.id,chat))){await ctx.answerCallbackQuery({text:"❌ لا يمكنك تطبيق العقوبة عليه.",show_alert:true});return;}
  let target;try{const u=await ctx.api.getChat(userId);target={id:u.id,username:u.username,first_name:u.first_name||u.title};}catch{await ctx.answerCallbackQuery({text:"تعذر العثور على المستخدم.",show_alert:true});return;}
  const p=await import("../db.js"),r=await p.pool.query("SELECT repetition_punishment_duration FROM protection_settings WHERE chat_id=$1",[String(chat)]),until=new Date(Date.now()+Number(r.rows[0]?.repetition_punishment_duration??300)*1000);
- if(action==="restrict")await ctx.api.restrictChatMember(chat,userId,{can_send_messages:false},{until_date:until});
+ if(action==="restrict")await ctx.api.restrictChatMember(chat,userId,{can_send_messages:false},{until_date:Math.floor(until.getTime()/1000)});
  await saveSanction(action==="mute"?"bot_mutes":"restrictions",chat,target,until,"التكرار",ctx.me.id);await clearWarnings(chat,userId);
  await ctx.answerCallbackQuery({text:"تم اختيار العقوبة وتصفير إنذاراته."});try{await ctx.editMessageText("• ✅ تم اختيار العقوبة المناسبة بنجاح .");}catch{}
 }
