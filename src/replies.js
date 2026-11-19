@@ -4,6 +4,8 @@ import { getRank, getRankLevel, getDeveloperType } from "./ranks.js";
 const sessions = new Map();
 let normalCache = null;
 let specialCache = null;
+let cacheLoadedAt = 0;
+const CACHE_TTL_MS = 15000;
 const PLACEHOLDERS = ["#الاسم", "#يوزره", "#اليوزر", "#الرسائل", "#الايدي", "#الرتبه", "#التعديل", "#النقاط"];
 
 function db() {
@@ -16,9 +18,10 @@ function isAdmin(userId) {
 function invalidateCache() {
   normalCache = null;
   specialCache = null;
+  cacheLoadedAt = 0;
 }
 async function loadCache() {
-  if (normalCache && specialCache) return;
+  if (normalCache && specialCache && Date.now() - cacheLoadedAt < CACHE_TTL_MS) return;
   const [normal, special] = await Promise.all([
     db().query("SELECT name, text, type, caption, entities FROM replies ORDER BY name"),
     db().query("SELECT name, text, type, caption, entities FROM special_replies ORDER BY name"),
@@ -29,6 +32,7 @@ async function loadCache() {
   specialCache = special.rows.map(row => ({
     name: row.name, text: row.text, type: row.type, caption: row.caption, entities: row.entities,
   }));
+  cacheLoadedAt = Date.now();
 }
 function parseMetadata(value) {
   if (!value) return { entities: undefined, sourceChatId: null, sourceMessageId: null, copyable: false };
