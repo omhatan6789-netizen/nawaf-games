@@ -11,13 +11,16 @@ const group=ctx=>["group","supergroup"].includes(ctx.chat?.type);
 function parseDuration(t){const m=String(t??"").trim().match(/^(\d+(?:\.\d+)?)\s*(ث|ثانية|ثواني|د|دقيقة|دقائق|س|ساعة|ساعات|ي|يوم|أيام)$/);if(!m)return null;const n=Number(m[1]);if(n<1)return null;return Math.floor(n*({"ث":1,"ثانية":1,"ثواني":1,"د":60,"دقيقة":60,"دقائق":60,"س":3600,"ساعة":3600,"ساعات":3600,"ي":86400,"يوم":86400,"أيام":86400}[m[2]]));}
 function formatDuration(n){return n%86400===0?(n/86400)+" يوم":n%3600===0?(n/3600)+" ساعة":n%60===0?(n/60)+" دقيقة":n+" ثانية";}
 async function canManage(id,chat){return Number(id)===OWNER_ID||Boolean(await getDeveloperType(id))||(await getRankLevel(id,chat))>=3;}
+async function ensureChat(chat){await pool.query("INSERT INTO chats(chat_id,chat_type,title) VALUES($1,'supergroup','') ON CONFLICT(chat_id) DO NOTHING",[String(chat)]);}
 async function settings(chat){
- const r=await pool.query("INSERT INTO protection_settings(chat_id) VALUES($1) ON CONFLICT DO NOTHING",[String(chat)]);
+ await ensureChat(chat);
+ await pool.query("INSERT INTO protection_settings(chat_id) VALUES($1) ON CONFLICT DO NOTHING",[String(chat)]);
  const q=await pool.query("SELECT repetition_enabled,repetition_limit,repetition_seconds,repetition_rank,repetition_punishment_duration FROM protection_settings WHERE chat_id=$1",[String(chat)]);
  const x=q.rows[0]||{};return {enabled:Boolean(x.repetition_enabled),limit:Math.max(1,Number(x.repetition_limit||3)),seconds:Math.max(1,Number(x.repetition_seconds||5)),rank:x.repetition_rank||"عضو",punishment:Math.max(1,Number(x.repetition_punishment_duration||300))};
 }
 async function update(chat,column,value){
  const allowed=["repetition_enabled","repetition_limit","repetition_seconds","repetition_rank","repetition_punishment_duration"];if(!allowed.includes(column))throw new Error("Invalid repetition setting");
+ await ensureChat(chat);
  await pool.query("INSERT INTO protection_settings(chat_id) VALUES($1) ON CONFLICT DO NOTHING",[String(chat)]);
  await pool.query("UPDATE protection_settings SET "+column+"=$2 WHERE chat_id=$1",[String(chat),value]);
 }
