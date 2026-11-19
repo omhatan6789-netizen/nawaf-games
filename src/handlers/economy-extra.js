@@ -73,6 +73,38 @@ export async function handleEconomyExtraCallback(ctx) {
   return true;
 }
 
+
+async function ensureScratchCodes(){
+  const c=await db().connect(), hour=Math.floor(Date.now()/3600000), chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  try{
+    await c.query("BEGIN");await c.query("SELECT pg_advisory_xact_lock($1::bigint)",[918273645]);
+    let count=Number((await c.query("SELECT COUNT(*) FROM scratch_codes WHERE hour_key=$1",[hour])).rows[0].count);
+    while(count<10){
+      const code=Array.from({length:12},()=>chars[randomInt(chars.length)]).join("");
+      const r=await c.query("INSERT INTO scratch_codes(code,amount,hour_key,expires_at) VALUES($1,$2,$3,date_trunc('hour',NOW())+interval '1 hour') ON CONFLICT(code) DO NOTHING RETURNING id",[code,randomInt(70,10000001),hour]);
+      if(r.rowCount)count++;
+    }
+    await c.query("COMMIT");
+  }catch(e){await c.query("ROLLBACK");throw e;}finally{c.release();}
+}
+async function scratchCode(userId,code){
+  const c=await db().connect();
+  try{
+    await c.query("BEGIN");await ensureUser(c,userId);
+    await c.query("SELECT pg_advisory_xact_lock($1::bigint)",[String(userId)]);
+    const last=await c.query("SELECT last_scratched_at FROM scratch_limits WHERE user_id=$1 FOR UPDATE",[String(userId)]);
+    if(last.rows[0]){
+      const remaining=Math.ceil((new Date(last.rows[0].last_scratched_at).getTime()+7200000-Date.now())/1000);
+      if(remaining>0){await c.query("COMMIT");return {status:"cooldown",remaining};}
+    }
+    const r=await c.query("UPDATE scratch_codes SET used=TRUE,used_by=$1 WHERE code=$2 AND used=FALSE AND expires_at>NOW() RETURNING amount",[String(userId),code]);
+    if(!r.rowCount){await c.query("COMMIT");return {status:"invalid"};}
+    await c.query("INSERT INTO scratch_limits(user_id,last_scratched_at) VALUES($1,NOW()) ON CONFLICT(user_id) DO UPDATE SET last_scratched_at=EXCLUDED.last_scratched_at",[String(userId)]);
+    await c.query("UPDATE points SET points=points+$2 WHERE user_id=$1",[String(userId),Number(r.rows[0].amount)]);
+    await c.query("COMMIT");return {status:"success",amount:Number(r.rows[0].amount)};
+  }catch(e){await c.query("ROLLBACK");throw e;}finally{c.release();}
+}
+
 export async function handleEconomyExtraMessage(ctx) {
   const msg=ctx.message, text=msg?.text?.trim(), user=ctx.from;
   if(!msg||!user||!ctx.chat)return false;
