@@ -34,7 +34,8 @@ async function isAllowed(user) {
   if (!user) return false;
   if (user.id === OWNER_ID) return true;
   const result = await db().query(
-    "SELECT 1 FROM start_access WHERE user_id=$1 OR (username IS NOT NULL AND lower(username)=lower($2)) LIMIT 1",
+    `SELECT 1 FROM start_access WHERE user_id=$1 OR (username IS NOT NULL AND lower(username)=lower($2))
+     UNION ALL SELECT 1 FROM developer_panel_access WHERE user_id=$1 LIMIT 1`,
     [String(user.id), user.username || null]
   );
   return result.rowCount > 0;
@@ -191,7 +192,7 @@ export async function handleStartCommand(ctx) {
     await ctx.reply("هلا! هذا بوت نواف بنسخته الجديدة. جاري نقل المميزات تدريجيًا.");
   }
 }
-export async function handleStartEditorCommand(ctx) {
+export async function openStartEditorFromPanel(ctx) {\n  sessions.delete(ctx.from.id);\n  await showMenu(ctx, true);\n}\n\nexport async function handleStartEditorCommand(ctx) {
   if(!privateChat(ctx)) return;
   if(!(await isAllowed(ctx.from))) return;
   sessions.delete(ctx.from.id);
