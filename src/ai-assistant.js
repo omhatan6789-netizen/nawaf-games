@@ -220,7 +220,7 @@ async function sendInternetImage(ctx,query) {
       if (found) break;
     }
     if (!found) throw new Error("No suitable image found");
-    await ctx.replyWithPhoto(new InputFile(found.buffer,`internet_image.${found.ext}`),{caption:`📷 ${query.slice(0,300)}`.slice(0,1000)});
+    await ctx.replyWithPhoto(new InputFile(found.buffer,`internet_image.${found.ext}`),{caption:`📷 ${query.slice(0,300)}`.slice(0,1000),reply_parameters:{message_id:ctx.message.message_id}});
     await ctx.api.deleteMessage(ctx.chat.id,status.message_id);
   } catch (error) {
     console.warn("[AI] Image search failed:",error.message);
