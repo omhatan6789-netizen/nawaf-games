@@ -223,23 +223,19 @@ function showGames(){
    const placeholder=document.createElement('div');placeholder.className='game-cover-placeholder';placeholder.textContent=emoji;card.appendChild(placeholder);
   }
   const label=document.createElement('span');label.className='label';label.textContent=name;card.appendChild(label);
-  card.onclick=()=>{if(type==='carrom'||type==='gravity'){location.href='/'+type;return;}if(type==='connect'){showConnect4Setup();return;}if(type==='word'){showWordSetup();return;}showMiniGameInstructions(type);};
+  card.onclick=()=>{if(type==='carrom'||type==='gravity'){location.href='/'+type;return;}if(type==='connect'){showConnect4ModeChoice();return;}if(type==='word'){showWordSetup();return;}showMiniGameInstructions(type);};
   pageContent.appendChild(card);
  });
 }
 function showMiniGameInstructions(type){
  stopMiniGameTimers();document.body.classList.add('c4-active');
  const shell=c4Shell(),isDots=type==='dots',title=isDots?'المربعات 🟦':'اختبر ذاكرتك 🧠';
- shell.innerHTML='<div class="c4-heading"><h2>'+title+'</h2><p>اختر طريقة اللعب</p></div><div class="c4-panel"><button class="c4-start" id="mg-solo">🤖 العب ضد البوت</button><button class="c4-secondary" id="mg-multi">👥 تحدَّ لاعبًا</button><div class="c4-result show">'+(isDots?'ارسم الخطوط وأكمل المربعات لتحصل على نقاط.':'احفظ تسلسل الألوان وكرره، وكل جولة يزيد التسلسل.')+'</div><button class="c4-secondary" id="mg-back">رجوع للألعاب</button></div>';
+ shell.innerHTML='<div class="c4-heading"><h2>'+title+'</h2><p>اختر طريقة اللعب</p></div><div class="c4-panel"><button class="c4-start" id="mg-solo">🤖 لعب ضد البوت</button><button class="c4-secondary" id="mg-multi">👥 لعب ضد شخص بالتيليجرام</button><div class="c4-result show">'+(isDots?'ارسم الخطوط وأكمل المربعات لتحصل على نقاط.':'احفظ تسلسل الألوان وكرره، وكل جولة يزيد التسلسل.')+'</div><button class="c4-secondary" id="mg-back">رجوع للألعاب</button></div>';
  shell.querySelector('#mg-solo').onclick=()=>showMiniGameDifficulty(type);
- shell.querySelector('#mg-multi').onclick=()=>showMiniGameMultiplayerInfo(type);
+ shell.querySelector('#mg-multi').onclick=()=>openInlineGamePicker(type);
  shell.querySelector('#mg-back').onclick=showGames;
 }
-function showMiniGameMultiplayerInfo(type){
- const shell=c4Shell(),command=type==='dots'?'مربعات':'ذاكرة';
- shell.innerHTML='<div class="c4-heading"><h2>تحدي لاعب 👥</h2></div><div class="c4-panel"><div class="c4-result show">رد على رسالة اللاعب في القروب واكتب <b>'+command+'</b>، أو أضف مبلغ الرهان مثل <b>'+command+' 50000</b>. الرهان الافتراضي 20,000 لكل لاعب.</div><button class="c4-secondary" id="mg-back">رجوع</button></div>';
- shell.querySelector('#mg-back').onclick=()=>showMiniGameInstructions(type);
-}
+function showMiniGameMultiplayerInfo(type){openInlineGamePicker(type);}
 function showMiniGameDifficulty(type){
  stopMiniGameTimers();const shell=c4Shell(),title=type==='dots'?'المربعات 🟦':'اختبر ذاكرتك 🧠';
  const levels=[['سهل','مناسب للتجربة'],['متوسط','تحدي متوازن'],['صعب','خصم أذكى'],['مستحيل','أقوى مستوى']];
@@ -264,6 +260,19 @@ let miniSoloGame=null,miniSoloId=null,miniSoloPoll=null,miniSoloBotTimer=null,mi
 const c4Levels=[['سهل','مناسب للتجربة'],['متوسط','تحدي متوازن'],['صعب','يفكر قبل أن يلعب'],['مستحيل','أقوى تحدي']];
 function stopC4Timer(){if(c4Timer)clearTimeout(c4Timer);if(c4Tick)clearInterval(c4Tick);if(c4BotTimer)clearTimeout(c4BotTimer);if(c4PollTimer)clearTimeout(c4PollTimer);if(c4ChallengePollTimer)clearTimeout(c4ChallengePollTimer);c4Timer=null;c4Tick=null;c4BotTimer=null;c4PollTimer=null;c4ChallengePollTimer=null;}
 function c4Shell(){document.body.classList.add('c4-active');pageContent.innerHTML='<div class="c4-shell" id="c4-shell"></div>';return document.getElementById('c4-shell');}
+function openInlineGamePicker(type){
+ const queries={connect:'كونكت 4',dots:'المربعات',memory:'الذاكرة',word:'خمن الكلمة',carrom:'الكيرم',gravity:'جري الجاذبية'};
+ const query=queries[type];if(!query)return;
+ if(typeof tg?.switchInlineQuery!=='function'){alert('افتح الميني آب من داخل تطبيق تيليجرام لاختيار المحادثة.');return;}
+ try{tg.switchInlineQuery(query,['users','groups','channels']);}catch(e){alert('تعذر فتح اختيار المحادثة. حدّث تيليجرام وحاول مرة ثانية.');}
+}
+function showConnect4ModeChoice(){
+ stopC4Timer();const shell=c4Shell();
+ shell.innerHTML='<div class="c4-heading"><h2>كونكت 4 🔴🔵</h2><p>اختر طريقة اللعب</p></div><div class="c4-panel"><button class="c4-start" id="c4-vs-bot">🤖 لعب ضد البوت</button><button class="c4-secondary" id="c4-vs-telegram">👥 لعب ضد شخص بالتيليجرام</button><button class="c4-secondary" id="c4-mode-back">رجوع للألعاب</button></div>';
+ shell.querySelector('#c4-vs-bot').onclick=showConnect4Setup;
+ shell.querySelector('#c4-vs-telegram').onclick=()=>openInlineGamePicker('connect');
+ shell.querySelector('#c4-mode-back').onclick=showGames;
+}
 function showConnect4Setup(){
  stopC4Timer();c4Game=null;c4Busy=false;c4RpsChoice=null;
  const shell=c4Shell();
@@ -752,13 +761,19 @@ function stopExtraGame(){
 }
 function showWordSetup(){
  stopExtraGame();const shell=c4Shell();
- shell.innerHTML='<div class="c4-heading"><h2>خمن الكلمة 🔤</h2><p>اكتشف الكلمة قبل انتهاء محاولاتك أو وقت الجولة</p></div><div class="c4-panel"><label class="c4-label">عدد الكلمات في اللعبة</label><input id="word-count" type="number" min="1" max="15" value="5" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit"><label class="c4-label" style="display:block;margin-top:15px">طول الكلمة</label><div class="c4-levels" id="word-length-options"><button type="button" class="c4-level active" data-length="5">5 أحرف</button><button type="button" class="c4-level" data-length="4">4 أحرف</button><button type="button" class="c4-level" data-length="0">كلهم 4 و 5</button></div><label class="c4-label" style="display:block;margin-top:15px">عدد المحاولات لكل كلمة</label><input id="word-attempts" type="number" min="1" max="12" value="6" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit"><label class="c4-label" style="display:block;margin-top:15px">مدة الجولة بالثواني</label><input id="word-seconds" type="number" min="15" max="3600" value="180" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit"><label class="c4-label" style="display:block;margin-top:15px">عدد الكلمات الصحيحة للفوز</label><input id="word-target" type="number" min="1" max="15" value="3" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit"><button class="c4-start" id="word-training">🤖 العب ضد البوت</button><button class="c4-secondary" id="word-online">👥 أنشئ غرفة أونلاين</button><div class="c4-result show" style="text-align:right;line-height:2;font-size:13px">🟩 أخضر: الحرف صحيح بمكانه<br>🟧 برتقالي: الحرف موجود بمكان آخر<br>⬜ أبيض: الحرف غير موجود<br>🟪 الإطار البنفسجي: اختلاف إملائي مقبول<br><small>قائمة الكلمات تحتوي كلمات عربية من 4 أو 5 أحرف فقط.</small></div><button class="c4-secondary" id="word-back">رجوع للألعاب</button></div>';
+ shell.innerHTML='<div class="c4-heading"><h2>خمن الكلمة 🔤</h2><p>اختر طريقة اللعب</p></div><div class="c4-panel"><button class="c4-start" id="word-vs-bot">🤖 لعب ضد البوت</button><button class="c4-secondary" id="word-vs-telegram">👥 لعب ضد شخص بالتيليجرام</button><div class="c4-result show" style="text-align:right;line-height:2;font-size:13px">🟩 أخضر: الحرف صحيح بمكانه<br>🟧 برتقالي: الحرف موجود بمكان آخر<br>⬜ أبيض: الحرف غير موجود<br>🟪 الإطار البنفسجي: اختلاف إملائي مقبول</div><button class="c4-secondary" id="word-back">رجوع للألعاب</button></div>';
+ shell.querySelector('#word-vs-bot').onclick=showWordTrainingSetup;
+ shell.querySelector('#word-vs-telegram').onclick=()=>openInlineGamePicker('word');
+ shell.querySelector('#word-back').onclick=showGames;
+}
+function showWordTrainingSetup(){
+ stopExtraGame();const shell=c4Shell();
+ shell.innerHTML='<div class="c4-heading"><h2>خمن الكلمة 🔤</h2><p>اكتشف الكلمة قبل انتهاء محاولاتك أو وقت الجولة</p></div><div class="c4-panel"><label class="c4-label">عدد الكلمات في اللعبة</label><input id="word-count" type="number" min="1" max="15" value="5" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit"><label class="c4-label" style="display:block;margin-top:15px">طول الكلمة</label><div class="c4-levels" id="word-length-options"><button type="button" class="c4-level active" data-length="5">5 أحرف</button><button type="button" class="c4-level" data-length="4">4 أحرف</button><button type="button" class="c4-level" data-length="0">كلهم 4 و 5</button></div><label class="c4-label" style="display:block;margin-top:15px">عدد المحاولات لكل كلمة</label><input id="word-attempts" type="number" min="1" max="12" value="6" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit"><label class="c4-label" style="display:block;margin-top:15px">مدة الجولة بالثواني</label><input id="word-seconds" type="number" min="15" max="3600" value="180" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit"><label class="c4-label" style="display:block;margin-top:15px">عدد الكلمات الصحيحة للفوز</label><input id="word-target" type="number" min="1" max="15" value="3" style="width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff40;background:#17090b;color:white;font:inherit"><button class="c4-start" id="word-training">🤖 ابدأ اللعب ضد البوت</button><div class="c4-result show" style="text-align:right;line-height:2;font-size:13px">🟩 أخضر: الحرف صحيح بمكانه<br>🟧 برتقالي: الحرف موجود بمكان آخر<br>⬜ أبيض: الحرف غير موجود<br>🟪 الإطار البنفسجي: اختلاف إملائي مقبول<br><small>قائمة الكلمات تحتوي كلمات عربية من 4 أو 5 أحرف فقط.</small></div><button class="c4-secondary" id="word-back">رجوع للألعاب</button></div>';
  let wordLength=5;
  const lengthOptions=shell.querySelector('#word-length-options');
  lengthOptions.querySelectorAll('button').forEach(b=>b.onclick=()=>{wordLength=Number(b.dataset.length);lengthOptions.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));});
  shell.querySelector('#word-back').onclick=showGames;
  shell.querySelector('#word-training').onclick=()=>createWordGame('training',wordLength);
- shell.querySelector('#word-online').onclick=()=>createWordGame('online',wordLength);
 }
 async function createWordGame(mode,wordLength){
  const shell=document.getElementById('c4-shell');
