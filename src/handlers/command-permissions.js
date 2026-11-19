@@ -118,7 +118,7 @@ export async function enforceCommandLock(ctx) {
   ];
   const command = candidates
     .filter(item => text === item.command || text.startsWith(item.command + " "))
-    .sort((a, b) => b.command.length - a.command.length)[0];
+    .sort((a, b) => b.command.length - a.command.length || (a.source === "user" ? -1 : 1))[0];
   if (!command) return false;
 
   // A personal permission explicitly overrides the rank lock for this command.
