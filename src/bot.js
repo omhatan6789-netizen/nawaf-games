@@ -28,6 +28,7 @@ import { handleYouTubeAudioMessage, handleYouTubeAudioCallback } from "./youtube
 import { handleCommandsMenuMessage, handleCommandsMenuCallback } from "./commands-menu.js";
 import { handleSendMessage } from "./send.js";
 import { handleMiniAppPanelMessage, handleMiniAppPanelCallback } from "./mini-app-panel.js";
+import { handleAiAssistantMessage } from "./ai-assistant.js";
 
 const aliasExecutionKeys = new Set();
 
@@ -139,6 +140,7 @@ export function createBot() {
       if (await handleTemporaryMessages(ctx)) return;
       if (await handleWhisperMessage(ctx)) return;
       if (await handleYouTubeAudioMessage(ctx)) return;
+      if (await handleAiAssistantMessage(ctx)) return;
       if (await handleDeveloperPanelMessage(ctx)) return;
       if (await handleStartEditorMessage(ctx)) return;
       if (await handleDeveloperPanelCommand(ctx)) return;
