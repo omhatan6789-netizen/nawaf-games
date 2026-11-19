@@ -6,6 +6,8 @@ const GAME_INFO = {
   dots: ["Dots and Boxes 🟦", "ارسم الخطوط واجمع أكبر عدد من المربعات"],
   memory: ["Memory Match 🧠", "اختبر ذاكرتك وطابق الألوان والتسلسل"],
   word: ["خمن الكلمة 🔤", "تحدَّ حتى 10 لاعبين واكتشفوا الكلمة قبل انتهاء الوقت"],
+  carrom: ["الكيرم 🎯", "صوّب الأقراص نحو الجيوب وتحدَّ لاعبًا آخر"],
+  gravity: ["جري الجاذبية 🏃", "بدّل الجاذبية وتنافس مع لاعب آخر في سباق البقاء"],
 };
 
 const WORDS = ["سيارة", "مدرسة", "مكتبة", "طائرة", "حاسوب", "نافذة", "حديقة", "مفتاح", "مصباح", "وسادة", "حقيبة", "ثلاجة", "غسالة", "مروحة", "تلفاز", "سفينة", "دراجة", "طاولة", "ملعقة", "تفاحة"];
@@ -17,6 +19,8 @@ function selectGames(query = "") {
   if (/(مربع|المربعات|dots|dot)/i.test(value)) return ["dots"];
   if (/(ذاكرة|ذاكرت|memory)/i.test(value)) return ["memory"];
   if (/(خمن|كلمة|word)/i.test(value)) return ["word"];
+  if (/(كيرم|carrom)/i.test(value)) return ["carrom"];
+  if (/(جري الجاذبية|الجاذبية|gravity)/i.test(value)) return ["gravity"];
   return Object.keys(GAME_INFO);
 }
 
