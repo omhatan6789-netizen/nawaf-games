@@ -16,6 +16,7 @@ import { ensureStartEditorSchema } from "./start-editor-schema.js";
 import { ensureDeveloperPanelSchema } from "./developer-panel-schema.js";
 import { ensureGamesManagerSchema } from "./games-manager-schema.js";
 import { pool } from "./db.js";
+import { registerMiniGameRoutes } from "./mini-games-api.js";
 
 ensureModerationSchema().catch(error => console.error("Moderation schema initialization failed:", error));
 ensureProfileRepliesSchema().catch(error => console.error("Profile replies schema initialization failed:", error));
@@ -37,6 +38,7 @@ const gameProxies = new Map();
 
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: "1mb" }));
+if (pool) registerMiniGameRoutes(app, pool, process.env.BOT_TOKEN);
 app.use("/miniapp", express.static("public"));
 app.use("/mini_app", express.static("public/mini_app"));
 
