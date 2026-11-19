@@ -13,6 +13,7 @@ import { handleRepetitionCommand, handleRepetitionMessage } from "./handlers/rep
 import { handleDeleteMessages } from "./handlers/delete-messages.js";
 import { handleUserIdCommand } from "./handlers/user-id.js";
 import { handleProfileReplies } from "./profile-replies.js";
+import { handleEconomyMessage, handleEconomyCallback } from "./handlers/economy.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -40,6 +41,7 @@ export function createBot() {
     await ctx.reply("هلا! هذا بوت نواف بنسخته الجديدة. جاري نقل المميزات تدريجيًا.");
   });
 
+  bot.callbackQuery(/^tasliyat:bank:/, handleEconomyCallback);
   bot.callbackQuery(/^topmenu:/, handleTopCallback);
   bot.callbackQuery(/^statsreset:/, handleResetCallback);
   bot.callbackQuery(/^roles_clear:/, handleRolesClearCallback);
