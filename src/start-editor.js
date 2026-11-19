@@ -154,7 +154,9 @@ async function sendConfiguredStart(ctx) {
   try { rank=await getRank(user.id); } catch {}
   const data={messages:Number(userRow.rows[0]?.messages||0),points:Number(pointsRow.rows[0]?.points||0)};
   const baseText=setting?.message_text || `حياك الله #الاسم 🤍\nفي البوت الجديد ⭐`;
-  let entities=setting?.message_entities || [];\n  if (typeof entities === "string") { try { entities = JSON.parse(entities); } catch { entities = []; } }\n  if (!Array.isArray(entities)) entities = [];
+  let entities=setting?.message_entities || [];
+  if (typeof entities === "string") { try { entities = JSON.parse(entities); } catch { entities = []; } }
+  if (!Array.isArray(entities)) entities = [];
   const built=replaceVariables(baseText,entities,getReplacements(user,data,rank),user);
   const keyboardRows=[];
   for(let i=0;i<buttons.length;i+=2){
