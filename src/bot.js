@@ -27,6 +27,7 @@ import { handleWhisperMessage, handleWhisperStart, handleWhisperCallback } from 
 import { handleYouTubeAudioMessage, handleYouTubeAudioCallback } from "./youtube-audio.js";
 import { handleCommandsMenuMessage, handleCommandsMenuCallback } from "./commands-menu.js";
 import { handleSendMessage } from "./send.js";
+import { handleMiniAppPanelMessage, handleMiniAppPanelCallback } from "./mini-app-panel.js";
 
 const aliasExecutionKeys = new Set();
 
@@ -102,6 +103,7 @@ export function createBot() {
   bot.callbackQuery(/^wh_(temp|open):/, handleWhisperCallback);
   bot.callbackQuery(/^ytpick:/, handleYouTubeAudioCallback);
   bot.callbackQuery(/^cmdmenu:/, async (ctx) => { await handleCommandsMenuCallback(ctx); });
+  bot.callbackQuery(/^minipanel:/, async (ctx) => { await handleMiniAppPanelCallback(ctx); });
 
   bot.command("start", async (ctx) => {
     if (await handleWhisperStart(ctx)) return;
@@ -132,6 +134,7 @@ export function createBot() {
   bot.on("message", async (ctx) => {
     try {
       if (await handleSendMessage(ctx)) return;
+      if (await handleMiniAppPanelMessage(ctx)) return;
       if (await handleCustomCommandManagement(ctx)) return;
       if (await handleTemporaryMessages(ctx)) return;
       if (await handleWhisperMessage(ctx)) return;
