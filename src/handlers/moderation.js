@@ -19,7 +19,7 @@ async function targetOf(ctx){
 }
 async function act(ctx,action,target,seconds,reason){
  const until=seconds?new Date(Date.now()+seconds*1000):null,table={mute:"bot_mutes",restrict:"restrictions",ban:"moderation_bans"}[action];
- if(action==="restrict")await ctx.api.restrictChatMember(ctx.chat.id,target.id,{permissions:{can_send_messages:false},...(until?{until_date:until}:{})});
+ if(action==="restrict")await ctx.api.restrictChatMember(ctx.chat.id,target.id,{can_send_messages:false},until?{until_date:until}:{});
  if(action==="ban")await ctx.api.banChatMember(ctx.chat.id,target.id,{...(until?{until_date:until}:{})});
  await saveSanction(table,ctx.chat.id,target,until,reason,ctx.from.id);
  const label={mute:"كتم",restrict:"تقييد",ban:"حظر"}[action];
@@ -28,7 +28,7 @@ async function act(ctx,action,target,seconds,reason){
 }
 async function remove(ctx,action,target){
  const table={mute:"bot_mutes",restrict:"restrictions",ban:"moderation_bans"}[action];
- if(action==="restrict")await ctx.api.restrictChatMember(ctx.chat.id,target.id,{permissions:FULL});
+ if(action==="restrict")await ctx.api.restrictChatMember(ctx.chat.id,target.id,FULL);
  if(action==="ban")await ctx.api.unbanChatMember(ctx.chat.id,target.id,{only_if_banned:false});
  await deleteSanction(table,ctx.chat.id,target.id);
  await ctx.reply("فكيت عنه "+({mute:"الكتم",restrict:"التقييد",ban:"الحظر"}[action])+" يارب يعقل 🙏🏻\n• المستخدم ↤︎ "+mention(target),{parse_mode:"HTML"});
@@ -95,7 +95,7 @@ export async function handleModerationCallback(ctx){
  const kind=data.split(":")[2];if(!TABLES[kind])return;
  const chat=ctx.callbackQuery.message.chat.id;if(!await permitted(ctx.from.id,chat,3)){await ctx.answerCallbackQuery({text:"هذا الأمر للأدمن الأساسي وفوق فقط!",show_alert:true});return;}
  const rows=await getSanctionRows(TABLES[kind][0],chat);await ctx.answerCallbackQuery();
- if(kind==="restrict")for(const r of rows){try{await ctx.api.restrictChatMember(chat,Number(r.user_id),{permissions:FULL});}catch{}}
+ if(kind==="restrict")for(const r of rows){try{await ctx.api.restrictChatMember(chat,Number(r.user_id),FULL);}catch{}}
  if(kind==="ban")for(const r of rows){try{await ctx.api.unbanChatMember(chat,Number(r.user_id),{only_if_banned:false});}catch{}}
  const ids=await clearSanctionTable(TABLES[kind][0],chat);await ctx.editMessageText("• تم "+TABLES[kind][2]+" . ("+ids.length+")");
 }
@@ -106,11 +106,11 @@ export async function handleRepetitionPunishmentCallback(ctx){
  if(await getWarningCount(chat,userId)<3||userId===OWNER_ID||(await getRankLevel(userId,chat))>=(await getRankLevel(ctx.from.id,chat))){await ctx.answerCallbackQuery({text:"❌ لا يمكنك تطبيق العقوبة عليه.",show_alert:true});return;}
  let target;try{const u=await ctx.api.getChat(userId);target={id:u.id,username:u.username,first_name:u.first_name||u.title};}catch{await ctx.answerCallbackQuery({text:"تعذر العثور على المستخدم.",show_alert:true});return;}
  const p=await import("../db.js"),r=await p.pool.query("SELECT repetition_punishment_duration FROM protection_settings WHERE chat_id=$1",[String(chat)]),until=new Date(Date.now()+Number(r.rows[0]?.repetition_punishment_duration??300)*1000);
- if(action==="restrict")await ctx.api.restrictChatMember(chat,userId,{permissions:{can_send_messages:false},until_date:until});
+ if(action==="restrict")await ctx.api.restrictChatMember(chat,userId,{can_send_messages:false},{until_date:until});
  await saveSanction(action==="mute"?"bot_mutes":"restrictions",chat,target,until,"التكرار",ctx.me.id);await clearWarnings(chat,userId);
  await ctx.answerCallbackQuery({text:"تم اختيار العقوبة وتصفير إنذاراته."});try{await ctx.editMessageText("• ✅ تم اختيار العقوبة المناسبة بنجاح .");}catch{}
 }
-export async function handleMutedMessage(ctx){if(ctx.message&&ctx.from&&isGroup(ctx)&&await getActiveMute(ctx.chat.id,ctx.from.id)){try{await ctx.deleteMessage();}catch{}}}
+export async function handleMutedMessage(ctx){if(ctx.message&&ctx.from&&isGroup(ctx)&&await getActiveMute(ctx.chat.id,ctx.from.id)){try{await ctx.deleteMessage();}catch{}return true;}return false;}
 export async function moderationExpiryLoop(bot){
  while(true){try{const expired=await getExpiredSanctions();for(const [c,u] of expired.mutes)await deleteSanction("bot_mutes",c,u);for(const [c,u] of expired.restrictions){try{await bot.api.restrictChatMember(c,u,{permissions:FULL});await deleteSanction("restrictions",c,u);}catch(e){console.error("Auto-unrestrict failed",e);}}for(const [c,u] of expired.bans){try{await bot.api.unbanChatMember(c,u,{only_if_banned:false});await deleteSanction("moderation_bans",c,u);}catch(e){console.error("Auto-unban failed",e);}}}catch(e){console.error("Moderation expiry loop failed",e);}await new Promise(r=>setTimeout(r,5000));}
 }
