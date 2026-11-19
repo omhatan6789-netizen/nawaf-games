@@ -37,14 +37,23 @@ export function createBot() {
 
   const bot = new Bot(token);
 
-  // In groups, attach normal bot replies to the message that triggered them.
+  // In groups, attach every message response (text and media) to the
+  // message that triggered it, unless a handler supplied its own target.
   bot.use(async (ctx, next) => {
     if (["group", "supergroup"].includes(ctx.chat?.type) && ctx.msg?.message_id) {
-      const originalReply = ctx.reply.bind(ctx);
-      ctx.reply = (text, other = {}, ...rest) => originalReply(text, {
-        ...other,
-        reply_parameters: other?.reply_parameters ?? { message_id: ctx.msg.message_id },
-      }, ...rest);
+      const methods = [
+        "reply", "replyWithPhoto", "replyWithVideo", "replyWithAnimation",
+        "replyWithDocument", "replyWithAudio", "replyWithVoice",
+        "replyWithVideoNote", "replyWithSticker", "replyWithMediaGroup",
+      ];
+      for (const method of methods) {
+        if (typeof ctx[method] !== "function") continue;
+        const original = ctx[method].bind(ctx);
+        ctx[method] = (payload, other = {}, ...rest) => original(payload, {
+          ...other,
+          reply_parameters: other?.reply_parameters ?? { message_id: ctx.msg.message_id },
+        }, ...rest);
+      }
     }
     await next();
   });
