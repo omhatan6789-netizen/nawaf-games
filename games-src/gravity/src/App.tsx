@@ -95,6 +95,9 @@ function getInitialRoomCodeFromUrl(): string {
   const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param
     || hashParams.get('tgWebAppStartParam')
     || params.get('tgWebAppStartParam')
+    || hashParams.get('startapp')
+    || params.get('startapp')
+    || params.get('start_param')
     || '';
   if (startParam.startsWith('gravity_')) {
     return startParam.slice(8).trim().toUpperCase();
@@ -498,7 +501,12 @@ export default function App() {
                 showToast('افتح اللعبة من داخل تيليجرام لاختيار المحادثة');
                 return;
               }
-              webApp.switchInlineQuery('جري الجاذبية', ['users', 'groups', 'channels']);            }}
+              try {
+                webApp.switchInlineQuery('جري الجاذبية');
+              } catch {
+                showToast('تعذر فتح اختيار المحادثة؛ تأكد أنك فتحت اللعبة من تيليجرام');
+              }
+            }}
             className="nawaf-secondary w-full py-4 text-base font-black"
           >
             👥 لعب ضد شخص بالتيليجرام
