@@ -6,6 +6,7 @@ const blockedCache = new Map();
 const settingsCache = new Map();
 const now = () => Date.now();
 
+async function ensureChat(p,chatId){await p.query("INSERT INTO chats(chat_id,chat_type,title) VALUES($1,'supergroup','') ON CONFLICT(chat_id) DO NOTHING",[String(chatId)]);}
 async function db() {
   await ensureModerationSchema();
   if (!pool) throw new Error("DATABASE_URL is not configured");
@@ -39,14 +40,14 @@ export async function getActiveMute(chatId,userId) {
 export async function getModerationSettings(chatId) {
   const key=String(chatId),c=settingsCache.get(key);
   if(c&&now()-c.at<10000)return c.value;
-  const p=await db(); await p.query("INSERT INTO moderation_settings(chat_id) VALUES($1) ON CONFLICT DO NOTHING",[key]);
+  const p=await db(); await ensureChat(p,key); await p.query("INSERT INTO moderation_settings(chat_id) VALUES($1) ON CONFLICT DO NOTHING",[key]);
   const r=await p.query("SELECT durations_enabled,reasons_enabled FROM moderation_settings WHERE chat_id=$1",[key]);
   const value={durations_enabled:Boolean(r.rows[0]?.durations_enabled),reasons_enabled:Boolean(r.rows[0]?.reasons_enabled)};
   settingsCache.set(key,{value,at:now()}); return value;
 }
 export async function setModerationSetting(chatId,column,enabled) {
   if(!["durations_enabled","reasons_enabled"].includes(column))throw new Error("Invalid setting");
-  const p=await db(); await p.query(`INSERT INTO moderation_settings(chat_id,${column}) VALUES($1,$2)
+  const p=await db(); await ensureChat(p,chatId); await p.query(`INSERT INTO moderation_settings(chat_id,${column}) VALUES($1,$2)
     ON CONFLICT(chat_id) DO UPDATE SET ${column}=EXCLUDED.${column}`,[String(chatId),Boolean(enabled)]);
   settingsCache.delete(String(chatId));
 }
