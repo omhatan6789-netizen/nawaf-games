@@ -36,6 +36,10 @@ function clean(value) {
   return String(value || "").trim().replace(/\s+/g, " ");
 }
 
+export function hasCustomCommandSession(userId) {
+  return sessions.has(Number(userId));
+}
+
 export async function resolveCustomAlias(text) {
   await ensureCustomCommandsSchema();
   const value = clean(text);
