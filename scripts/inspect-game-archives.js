@@ -54,19 +54,23 @@ const inspectFiles = [
   "src/App.tsx",
   "src/game/exportCarromMiniApp.ts",
   "src/game/exportMiniApp.ts",
-  "src/game/carromEngine.ts",
-  "src/game/gravityEngine.ts",
 ];
 
 for (const archive of archives) {
-  const base = path.join(root, ".game-inspection", archive.label);
+  const dir = path.join(root, ".game-inspection", archive.label);
   for (const relative of inspectFiles) {
-    const file = path.join(base, relative);
+    const file = path.join(dir, relative);
     if (!fs.existsSync(file) || !fs.statSync(file).isFile()) continue;
-    const raw = fs.readFileSync(file, "utf8");
-    const content = raw.length > 12000 ? raw.slice(0, 12000) + "\\n[TRUNCATED]" : raw;
-    console.log(`[game-source] BEGIN ${archive.label}/${relative}`);
-    console.log(JSON.stringify(content));
-    console.log(`[game-source] END ${archive.label}/${relative}`);
+    let raw = fs.readFileSync(file, "utf8");
+    if (relative === "package.json" || relative === "metadata.json") {
+      try {
+        const parsed = JSON.parse(raw);
+        raw = JSON.stringify(relative === "package.json"
+          ? { name: parsed.name, scripts: parsed.scripts, dependencies: parsed.dependencies, devDependencies: parsed.devDependencies }
+          : parsed, null, 2);
+      } catch {}
+    }
+    const content = raw.length > 2200 ? raw.slice(0, 2200) + "\\n[TRUNCATED]" : raw;
+    console.log(`[game-source] ${archive.label}/${relative}: ${JSON.stringify(content)}`);
   }
 }
