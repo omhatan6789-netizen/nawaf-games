@@ -514,8 +514,9 @@ export default function App() {
               type="button"
               onClick={handleExitGameplay}
               className="nawaf-pill whitespace-nowrap shrink-0"
+              style={{ background: '#ef233c', color: '#fff', borderColor: '#ff8a91' }}
             >
-              خروج
+              انسحاب
             </button>
 
             <div className="text-center min-w-0">
@@ -685,10 +686,10 @@ export default function App() {
         <header className="flex items-center justify-between gap-3 py-1">
           <button
             type="button"
-            onClick={() => window.Telegram?.WebApp?.close?.()}
+            onClick={() => { window.location.href = '/miniapp/'; }}
             className="nawaf-pill whitespace-nowrap shrink-0"
           >
-            القائمة
+            القائمة الرئيسية
           </button>
 
           <div className="text-center leading-tight">
@@ -1106,46 +1107,15 @@ export default function App() {
 
             <button
               type="button"
-              onClick={() => setExportOpen(true)}
-              className="nawaf-secondary flex items-center justify-center gap-2"
+              onClick={() => { window.location.href = '/miniapp/'; }}
+              className="nawaf-secondary w-full flex items-center justify-center gap-2"
             >
-              <Code2 className="w-4 h-4 text-[#ff9ba3]" />
-              <span>كود الإضافة لمشروعك في GitHub (nawaf-bot-v2)</span>
+              الرجوع للقائمة الرئيسية
             </button>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  downloadZipFromEndpoint(
-                    '/carrom/api/export/project.zip',
-                    'carrom-game-project.zip'
-                  ).catch((err) => showToast(err.message));
-                }}
-                className="nawaf-choice py-2.5 px-3 text-xs flex items-center justify-center gap-2"
-              >
-                <FolderArchive className="w-4 h-4 text-[#facc15]" />
-                <span>تحميل المشروع كامل (ZIP)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  downloadZipFromEndpoint(
-                    '/carrom/api/export/nawaf-addon.zip',
-                    'nawaf-bot-v2-carrom-addon.zip'
-                  ).catch((err) => showToast(err.message));
-                }}
-                className="nawaf-choice py-2.5 px-3 text-xs flex items-center justify-center gap-2"
-              >
-                <Download className="w-4 h-4 text-[#60a5fa]" />
-                <span>تحميل إضافة البوت (ZIP)</span>
-              </button>
-            </div>
           </div>
         </section>
       </main>
 
-      <GitHubExportModal open={exportOpen} onClose={() => setExportOpen(false)} />
     </div>
   );
 }
