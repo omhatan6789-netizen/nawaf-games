@@ -156,3 +156,69 @@ export async function getPointsLeaderboard(limit = 10) {
   );
   return result.rows;
 }
+
+
+export async function chargeTwoPlayersAtomic(firstId, secondId, amount) {
+  if (!Number.isSafeInteger(amount) || amount <= 0 || firstId === secondId) return "first_insufficient";
+  const ids = [firstId, secondId].sort((a, b) => a - b);
+  const client = await db().connect();
+  try {
+    await client.query("BEGIN");
+    for (const id of ids) {
+      await client.query("INSERT INTO users (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING", [id]);
+      await client.query("INSERT INTO points (user_id, points) VALUES ($1, 0) ON CONFLICT (user_id) DO NOTHING", [id]);
+    }
+    const locked = await client.query(
+      "SELECT user_id, points FROM points WHERE user_id = ANY($1::bigint[]) ORDER BY user_id FOR UPDATE",
+      [ids]
+    );
+    const balances = new Map(locked.rows.map(row => [Number(row.user_id), Number(row.points)]));
+    if ((balances.get(firstId) ?? 0) < amount) {
+      await client.query("ROLLBACK");
+      return "first_insufficient";
+    }
+    if ((balances.get(secondId) ?? 0) < amount) {
+      await client.query("ROLLBACK");
+      return "second_insufficient";
+    }
+    await client.query("UPDATE points SET points = points - $2 WHERE user_id = ANY($1::bigint[])", [ids, amount]);
+    await client.query("COMMIT");
+    return "ok";
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function settleTwoPlayerWagerAtomic(firstId, secondId, amount, winnerId = null) {
+  if (!Number.isSafeInteger(amount) || amount <= 0 || firstId === secondId ||
+      (winnerId !== null && winnerId !== firstId && winnerId !== secondId)) {
+    throw new Error("Invalid two-player wager settlement");
+  }
+  const ids = [firstId, secondId].sort((a, b) => a - b);
+  const client = await db().connect();
+  try {
+    await client.query("BEGIN");
+    for (const id of ids) {
+      await client.query("INSERT INTO users (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING", [id]);
+      await client.query("INSERT INTO points (user_id, points) VALUES ($1, 0) ON CONFLICT (user_id) DO NOTHING", [id]);
+    }
+    await client.query(
+      "SELECT user_id FROM points WHERE user_id = ANY($1::bigint[]) ORDER BY user_id FOR UPDATE",
+      [ids]
+    );
+    if (winnerId === null) {
+      await client.query("UPDATE points SET points = points + $2 WHERE user_id = ANY($1::bigint[])", [ids, amount]);
+    } else {
+      await client.query("UPDATE points SET points = points + $2 WHERE user_id = $1", [winnerId, amount * 2]);
+    }
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
