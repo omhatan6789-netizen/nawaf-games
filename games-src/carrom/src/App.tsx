@@ -518,7 +518,8 @@ export default function App() {
                 showToast('افتح اللعبة من داخل تيليجرام لاختيار المحادثة');
                 return;
               }
-              webApp.switchInlineQuery('الكيرم', ['users', 'bots', 'groups', 'channels']);
+              showToast('اختيار المحادثة جاهز، لكن نتائج الكيرم بالصور تنتظر نقل معالج الألعاب إلى بوت Node');
+
             }}
             className="nawaf-secondary w-full py-4 text-base font-black"
           >
