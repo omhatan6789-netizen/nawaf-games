@@ -280,7 +280,7 @@ export async function handleTemporaryMessages(ctx) {
   if (!isGroup(ctx)) return false;
   const parsed = parseScope(ctx, text);
   if (!await allowed(ctx, parsed.scope)) {
-    if (text.startsWith("اضف رسالة مؤقتة") || text.startsWith("الرسائل المؤقتة") || text.startsWith("مسح الرسالة المؤقتة") || text.startsWith("ضع الرسالة")) {
+    if (/^(?:اضف رسالة مؤقتة|اضف رساله مؤقته|الرسائل المؤقتة|الرسائل المؤقته|مسح الرسالة المؤقتة|مسح الرساله المؤقته|مسح الرسائل المؤقتة|مسح الرسائل المؤقته|ضع الرسالة)\b/.test(parsed.command)) {
       await ctx.reply(parsed.scope === "global" ? "• أوامر الرسائل المؤقتة العامة للمطور فقط." : "• هذا الأمر للمشرفين وفوق فقط.");
       return true;
     }
