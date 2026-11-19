@@ -31,6 +31,18 @@ export function createBot() {
 
   const bot = new Bot(token);
 
+  // In groups, attach normal bot replies to the message that triggered them.
+  bot.use(async (ctx, next) => {
+    if (["group", "supergroup"].includes(ctx.chat?.type) && ctx.msg?.message_id) {
+      const originalReply = ctx.reply.bind(ctx);
+      ctx.reply = (text, other = {}, ...rest) => originalReply(text, {
+        ...other,
+        reply_parameters: other?.reply_parameters ?? { message_id: ctx.msg.message_id },
+      }, ...rest);
+    }
+    await next();
+  });
+
   // Delete slash-prefixed messages after their handlers have run.
   bot.use(async (ctx, next) => {
     await next();
