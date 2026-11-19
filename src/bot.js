@@ -25,6 +25,7 @@ import { handleCustomCommandManagement, resolveCustomAlias, hasCustomCommandSess
 import { handleTemporaryMessages, handleTemporaryMessageCallback, startTemporaryMessageScheduler } from "./temporary-messages.js";
 import { handleWhisperMessage, handleWhisperStart, handleWhisperCallback } from "./whispers.js";
 import { handleYouTubeAudioMessage, handleYouTubeAudioCallback } from "./youtube-audio.js";
+import { handleCommandsMenuMessage, handleCommandsMenuCallback } from "./commands-menu.js";
 
 const aliasExecutionKeys = new Set();
 
@@ -99,6 +100,7 @@ export function createBot() {
   bot.callbackQuery(/^tmp:/, handleTemporaryMessageCallback);
   bot.callbackQuery(/^wh_(temp|open):/, handleWhisperCallback);
   bot.callbackQuery(/^ytpick:/, handleYouTubeAudioCallback);
+  bot.callbackQuery(/^cmdmenu:/, async (ctx) => { await handleCommandsMenuCallback(ctx); });
 
   bot.command("start", async (ctx) => {
     if (await handleWhisperStart(ctx)) return;
@@ -119,6 +121,8 @@ export function createBot() {
   bot.callbackQuery(/^devpanel:/, handleDeveloperPanelCallback);
   bot.on("my_chat_member", trackDeveloperBotChat);
   bot.hears("تعديل ستارت", handleStartEditorCommand);
+
+  bot.command("help", handleCommandsMenuMessage);
 
   bot.command("ping", async (ctx) => {
     await ctx.reply("البوت يعمل ✅");
