@@ -23,6 +23,8 @@ import { handleGamesManagerMessage } from "./handlers/games-manager.js";
 import { handleInlineGamesQuery } from "./inline-games.js";
 import { handleCustomCommandManagement, resolveCustomAlias } from "./custom-commands.js";
 
+const aliasExecutionKeys = new Set();
+
 export function createBot() {
   const token = process.env.BOT_TOKEN;
   if (!token) {
@@ -57,6 +59,34 @@ export function createBot() {
     }
   });
 
+  // Re-dispatch aliases as a fresh Telegram update so every handler type,
+  // including multi-step and dedicated command handlers, runs normally.
+  bot.use(async (ctx, next) => {
+    const message = ctx.message;
+    if (!message?.text || !ctx.chat?.id || !message.message_id) return next();
+    const key = `${ctx.chat.id}:${message.message_id}`;
+    if (aliasExecutionKeys.has(key)) return next();
+
+    let originalCommand = null;
+    try {
+      originalCommand = await resolveCustomAlias(message.text);
+    } catch (error) {
+      console.error("Loading custom command aliases failed:", error);
+      return next();
+    }
+    if (!originalCommand || originalCommand === message.text) return next();
+
+    aliasExecutionKeys.add(key);
+    try {
+      await bot.handleUpdate({
+        ...ctx.update,
+        message: { ...message, text: originalCommand },
+      });
+    } finally {
+      aliasExecutionKeys.delete(key);
+    }
+  });
+
   bot.on("inline_query", handleInlineGamesQuery);
 
   bot.command("start", async (ctx) => {
@@ -83,12 +113,8 @@ export function createBot() {
   });
 
   bot.on("message", async (ctx) => {
-    const incomingText = ctx.message?.text;
-    let aliasText = null;
     try {
       if (await handleCustomCommandManagement(ctx)) return;
-      if (typeof incomingText === "string") aliasText = await resolveCustomAlias(incomingText);
-      if (aliasText && ctx.update?.message) ctx.update.message.text = aliasText;
       if (await handleDeveloperPanelMessage(ctx)) return;
       if (await handleStartEditorMessage(ctx)) return;
       if (await handleDeveloperPanelCommand(ctx)) return;
@@ -128,8 +154,6 @@ export function createBot() {
     } catch (error) {
       console.error("Message handler failed:", error);
       try { await ctx.reply("❌ حصل خطأ أثناء تنفيذ الأمر، حاول مرة ثانية."); } catch {}
-    } finally {
-      if (aliasText && ctx.update?.message) ctx.update.message.text = incomingText;
     }
   });
 
