@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node src/server.js",
-    "check": "node --check src/server.js && node --check src/bot.js && node --check src/db.js && node --check src/points.js && node --check src/handlers/points.js && node --check src/activity.js && node --check src/handlers/activity-commands.js",
+    "check": "node --check src/server.js && node --check src/bot.js && node --check src/db.js && node --check src/points.js && node --check src/handlers/points.js && node --check src/activity.js && node --check src/handlers/activity-commands.js && node --check src/ranks.js && node --check src/handlers/ranks.js",
     "postinstall": "npm run check && npm run build:games",
     "build:games": "npm install --prefix games-src/carrom && npm run build --prefix games-src/carrom && npm install --prefix games-src/gravity && npm run build --prefix games-src/gravity"
   },
