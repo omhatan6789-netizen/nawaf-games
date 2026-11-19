@@ -7,6 +7,9 @@ export const RANK_LEVELS = {
 };
 export const NORMAL_RANKS = ["مميز", "ادمن", "ادمن اساسي", "نائب المالك", "المالك"];
 
+let commandLocksCache = null;
+let commandLocksCacheAt = 0;
+
 function db() {
   if (!pool) throw new Error("DATABASE_URL is not configured");
   return pool;
@@ -186,4 +189,49 @@ export async function checkCommandPermission(userId, command, chatId) {
   if (await getDeveloperType(userId)) return { allowed: true, required };
   const level = await getRankLevel(userId, chatId);
   return { allowed: level >= (RANK_LEVELS[required] ?? 0), required };
+}
+
+
+export async function getCommandLocks() {
+  if (commandLocksCache && Date.now() - commandLocksCacheAt < 30000) return { ...commandLocksCache };
+  const result = await db().query("SELECT command, rank FROM command_locks");
+  commandLocksCache = Object.fromEntries(result.rows.map(row => [row.command, row.rank]));
+  commandLocksCacheAt = Date.now();
+  return { ...commandLocksCache };
+}
+
+export async function setCommandLock(command, rank) {
+  const cleanCommand = String(command || "").trim().replace(/\\s+/g, " ");
+  if (!cleanCommand || !Object.hasOwn(RANK_LEVELS, rank) || rank === "عضو") throw new Error("Invalid command lock");
+  await db().query(
+    `INSERT INTO command_locks(command, rank) VALUES($1,$2)
+     ON CONFLICT(command) DO UPDATE SET rank=EXCLUDED.rank`,
+    [cleanCommand, rank]
+  );
+  commandLocksCache = null;
+}
+
+export async function removeCommandLock(command) {
+  const cleanCommand = String(command || "").trim().replace(/\\s+/g, " ");
+  await db().query("DELETE FROM command_locks WHERE command=$1", [cleanCommand]);
+  commandLocksCache = null;
+}
+
+export async function setUserPermission(chatId, userId, command, allowed) {
+  const cleanCommand = String(command || "").trim().replace(/\\s+/g, " ");
+  if (!cleanCommand) throw new Error("Permission command cannot be empty");
+  await db().query(
+    `INSERT INTO group_user_permissions(chat_id,user_id,permission,allowed)
+     VALUES($1,$2,$3,$4)
+     ON CONFLICT(chat_id,user_id,permission) DO UPDATE SET allowed=EXCLUDED.allowed`,
+    [String(chatId), String(userId), cleanCommand, Boolean(allowed)]
+  );
+}
+
+export async function getUserPermission(chatId, userId, command) {
+  const result = await db().query(
+    "SELECT allowed FROM group_user_permissions WHERE chat_id=$1 AND user_id=$2 AND permission=$3",
+    [String(chatId), String(userId), String(command)]
+  );
+  return result.rows[0] ? Boolean(result.rows[0].allowed) : null;
 }
