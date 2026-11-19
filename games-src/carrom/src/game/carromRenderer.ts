@@ -491,10 +491,15 @@ export class CarromBoardRenderer {
       canInteract: boolean;
       aim: AimVisualState | null;
       sparks: ImpactSpark[];
+      flip?: boolean;
     }
   ) {
     ctx.save();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (state.flip) {
+      ctx.translate(BOARD_SIZE, BOARD_SIZE);
+      ctx.rotate(Math.PI);
+    }
     ctx.clearRect(0, 0, BOARD_SIZE, BOARD_SIZE);
 
     // Draw pre-rendered Carrom board
