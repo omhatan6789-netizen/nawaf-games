@@ -518,9 +518,7 @@ export default function App() {
                 showToast('افتح اللعبة من داخل تيليجرام لاختيار المحادثة');
                 return;
               }
-              showToast('نظام اختيار المحادثة ونتائج اللعبة بالصور قيد ربط بوت Node');
-
-            }}
+              webApp.switchInlineQuery('الكيرم', ['users', 'groups', 'channels']);            }}
             className="nawaf-secondary w-full py-4 text-base font-black"
           >
             👥 لعب ضد شخص بالتيليجرام
@@ -769,7 +767,7 @@ export default function App() {
               لعبة الكيرم الأصلية
             </h1>
             <p className="text-sm text-white/75 m-0 mt-1.5">
-              حرّك قرص التسديد بالسحّاب، اسحب للخلف للتصويب، وتحدَّ بوت نواف أو أصدقاءك أونلاين!
+              حرّك قرص التسديد بالسحّاب، اسحب للخلف للتصويب، وأدخل الأقراص في الجيوب!
             </p>
           </div>
 
