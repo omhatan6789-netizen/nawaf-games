@@ -17,6 +17,7 @@ import { handleEconomyMessage, handleEconomyCallback } from "./handlers/economy.
 import { handleEconomyExtraMessage, handleEconomyExtraCallback } from "./handlers/economy-extra.js";
 import { handleMandatorySubscriptionCommand, enforceMandatorySubscription, recordPrivateStart } from "./mandatory-subscription.js";
 import { handleEmojiReactionsMessage } from "./emoji-reactions.js";
+import { handleStartCommand, handleStartEditorCommand, handleStartEditorCallback, handleStartEditorMessage } from "./start-editor.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -43,7 +44,7 @@ export function createBot() {
   bot.command("start", async (ctx) => {
     try { await recordPrivateStart(ctx); }
     catch (error) { console.error("Recording private /start failed:", error); }
-    await ctx.reply("هلا! هذا بوت نواف بنسخته الجديدة. جاري نقل المميزات تدريجيًا.");
+    await handleStartCommand(ctx);
   });
 
   bot.callbackQuery(/^tasliyat:bank:/, handleEconomyCallback);
@@ -54,6 +55,8 @@ export function createBot() {
   bot.callbackQuery(/^bw:/, handleBlockedWordCallback);
   bot.callbackQuery(/^moderation:clear:/, handleModerationCallback);
   bot.callbackQuery(/^repetition_punish:/, handleRepetitionPunishmentCallback);
+  bot.callbackQuery(/^startedit:/, handleStartEditorCallback);
+  bot.hears("تعديل ستارت", handleStartEditorCommand);
 
   bot.command("ping", async (ctx) => {
     await ctx.reply("البوت يعمل ✅");
@@ -61,6 +64,7 @@ export function createBot() {
 
   bot.on("message", async (ctx) => {
     try {
+      if (await handleStartEditorMessage(ctx)) return;
       if (await handleMandatorySubscriptionCommand(ctx)) return;
       if (await enforceMandatorySubscription(ctx)) return;
       if (await handleEmojiReactionsMessage(ctx)) return;
