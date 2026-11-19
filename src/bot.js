@@ -12,6 +12,7 @@ import { handleModerationCommand, handleModerationCallback, handleRepetitionPuni
 import { handleRepetitionCommand, handleRepetitionMessage } from "./handlers/repetition.js";
 import { handleDeleteMessages } from "./handlers/delete-messages.js";
 import { handleUserIdCommand } from "./handlers/user-id.js";
+import { handleProfileReplies } from "./profile-replies.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -64,6 +65,7 @@ export function createBot() {
 
       if (typeof ctx.message?.text !== "string") return;
       if (await handleUserPermissionCommand(ctx)) return;
+      if (await handleProfileReplies(ctx)) return;
       if (await enforceCommandLock(ctx)) return;
       if (await handleReplyManagement(ctx)) return;
 
