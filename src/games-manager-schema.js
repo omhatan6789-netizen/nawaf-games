@@ -102,7 +102,8 @@ export async function ensureGamesManagerSchema() {
     await seedQuestions("كلمات",words.map(word=>[`• اكتب كلمة ~ ${word}`,[word]]));
     await seedQuestions("تفكيك",decomposition.map(word=>[`• فكك كلمة ~ ${word}`,[word.split("").join(" ")]]));
     await seedQuestions("انمي",anime);
-\n    console.log("Games manager schema is ready.");
+
+    console.log("Games manager schema is ready.");
   })().catch(error => { ready = null; throw error; });
   return ready;
 }
