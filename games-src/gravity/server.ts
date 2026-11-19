@@ -474,6 +474,24 @@ async function startServer() {
   const app = express();
   app.use(express.json());
 
+
+  app.post('/api/internal/inline-room', (req, res) => {
+    if (!process.env.BOT_TOKEN || req.headers['x-bot-token'] !== process.env.BOT_TOKEN) {
+      res.sendStatus(403); return;
+    }
+    const hostId = `tg_${String(req.body?.userId || '').replace(/[^0-9]/g, '')}`;
+    if (hostId === 'tg_') { res.status(400).json({ok:false,error:'Invalid host'}); return; }
+    const name = sanitizeName(req.body?.name, 'اللاعب الأول');
+    const roomId = makeRoomId();
+    const room: GravityRoom = {
+      id: roomId, hostId, status: 'lobby', targetScore: 3, createdAt: Date.now(),
+      players: [{ id: hostId, name, score: 0, withdrawn: false, connected: false, ws: null }],
+      spectators: new Map(), game: null, interval: null,
+    };
+    rooms.set(roomId, room);
+    res.json({ok:true,roomId});
+  });
+
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true, activeRooms: rooms.size });
   });
