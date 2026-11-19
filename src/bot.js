@@ -51,7 +51,7 @@ export function createBot() {
   bot.on("message", async (ctx) => {
     try {
       recordGroupTextMessage(ctx);
-      await handleMutedMessage(ctx);
+      if (await handleMutedMessage(ctx)) return;
       if (hasBlockedWordSession(ctx.from?.id, ctx.chat?.id) || await handleBlockedWords(ctx)) return;
       if (await handleCommandLockFlow(ctx)) return;
 
