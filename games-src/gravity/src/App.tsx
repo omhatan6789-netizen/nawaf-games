@@ -538,22 +538,22 @@ export default function App() {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
+                handleExitGameplay();
+              }}
+              className="rounded-full bg-[#ef233c] text-white border border-[#ff8a91] px-3.5 py-1.5 text-xs font-black shadow-lg cursor-pointer hover:bg-[#d91d35]"
+            >
+              انسحاب
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
                 toggleMute();
               }}
               className="rounded-full bg-white/90 text-slate-900 w-8 h-8 flex items-center justify-center shadow-lg cursor-pointer"
               aria-label={muted ? 'تشغيل الصوت' : 'كتم الصوت'}
             >
               {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleExitGameplay();
-              }}
-              className="rounded-full bg-white text-slate-900 px-3.5 py-1.5 text-xs font-black shadow-lg cursor-pointer hover:bg-slate-100"
-            >
-              خروج
             </button>
           </div>
 
@@ -572,7 +572,7 @@ export default function App() {
                   }}
                   className="rounded-full bg-[#ef233c] text-white px-3 py-1 text-xs font-black shrink-0 cursor-pointer"
                 >
-                  خروج
+                  انسحاب
                 </button>
               </div>
             ) : (
@@ -688,10 +688,10 @@ export default function App() {
         <header className="flex items-center justify-between gap-3 py-1">
           <button
             type="button"
-            onClick={() => window.Telegram?.WebApp?.close?.()}
+            onClick={() => { window.location.href = '/miniapp/'; }}
             className="nawaf-pill whitespace-nowrap shrink-0"
           >
-            القائمة
+            القائمة الرئيسية
           </button>
 
           <div className="text-center leading-tight">
@@ -1091,45 +1091,15 @@ export default function App() {
             )}
             <button
               type="button"
-              onClick={() => setExportOpen(true)}
-              className="nawaf-secondary flex items-center justify-center gap-2"
+              onClick={() => { window.location.href = '/miniapp/'; }}
+              className="nawaf-secondary w-full flex items-center justify-center gap-2"
             >
-              <Code2 className="w-4 h-4 text-[#ff9ba3]" />
-              <span>كود الإضافة لمشروعك في GitHub (nawaf-bot-v2)</span>
+              الرجوع للقائمة الرئيسية
             </button>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  downloadZipFromEndpoint(
-                    '/gravity/api/export/project.zip',
-                    'gravity-game-project.zip'
-                  ).catch(() => showToast('تعذر تحميل ملف ZIP'));
-                }}
-                className="nawaf-secondary flex items-center justify-center gap-2 text-xs sm:text-sm"
-              >
-                <FolderArchive className="w-4 h-4 text-[#facc15]" />
-                <span>تحميل المشروع كامل (ZIP)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  downloadZipFromEndpoint(
-                    '/gravity/api/export/nawaf-addon.zip',
-                    'nawaf-bot-v2-gravity-addon.zip'
-                  ).catch(() => showToast('تعذر تحميل ملف ZIP'));
-                }}
-                className="nawaf-secondary flex items-center justify-center gap-2 text-xs sm:text-sm"
-              >
-                <FolderArchive className="w-4 h-4 text-[#60a5fa]" />
-                <span>تحميل إضافة البوت (ZIP)</span>
-              </button>
-            </div>
           </div>
         </section>
       </main>
 
-      <GitHubExportModal open={exportOpen} onClose={() => setExportOpen(false)} />
     </div>
   );
 }
