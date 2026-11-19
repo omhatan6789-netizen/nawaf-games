@@ -26,6 +26,7 @@ import { handleTemporaryMessages, handleTemporaryMessageCallback, startTemporary
 import { handleWhisperMessage, handleWhisperStart, handleWhisperCallback } from "./whispers.js";
 import { handleYouTubeAudioMessage, handleYouTubeAudioCallback } from "./youtube-audio.js";
 import { handleCommandsMenuMessage, handleCommandsMenuCallback } from "./commands-menu.js";
+import { handleSendMessage } from "./send.js";
 
 const aliasExecutionKeys = new Set();
 
@@ -130,6 +131,7 @@ export function createBot() {
 
   bot.on("message", async (ctx) => {
     try {
+      if (await handleSendMessage(ctx)) return;
       if (await handleCustomCommandManagement(ctx)) return;
       if (await handleTemporaryMessages(ctx)) return;
       if (await handleWhisperMessage(ctx)) return;
