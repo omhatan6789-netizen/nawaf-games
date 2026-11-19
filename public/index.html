@@ -12,6 +12,9 @@
   const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param
     || launchParams.get('tgWebAppStartParam')
     || queryParams.get('tgWebAppStartParam')
+    || launchParams.get('startapp')
+    || queryParams.get('startapp')
+    || queryParams.get('start_param')
     || '';
   const suffix = window.location.search + window.location.hash;
   if (startParam.startsWith('carrom_')) window.location.replace('/carrom/' + suffix);
