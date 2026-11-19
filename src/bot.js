@@ -68,7 +68,7 @@ export function createBot() {
     // A pending add/delete flow must receive the exact text the user sends,
     // even when that text happens to match an existing alias.
     if (hasCustomCommandSession(ctx.from?.id)) return next();
-    const managementText = message.text.trim().replace(/\\s+/g, " ");
+    const managementText = message.text.trim().replace(/\s+/g, " ");
     if (["اضف امر", "مسح امر", "الاوامر المضافة", "مسح الاوامر المضافة"].includes(managementText)) return next();
     const key = `${ctx.chat.id}:${message.message_id}`;
     if (aliasExecutionKeys.has(key)) return next();
