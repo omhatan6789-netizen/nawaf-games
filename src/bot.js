@@ -1,6 +1,6 @@
 import { Bot } from "grammy";
 import { handlePointsMessage } from "./handlers/points.js";
-import { recordGroupTextMessage, flushPendingActivity } from "./activity.js";
+import { recordGroupTextMessage } from "./activity.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -47,9 +47,5 @@ export function createBot() {
   });
 
   bot.catch((err) => console.error("Telegram bot error:", err));
-  bot.api.config.use(async (prev, method, payload, signal) => prev(method, payload, signal));
-  bot.on("my_chat_member", async (ctx) => {
-    try { await flushPendingActivity(); } catch (error) { console.error("Activity shutdown flush failed:", error); }
-  });
   return bot;
 }
