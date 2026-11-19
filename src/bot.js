@@ -11,6 +11,7 @@ import { handleBlockedWords, handleBlockedWordCallback, hasBlockedWordSession, c
 import { handleModerationCommand, handleModerationCallback, handleRepetitionPunishmentCallback, handleMutedMessage, moderationExpiryLoop } from "./handlers/moderation.js";
 import { handleRepetitionCommand, handleRepetitionMessage } from "./handlers/repetition.js";
 import { handleDeleteMessages } from "./handlers/delete-messages.js";
+import { handleUserIdCommand } from "./handlers/user-id.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -70,6 +71,7 @@ export function createBot() {
       await handleRoleManagementCommand(ctx);
       if (await handleModerationCommand(ctx)) return;
       if (await handleDeleteMessages(ctx)) return;
+      if (await handleUserIdCommand(ctx)) return;
       await handleResetCommand(ctx);
       await handleRankCommand(ctx);
       await handleActivityCommand(ctx);
