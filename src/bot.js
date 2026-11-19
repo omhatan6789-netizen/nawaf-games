@@ -30,6 +30,7 @@ import { handleSendMessage } from "./send.js";
 import { handleMiniAppPanelMessage, handleMiniAppPanelCallback } from "./mini-app-panel.js";
 import { handleAiAssistantMessage } from "./ai-assistant.js";
 import { handleRpsMessage, handleRpsCallback } from "./games/rock-paper-scissors.js";
+import { handleXoMessage, handleXoCallback } from "./games/xo.js";
 
 const aliasExecutionKeys = new Set();
 
@@ -105,6 +106,7 @@ export function createBot() {
   bot.callbackQuery(/^wh_(temp|open):/, handleWhisperCallback);
   bot.callbackQuery(/^ytpick:/, handleYouTubeAudioCallback);
   bot.callbackQuery(/^rps:/, handleRpsCallback);
+  bot.callbackQuery(/^xo:/, handleXoCallback);
   bot.callbackQuery(/^cmdmenu:/, async (ctx) => { await handleCommandsMenuCallback(ctx); });
   bot.callbackQuery(/^minipanel:/, async (ctx) => { await handleMiniAppPanelCallback(ctx); });
 
@@ -143,6 +145,7 @@ export function createBot() {
       if (await handleWhisperMessage(ctx)) return;
       if (await handleYouTubeAudioMessage(ctx)) return;
       if (await handleRpsMessage(ctx)) return;
+      if (await handleXoMessage(ctx)) return;
       if (await handleAiAssistantMessage(ctx)) return;
       if (await handleDeveloperPanelMessage(ctx)) return;
       if (await handleStartEditorMessage(ctx)) return;
