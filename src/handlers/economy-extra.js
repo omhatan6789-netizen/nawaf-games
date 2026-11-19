@@ -13,7 +13,7 @@ const ensureUser = async (c,id) => {
   await c.query("INSERT INTO points(user_id,points) VALUES($1,0) ON CONFLICT(user_id) DO NOTHING",[String(id)]);
 };
 const lockIds = async (c,ids) => {
-  for (const id of [...ids].map(String).sort((a,b)=>BigInt(a)<BigInt(b)?-1:1)) await c.query("SELECT pg_advisory_xact_lock($1)",[id]);
+  for (const id of [...ids].map(String).sort((a,b)=>BigInt(a)<BigInt(b)?-1:1)) await c.query("SELECT pg_advisory_xact_lock($1::bigint)",[id]);
 };
 const fmtClock = n => [Math.floor(n/60),n%60].map(x=>String(x).padStart(2,"0")).join(":");
 
