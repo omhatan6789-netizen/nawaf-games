@@ -117,7 +117,7 @@ export async function flushPendingActivity() {
       for (const [userId, user] of users) {
         await client.query(
           `INSERT INTO users(user_id, username, first_name, last_name, is_bot, messages, activity_messages, rank, joined_date)
-           VALUES($1, $2, $3, $4, FALSE, $5, $5, 'عضو', NOW())
+           VALUES($1, $2, $3, $4, FALSE, $5::integer, $5::bigint, 'عضو', NOW())
            ON CONFLICT(user_id) DO UPDATE SET
              username = COALESCE(EXCLUDED.username, users.username),
              first_name = COALESCE(EXCLUDED.first_name, users.first_name),
