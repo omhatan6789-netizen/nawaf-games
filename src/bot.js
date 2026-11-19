@@ -16,6 +16,7 @@ import { handleProfileReplies } from "./profile-replies.js";
 import { handleEconomyMessage, handleEconomyCallback } from "./handlers/economy.js";
 import { handleEconomyExtraMessage, handleEconomyExtraCallback } from "./handlers/economy-extra.js";
 import { handleMandatorySubscriptionCommand, enforceMandatorySubscription, recordPrivateStart } from "./mandatory-subscription.js";
+import { handleEmojiReactionsMessage } from "./emoji-reactions.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -62,6 +63,7 @@ export function createBot() {
     try {
       if (await handleMandatorySubscriptionCommand(ctx)) return;
       if (await enforceMandatorySubscription(ctx)) return;
+      if (await handleEmojiReactionsMessage(ctx)) return;
       recordGroupTextMessage(ctx);
       if (await handleMutedMessage(ctx)) return;
       if (hasBlockedWordSession(ctx.from?.id, ctx.chat?.id) || await handleBlockedWords(ctx)) return;
