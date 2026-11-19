@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { getPoints, transferPointsAtomic } from "./points.js";
+import { getPoints, transferPointsAtomic } from "../points.js";
 
 const DEFAULT_POINTS = 30;
 const CHALLENGE_TIMEOUT = 120;
