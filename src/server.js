@@ -15,6 +15,7 @@ import { ensureEmojiReactionSchema } from "./emoji-reactions-schema.js";
 import { ensureStartEditorSchema } from "./start-editor-schema.js";
 import { ensureDeveloperPanelSchema } from "./developer-panel-schema.js";
 import { ensureGamesManagerSchema } from "./games-manager-schema.js";
+import { pool } from "./db.js";
 
 ensureModerationSchema().catch(error => console.error("Moderation schema initialization failed:", error));
 ensureProfileRepliesSchema().catch(error => console.error("Profile replies schema initialization failed:", error));
@@ -37,6 +38,7 @@ const gameProxies = new Map();
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: "1mb" }));
 app.use("/miniapp", express.static("public"));
+app.use("/mini_app", express.static("public/mini_app"));
 
 for (const game of gameDefinitions) {
   const proxy = httpProxy.createProxyServer({
@@ -58,6 +60,90 @@ for (const game of gameDefinitions) {
   gameProxies.set(game.name, proxy);
   app.use(`/${game.name}`, (req, res) => proxy.web(req, res));
 }
+
+
+async function telegramFile(fileId) {
+  const token = process.env.BOT_TOKEN;
+  if (!token) throw new Error("Telegram token is not configured");
+  const metaResponse = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${encodeURIComponent(fileId)}`);
+  const meta = await metaResponse.json();
+  if (!meta.ok || !meta.result?.file_path) throw new Error("Telegram file not found");
+  const fileResponse = await fetch(`https://api.telegram.org/file/bot${token}/${meta.result.file_path}`);
+  if (!fileResponse.ok) throw new Error("Telegram file download failed");
+  return { buffer: Buffer.from(await fileResponse.arrayBuffer()), contentType: fileResponse.headers.get("content-type") || "application/octet-stream" };
+}
+
+app.get("/api/mini-app", async (req, res) => {
+  try {
+    if (!pool) return res.status(503).json({ ok: false, error: "Database unavailable" });
+    const [settingsResult, buttonsResult, soundsResult, onlineImagesResult, colorsResult] = await Promise.all([
+      pool.query("SELECT * FROM mini_app_settings WHERE id=1"),
+      pool.query("SELECT * FROM mini_app_buttons ORDER BY button_type DESC, button_order, id"),
+      pool.query("SELECT * FROM mini_app_sounds ORDER BY id").catch(() => ({ rows: [] })),
+      pool.query("SELECT * FROM online_game_images").catch(() => ({ rows: [] })),
+      pool.query("SELECT * FROM mini_app_button_colors").catch(() => ({ rows: [] })),
+    ]);
+    const settings = settingsResult.rows[0] || {};
+    const sounds = soundsResult.rows;
+    const onlineImages = onlineImagesResult.rows;
+    const buttonColors = Object.fromEntries(colorsResult.rows.map(row => [row.button_text, row.color_hex]));
+    let me = null;
+    if (process.env.BOT_TOKEN) {
+      try {
+        const response = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/getMe`);
+        const data = await response.json();
+        if (data.ok) me = data.result;
+      } catch {}
+    }
+    res.set("Cache-Control", "no-store").json({
+      leaderboard: null,
+      bot_username: me?.username || null,
+      bot_name: me?.first_name || "البوت",
+      banner: settings.banner_file_id ? "/tg-file/" + encodeURIComponent(settings.banner_file_id) : null,
+      banner_type: settings.banner_media_kind || "image",
+      banner_mime_type: settings.banner_mime_type || null,
+      buttons: buttonsResult.rows.map(row => ({
+        id: row.id, title: row.title, target: row.target, type: row.button_type,
+        color: row.color, image: row.image_file_id ? "/tg-file/" + encodeURIComponent(row.image_file_id) : null,
+        media_kind: row.media_kind || "image", mime_type: row.mime_type || null
+      })),
+      button_colors: buttonColors,
+      sounds: sounds.map(row => ({
+        id: row.id, title: row.title, type: row.media_kind || "audio",
+        mime_type: row.mime_type || null, url: `/mini-app/sound/${row.id}`
+      })),
+      online_game_images: Object.fromEntries(onlineImages.map(row => [
+        row.game_type, "/tg-file/" + encodeURIComponent(row.photo_file_id)
+      ]))
+    });
+  } catch (error) {
+    console.error("Mini App payload failed:", error);
+    res.status(503).json({ ok: false, error: "تعذر تحميل بيانات الميني آب" });
+  }
+});
+
+app.get("/tg-file/:fileId", async (req, res) => {
+  try {
+    const { buffer, contentType } = await telegramFile(req.params.fileId);
+    res.set("Cache-Control", "public, max-age=3600").type(contentType).send(buffer);
+  } catch (error) {
+    console.error("Mini App Telegram media failed:", error.message);
+    res.sendStatus(404);
+  }
+});
+
+app.get("/mini-app/sound/:id", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT file_id,mime_type,media_kind FROM mini_app_sounds WHERE id=$1", [Number(req.params.id)]);
+    const sound = result.rows[0];
+    if (!sound) return res.sendStatus(404);
+    const { buffer, contentType } = await telegramFile(sound.file_id);
+    res.set("Cache-Control", "public, max-age=3600").type(sound.mime_type || contentType).send(buffer);
+  } catch (error) {
+    console.error("Mini App sound failed:", error.message);
+    res.sendStatus(404);
+  }
+});
 
 app.get("/", (_req, res) => res.redirect("/miniapp/"));
 app.get("/health", (_req, res) => res.status(200).send("Bot is running"));
