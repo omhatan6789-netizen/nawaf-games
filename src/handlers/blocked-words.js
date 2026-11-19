@@ -57,7 +57,7 @@ async function applyBlockedPunishment(ctx,chatId,user,action,duration){
  if(action==="restrict"){
   await ctx.api.restrictChatMember(chatId,user.id,{can_send_messages:false},until?{until_date:until}:{});
  } else if(action==="ban"){
-  await ctx.api.banChatMember(chatId,user.id,{...(untilDate?{until_date:untilDate}:{})});
+  await ctx.api.banChatMember(chatId,user.id,{...(until?{until_date:until}:{})});
  }
  await saveSanction(table,chatId,user,untilDate,null,ctx.me.id);
  const labels={mute:"كتم",restrict:"تقييد",ban:"حظر"};
