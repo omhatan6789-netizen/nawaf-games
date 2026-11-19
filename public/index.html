@@ -8,8 +8,9 @@
 <script>
 (function () {
   const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param || '';
-  if (startParam.startsWith('carrom_')) window.location.replace('/carrom/');
-  else if (startParam.startsWith('gravity_')) window.location.replace('/gravity/');
+  const suffix = window.location.search + window.location.hash;
+  if (startParam.startsWith('carrom_')) window.location.replace('/carrom/' + suffix);
+  else if (startParam.startsWith('gravity_')) window.location.replace('/gravity/' + suffix);
 })();
 </script>
 <style>
