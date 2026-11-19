@@ -153,8 +153,10 @@ async function setEnabled(groupId, enabled, userId) {
 export async function recordPrivateStart(ctx) {
   if (ctx.chat?.type !== "private" || !ctx.from || ctx.from.is_bot) return;
   await db().query(
-    "INSERT INTO developer_private_starts(user_id, started_at) VALUES($1,NOW()) ON CONFLICT(user_id) DO UPDATE SET started_at=NOW()",
-    [String(ctx.from.id)]
+    `INSERT INTO developer_private_starts(user_id,username,first_name,started_at,last_start_at)
+     VALUES($1,$2,$3,NOW(),NOW()) ON CONFLICT(user_id) DO UPDATE SET
+     username=EXCLUDED.username,first_name=EXCLUDED.first_name,last_start_at=NOW()`,
+    [String(ctx.from.id),ctx.from.username||null,ctx.from.first_name||null]
   );
 }
 
