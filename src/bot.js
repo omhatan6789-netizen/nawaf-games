@@ -19,6 +19,7 @@ import { handleMandatorySubscriptionCommand, enforceMandatorySubscription, recor
 import { handleEmojiReactionsMessage } from "./emoji-reactions.js";
 import { handleStartCommand, handleStartEditorCommand, handleStartEditorCallback, handleStartEditorMessage } from "./start-editor.js";
 import { handleDeveloperPanelCommand, handleDeveloperPanelCallback, handleDeveloperPanelMessage, trackDeveloperBotChat } from "./developer-panel.js";
+import { handleGamesManagerMessage } from "./handlers/games-manager.js";
 
 export function createBot() {
   const token = process.env.BOT_TOKEN;
@@ -73,6 +74,7 @@ export function createBot() {
       if (await handleMandatorySubscriptionCommand(ctx)) return;
       if (await enforceMandatorySubscription(ctx)) return;
       if (await handleEmojiReactionsMessage(ctx)) return;
+      if (await handleGamesManagerMessage(ctx)) return;
       recordGroupTextMessage(ctx);
       if (await handleMutedMessage(ctx)) return;
       if (hasBlockedWordSession(ctx.from?.id, ctx.chat?.id) || await handleBlockedWords(ctx)) return;
