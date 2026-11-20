@@ -52,6 +52,7 @@ export async function handleBigGameRouterMessage(ctx) {
   if (text === ".كمل") {
     if (game === "penalties") return continuePenalties(ctx);
     if (game === "word_race") return handleWordRaceRouter(ctx, text);
+    if (game === "image_quiz") return handleImageQuizRouter(ctx, text);
     return false;
   }
   if (/^\.(?:احمر|ازرق)(?:\s+\d+\*?)+$/.test(text)) {
