@@ -2,10 +2,14 @@ import crypto from "node:crypto";
 import { pool } from "./db.js";
 
 const GAME_INFO = {
-  connect: ["Connect Four 🔴", "لعبة توصيل أربعة أقراص"],
-  dots: ["Dots and Boxes 🟦", "ارسم الخطوط واجمع أكبر عدد من المربعات"],
-  memory: ["Memory Match 🧠", "اختبر ذاكرتك وطابق الألوان والتسلسل"],
-  word: ["خمن الكلمة 🔤", "تحدَّ حتى 10 لاعبين واكتشفوا الكلمة قبل انتهاء الوقت"],
+  connect: ["كونكت 4 🔴", "لعبة توصيل أربعة أقراص"],
+  dots: ["المربعات 🟦", "ارسم الخطوط واجمع أكبر عدد من المربعات"],
+  memory: ["اختبر ذاكرتك 🧠", "احفظ التسلسل وكرر الألوان"],
+  word: ["خمن الكلمة 🔤", "تحدَّ حتى 10 لاعبين واكتشفوا الكلمة"],
+  match: ["تطابق البطاقات 🃏", "طابق البطاقات واجمع أكبر عدد"],
+  find: ["Find Match 🔎", "اعثر على الغرض المشترك قبل خصمك"],
+  number: ["خمن الرقم 🎯", "اكتشف الرقم مع تلميحات أعلى أو أقل"],
+  sort: ["ترتيب الأرقام 🔢", "رتّب اللوحة قبل انتهاء الوقت"],
   carrom: ["الكيرم 🎯", "صوّب الأقراص نحو الجيوب وتحدَّ لاعبًا آخر"],
   gravity: ["جري الجاذبية 🏃", "بدّل الجاذبية وتجاوز العقبات مع لاعب آخر"],
   snowball: ["كرة الثلج ❄️", "صوّب كرات الثلج وتحدَّ لاعبًا آخر"],
@@ -19,6 +23,10 @@ function selectGames(query = "") {
   if (/(كونكت|connect|4)/i.test(value)) return ["connect"];
   if (/(مربع|المربعات|dots|dot)/i.test(value)) return ["dots"];
   if (/(ذاكرة|ذاكرت|memory)/i.test(value)) return ["memory"];
+  if (/(خمن الرقم|رقم|number)/i.test(value)) return ["number"];
+  if (/(ترتيب الأرقام|ترتيب|sort)/i.test(value)) return ["sort"];
+  if (/(find match|فايند ماتش|اعثر|العثور)/i.test(value)) return ["find"];
+  if (/(تطابق البطاقات|مطابقة|match)/i.test(value)) return ["match"];
   if (/(خمن|كلمة|word)/i.test(value)) return ["word"];
   if (/(كيرم|carrom)/i.test(value)) return ["carrom"];
   if (/(كرة الثلج|ثلج|snowball)/i.test(value)) return ["snowball"];
