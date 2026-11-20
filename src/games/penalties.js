@@ -151,8 +151,8 @@ function readyCaption(g,update=false){
  if(update)round=Math.floor((g.kickNumber+1)/2);
  else if(g.kickNumber<=2)round=1;else if(g.kickNumber<=4)round=2;else if(g.kickNumber<=6)round=3;else if(g.kickNumber<=8)round=4;else if(g.kickNumber<=10)round=5;else round=Math.floor((g.kickNumber-1)/2);
  const kickName=g.kickNumber%2===1?"الركلة الأولى":"الركلة الثانية",sc=team==="red"?"🔴":"🔵",gc=team==="red"?"🔵":"🔴";
- let text="🎮 *الجولة "+round+" — "+kickName+" "+sc+"*\\n\\n🎯 المسدد: *"+playerName(shooter)+"* "+sc+" ("+shooterStatus+")\\n🛡️ الحارس: *"+playerName(goalie)+"* "+gc+" ("+goalieStatus+")\\n\\n";
- const warning=kickWarning(g);if(warning)text+=warning+"\\n\\n";
+ let text="🎮 *الجولة "+round+" — "+kickName+" "+sc+"*\n\n🎯 المسدد: *"+playerName(shooter)+"* "+sc+" ("+shooterStatus+")\n🛡️ الحارس: *"+playerName(goalie)+"* "+gc+" ("+goalieStatus+")\n\n";
+ const warning=kickWarning(g);if(warning)text+=warning+"\n\n";
  return text+"اختر الزاوية من الأزرار بالأسفل:";
 }
 async function sendReadyImage(api,chatId,goalieTeam){
@@ -187,8 +187,8 @@ async function resolveKick(api,chatId){
   if(teaser){try{await api.deleteMessage(chatId,teaser.message_id);}catch{}}
   const image=RESULT_IMAGES[goalieTeam+"|"+g.goalieChoice+"|"+g.shooterChoice];
   let text;
-  if(goal)text="⚽ قوووول!! هدف لصالح "+playerName(shooter)+" (فريق "+(shootingTeam==="red"?"الأحمر 🔴":"الأزرق 🔵")+") 🔥\\n\\n🎯 المسدد سدد في "+g.shooterChoice+" "+DIRECTIONS[g.shooterChoice]+" والحارس ارتمى إلى "+g.goalieChoice+" "+DIRECTIONS[g.goalieChoice]+"!\\n\\n📊 النتيجة: 🔴 الأحمر "+g.score.red+" - "+g.score.blue+" الأزرق 🔵";
-  else text="🧤 ياساتر صدها الحارس! مستحييل! 💥\\n\\n🛡️ الحارس "+playerName(goalie)+" (فريق "+(goalieTeam==="red"?"الأحمر 🔴":"الأزرق 🔵")+") تصدى للكرة في "+g.goalieChoice+" "+DIRECTIONS[g.goalieChoice]+"!\\n\\n📊 النتيجة: 🔴 الأحمر "+g.score.red+" - "+g.score.blue+" الأزرق 🔵";
+  if(goal)text="⚽ قوووول!! هدف لصالح "+playerName(shooter)+" (فريق "+(shootingTeam==="red"?"الأحمر 🔴":"الأزرق 🔵")+") 🔥\n\n🎯 المسدد سدد في "+g.shooterChoice+" "+DIRECTIONS[g.shooterChoice]+" والحارس ارتمى إلى "+g.goalieChoice+" "+DIRECTIONS[g.goalieChoice]+"!\n\n📊 النتيجة: 🔴 الأحمر "+g.score.red+" - "+g.score.blue+" الأزرق 🔵";
+  else text="🧤 ياساتر صدها الحارس! مستحييل! 💥\n\n🛡️ الحارس "+playerName(goalie)+" (فريق "+(goalieTeam==="red"?"الأحمر 🔴":"الأزرق 🔵")+") تصدى للكرة في "+g.goalieChoice+" "+DIRECTIONS[g.goalieChoice]+"!\n\n📊 النتيجة: 🔴 الأحمر "+g.score.red+" - "+g.score.blue+" الأزرق 🔵";
   try{if(image)await api.sendPhoto(chatId,image,{caption:text});else await api.sendMessage(chatId,text);}catch{try{await api.sendMessage(chatId,text);}catch{}}
   if(decisive){await finishPenaltyGame(api,chatId,goal?shootingTeam:goalieTeam);return;}
   if(survival&&!goal){await finishPenaltyGame(api,chatId,goalieTeam);return;}
@@ -218,11 +218,11 @@ export async function continuePenalties(ctx){
 async function finishPenaltyGame(api,chatId,winner){
  const g=activePenaltyGames.get(chatId);if(!g||g.phase==="finished")return;
  g.phase="finished";cancelKickTasks(g);const loser=winner==="red"?"blue":"red";
- await api.sendMessage(chatId,"🏆 انتهت مباراة البلنتيات! 🏆\\n\\n🎉 الفائز: "+(winner==="red"?"🔴 الفريق الأحمر":"🔵 الفريق الأزرق")+"!\\n\\nالنتيجة النهائية: 🔴 الأحمر "+g.score.red+" - "+g.score.blue+" الأزرق 🔵");
+ await api.sendMessage(chatId,"🏆 انتهت مباراة البلنتيات! 🏆\n\n🎉 الفائز: "+(winner==="red"?"🔴 الفريق الأحمر":"🔵 الفريق الأزرق")+"!\n\nالنتيجة النهائية: 🔴 الأحمر "+g.score.red+" - "+g.score.blue+" الأزرق 🔵");
  const winners=[...new Set([...g[winner].shooters,...g[winner].goalies])];
  const reward=["✨ جوائز الفريق الفائز: ✨"];
  for(const id of winners){const player=g.players.get(id);if(!player)continue;try{await addPoints(player,WIN_POINTS);}catch(e){console.error("Penalty award:",e?.message||e);}reward.push("• "+playerName(player)+" — حصل على "+WIN_POINTS+" نقطة! 🎖️");}
- try{await api.sendMessage(chatId,reward.join("\\n"));}catch{}
+ try{await api.sendMessage(chatId,reward.join("\n"));}catch{}
  activePenaltyGames.delete(chatId);unlockBigGame(chatId,"penalties");
 }
 export async function endPenaltyGame(ctx){
