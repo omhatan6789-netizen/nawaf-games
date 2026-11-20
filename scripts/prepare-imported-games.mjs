@@ -210,6 +210,8 @@ export default function App() {
   const clientRef = useRef<OnlineGameClient|null>(null);
   const screenRef = useRef<Screen>(screen);
   const shotSeq = useRef(0);
+  const pendingAimSync = useRef<AimSyncPayload|null>(null);
+  const aimSyncTimer = useRef<number|null>(null);
   screenRef.current = screen;
 
   // Lock the Telegram Mini App viewport while a Snowball match is active.
@@ -265,10 +267,10 @@ export default function App() {
             setResult(null); setMatchKey(k => k + 1); setScreen('playing');
           }
         },
-        onShotBroadcast: (outcome) => { shotSeq.current += 1; setAim(null); setShot({seq:shotSeq.current,outcome}); },
-        onAimSync: (next) => setAim(next),
+        onShotBroadcast: (outcome) => { if (aimSyncTimer.current !== null) window.clearTimeout(aimSyncTimer.current); aimSyncTimer.current = null; pendingAimSync.current = null; shotSeq.current += 1; setAim(null); setShot({seq:shotSeq.current,outcome}); },
+        onAimSync: (next) => { pendingAimSync.current = next; if (aimSyncTimer.current !== null) return; aimSyncTimer.current = window.setTimeout(() => { aimSyncTimer.current = null; setAim(pendingAimSync.current); }, 50); },
         onError: (message) => setError(message),
-        onLeft: () => { setSnapshot(null); setShot(null); setAim(null); setScreen('home'); },
+        onLeft: () => { if (aimSyncTimer.current !== null) window.clearTimeout(aimSyncTimer.current); aimSyncTimer.current = null; pendingAimSync.current = null; setSnapshot(null); setShot(null); setAim(null); setScreen('home'); },
       });
       clientRef.current.connect();
     }
