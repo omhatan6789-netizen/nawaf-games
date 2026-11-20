@@ -223,7 +223,7 @@ export async function handleMiniAppPanelMessage(ctx) {
   }
   if (session.action === "number_sort_bg" && session.step === "media") {
     const msg=ctx.message;
-    const media=msg?.photo?.at(-1)||(msg?.document&&/^image\\//.test(msg.document.mime_type||"")?msg.document:null);
+    const media=msg?.photo?.at(-1)||(msg?.document&&/^image\//.test(msg.document.mime_type||"")?msg.document:null);
     if(!media){await ctx.reply("أرسل صورة عادية أو ملف صورة، أو اكتب إلغاء.");return true;}
     if((media.file_size||0)>20*1024*1024){await ctx.reply("الصورة أكبر من 20 ميجابايت.");return true;}
     await pool.query("UPDATE number_sort_settings SET background_file_id=$1,updated_at=NOW() WHERE id=1",[media.file_id]);
