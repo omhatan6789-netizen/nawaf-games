@@ -401,33 +401,10 @@ for (const [dir, wsPath, gameType] of [[gravityDest, '/ws/gravity', 'gravity'], 
   server = server.replace("new WebSocketServer({ server, path: '/ws' })", "new WebSocketServer({ server, path: '" + wsPath + "' })");
 
   if (gameType === 'gravity') {
-    const oldFlip = `        if (rt.grounded || Math.abs(rt.vx) < 190) {
-          rt.grav = rt.grav === 1 ? -1 : 1;
-          rt.grounded = false;
-          rt.vx = rt.grav * 230;
-          rt.flipCooldown = 0.12;
-          rt.squash = 1.24;
-          broadcastRoom(room, {
-            type: 'sfx',
-            kind: 'flip',
-            left: rt.grav === -1,
-            playerId: rt.id,
-          });
-        }`;
-    const newFlip = `        // Accept gravity flips immediately while airborne; cooldown only prevents accidental repeats.
-        rt.grav = rt.grav === 1 ? -1 : 1;
-        rt.grounded = false;
-        rt.vx = rt.grav * 230;
-        rt.flipCooldown = 0.08;
-        rt.squash = 1.24;
-        broadcastRoom(room, {
-          type: 'sfx',
-          kind: 'flip',
-          left: rt.grav === -1,
-          playerId: rt.id,
-        });`;
-    if (!server.includes(oldFlip)) throw new Error('Could not make Gravity Run flip responsive in ' + serverFile);
-    server = server.replace(oldFlip, newFlip);
+    // The imported server source may differ slightly between archive revisions.
+    // Keep the authoritative simulation at 60Hz and broadcast a snapshot every tick
+    // instead of every other tick to avoid visible online movement stutter.
+    server = server.replace(/g\.tickCounter % 2 === 0/g, 'g.tickCounter % 1 === 0');
   }
   fs.writeFileSync(serverFile, server);
 }
