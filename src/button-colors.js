@@ -20,6 +20,9 @@ export async function ensureButtonColorsSchema() {
     color TEXT NOT NULL DEFAULT 'شفاف',
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )`);
+  // Upgrade an existing legacy table without dropping its saved button colors.
+  await db().query("ALTER TABLE button_colors ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()");
+  await db().query("ALTER TABLE button_colors ADD COLUMN IF NOT EXISTS color TEXT NOT NULL DEFAULT 'شفاف'");
   await loadButtonColors();
 }
 
