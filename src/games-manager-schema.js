@@ -81,6 +81,14 @@ export async function ensureGamesManagerSchema() {
     await seedQuestions("كلمات",words.map(word=>[`• اكتب كلمة ~ ${word}`,[word]]));
     await seedQuestions("تفكيك",decomposition.map(word=>[`• فكك كلمة ~ ${word}`,[word.split("").join(" ")]]));
     await seedQuestions("انمي",anime);
+    await pool.query(
+      "INSERT INTO game_questions(game_name,question,image,caption,answers) " +
+      "SELECT 'انمي',seed.question,NULL,NULL,seed.answers::jsonb " +
+      "FROM unnest($1::text[],$2::text[]) AS seed(question,answers) " +
+      "WHERE NOT EXISTS (SELECT 1 FROM game_questions existing " +
+      "WHERE existing.game_name='انمي' AND existing.question=seed.question)",
+      [anime.map(row=>row[0]),anime.map(row=>JSON.stringify(row[1]))]
+    );
 
     console.log("Games manager schema is ready.");
   })().catch(error => { ready = null; throw error; });
