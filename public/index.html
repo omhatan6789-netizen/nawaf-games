@@ -213,6 +213,26 @@ function showTop(kind,title){
  }).catch(()=>{pageContent.replaceChildren();const e=document.createElement('div');e.className='empty';e.textContent='تعذر تحميل الترتيب حاليًا، حاول مرة ثانية';pageContent.appendChild(e);});
 }
 
+function showGameEntry(type,emoji,name,hint){
+ stopC4Timer();stopMiniGameTimers();stopExtraGame();window.stopCasualGame?.();window.stopNumberSort?.();
+ const shell=c4Shell(),image=onlineGameImages[type]||'';
+ shell.innerHTML='<div style="min-height:calc(100dvh - 30px);display:flex;flex-direction:column;justify-content:center;gap:22px;padding:10px 0">'+
+  '<div style="height:min(42vh,350px);overflow:hidden;border-radius:34px;border:1px solid #ffffff40;background:#fff2;box-shadow:0 14px 35px #0006">'+(image?'<img src="'+image+'" alt="'+name+'" style="width:100%;height:100%;object-fit:cover">':'<div style="height:100%;display:grid;place-items:center;font-size:100px">'+emoji+'</div>')+'</div>'+
+  '<div class="c4-heading"><h2 style="font-size:38px">'+name+'</h2><p>'+hint+'</p></div>'+
+  '<div class="c4-panel" style="display:grid;gap:12px;padding:18px">'+
+   '<button class="c4-start" id="entry-bot" style="min-height:76px;font-size:25px">🤖 لعب ضد البوت</button>'+
+   '<button class="c4-secondary" id="entry-human" style="min-height:70px;font-size:22px">👥 لعب ضد شخص بالتيليجرام</button>'+
+  '</div><button class="c4-secondary" id="entry-home" style="min-height:60px">↩ الرجوع للقائمة الرئيسية</button></div>';
+ shell.querySelector('#entry-home').onclick=showHome;
+ shell.querySelector('#entry-human').onclick=()=>openInlineGamePicker(type);
+ shell.querySelector('#entry-bot').onclick=()=>{
+  if(type==='connect')showConnect4Setup();
+  else if(type==='word')showWordTrainingSetup();
+  else if(type==='match'||type==='number')window.startCasualSetup(type);
+  else if(type==='sort')window.startNumberSortSetup();
+  else if(type==='dots'||type==='memory')showMiniGameDifficulty(type);
+ };
+}
 function showGames(){
  stopC4Timer();stopMiniGameTimers();stopExtraGame();window.stopCasualGame?.();window.stopNumberSort?.();document.body.classList.remove('c4-active');home.hidden=true;page.hidden=false;pageTitle.textContent='الألعاب 🎮';pageContent.replaceChildren();
  const games=[
@@ -238,7 +258,7 @@ function showGames(){
    const placeholder=document.createElement('div');placeholder.className='game-cover-placeholder';placeholder.textContent=emoji;card.appendChild(placeholder);
   }
   const label=document.createElement('span');label.className='label';label.textContent=name;card.appendChild(label);
-  card.onclick=()=>{if(type==='carrom'||type==='gravity'||type==='snowball'){location.href='/'+type+'/';return;}if(type==='connect'){showConnect4ModeChoice();return;}if(type==='word'){showWordSetup();return;}if(type==='match'||type==='number'){window.startCasualSetup(type);return;}if(type==='sort'){window.startNumberSortSetup();return;}showMiniGameInstructions(type);};
+  card.onclick=()=>{if(type==='carrom'||type==='gravity'||type==='snowball'){location.href='/'+type+'/';return;}showGameEntry(type,emoji,name,hint);};
   pageContent.appendChild(card);
  });
 }
@@ -277,7 +297,7 @@ const c4Levels=[['سهل','مناسب للتجربة'],['متوسط','تحدي �
 function stopC4Timer(){if(c4Timer)clearTimeout(c4Timer);if(c4Tick)clearInterval(c4Tick);if(c4BotTimer)clearTimeout(c4BotTimer);if(c4PollTimer)clearTimeout(c4PollTimer);if(c4ChallengePollTimer)clearTimeout(c4ChallengePollTimer);c4Timer=null;c4Tick=null;c4BotTimer=null;c4PollTimer=null;c4ChallengePollTimer=null;}
 function c4Shell(){document.body.classList.add('c4-active');pageContent.innerHTML='<div class="c4-shell" id="c4-shell"></div>';return document.getElementById('c4-shell');}
 function openInlineGamePicker(type){
- const queries={connect:'كونكت 4',dots:'المربعات',memory:'الذاكرة',word:'خمن الكلمة',carrom:'الكيرم',gravity:'جري الجاذبية',snowball:'كرة الثلج'};
+ const queries={connect:'كونكت 4',dots:'المربعات',memory:'الذاكرة',word:'خمن الكلمة',match:'تطابق البطاقات',find:'Find Match',number:'خمن الرقم',sort:'ترتيب الأرقام',carrom:'الكيرم',gravity:'جري الجاذبية',snowball:'كرة الثلج'};
  const query=queries[type];if(!query)return;
  if(typeof tg?.switchInlineQuery!=='function'){alert('افتح الميني آب من داخل تطبيق تيليجرام لاختيار المحادثة.');return;}
  try{tg.switchInlineQuery(query,['users','groups','channels']);}catch(e){alert('تعذر فتح اختيار المحادثة. حدّث تيليجرام وحاول مرة ثانية.');}
