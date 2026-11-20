@@ -1,8 +1,8 @@
 import { getRankLevel } from "../ranks.js";
 import { pool } from "../db.js";
+import { getBigGame, lockBigGame, unlockBigGame } from "./big-game-lock.js";
 
 export const activeHideGames = new Map();
-const activeBigGames = new Map();
 const HIDE_TIME = 60_000;
 const SEARCH_TIME = 30_000;
 const MIN_PLAYERS = 2;
@@ -159,7 +159,7 @@ async function finishHideGame(ctx, chatId) {
   }
   await ctx.api.sendMessage(chatId, message);
   activeHideGames.delete(chatId);
-  if (activeBigGames.get(chatId)?.key === "hide") activeBigGames.delete(chatId);
+  unlockBigGame(chatId, "hide");
 }
 async function resolveSearch(ctx, chatId, playerId, number, messageId) {
   const game = activeHideGames.get(chatId);
@@ -287,7 +287,7 @@ export async function handleHideAndSeekCallback(ctx) {
 async function startHideGame(ctx) {
   if (ctx.chat.type === "private") return ctx.reply("❌ لعبة الغميضة تبدأ من القروب.");
   if (!(await canManage(ctx.from.id, ctx.chat.id))) return ctx.reply("❌ هذا الأمر للرتب فقط.");
-  const active = activeBigGames.get(ctx.chat.id);
+  const active = getBigGame(ctx.chat.id);
   if (active) return ctx.reply(`❌ فيه لعبة شغالة حاليًا!: ${active.name}\n\n🛑 أنهِ اللعبة الحالية أولًا قبل بدء لعبة أخرى.`);
   if (activeHideGames.has(ctx.chat.id)) return ctx.reply("❌ توجد لعبة غميضة شغالة بالفعل.");
   activeHideGames.set(ctx.chat.id, {
@@ -297,10 +297,10 @@ async function startHideGame(ctx) {
     discoveries: new Map(), bombHits: new Map(), scores: new Map(), hidden: new Map(),
     searching: false, resolving: false,
   });
-  activeBigGames.set(ctx.chat.id, { key: "hide", name: "غميضة 🕵️" });
+  lockBigGame(ctx.chat.id, "hide", "غميضة 🕵️");
   await ctx.reply("🚪 تم فتح التسجيل في لعبة الغميضة!\n\n• نوع اللوحة المختار: الأرقام 🔢\n• اكتب دخول للانضمام إلى اللعبة.\n• عندما يكتمل اللاعبون، يكتب الأدمن ابدا لبدء اللعبة.\n• الحد الأدنى لبدء اللعبة: 2 لاعبين.");
 }
-async function joinHideGame(ctx) {
+export async function joinHideGame(ctx) {
   const game = activeHideGames.get(ctx.chat.id);
   if (!game || game.phase !== "registration") return false;
   const user = ctx.from;
@@ -316,7 +316,7 @@ async function joinHideGame(ctx) {
   await ctx.reply(`✅ تم تسجيل ${playerName(user)} في لعبة الغميضة!\n\n👥 عدد اللاعبين: ${game.players.size}\n🔢 عدد المربعات: ${game.boardSize}\n\n${names.join("\n")}`);
   return true;
 }
-async function beginHideGame(ctx) {
+export async function beginHideGame(ctx) {
   const game = activeHideGames.get(ctx.chat.id);
   if (!game) return false;
   if (!(await canManage(ctx.from.id, ctx.chat.id))) return true;
@@ -344,13 +344,13 @@ async function beginHideGame(ctx) {
   }, HIDE_TIME);
   return true;
 }
-async function endHideGame(ctx) {
+export async function endHideGame(ctx) {
   const game = activeHideGames.get(ctx.chat.id);
   if (!game) return false;
   if (!(await canManage(ctx.from.id, ctx.chat.id))) return true;
   await ctx.reply("🛑 تم إنهاء لعبة الغميضة.");
   activeHideGames.delete(ctx.chat.id);
-  if (activeBigGames.get(ctx.chat.id)?.key === "hide") activeBigGames.delete(ctx.chat.id);
+  unlockBigGame(ctx.chat.id, "hide");
   cancelTask(game, "hideTask");
   cancelTask(game, "searchTask");
   return true;
@@ -359,8 +359,5 @@ export async function handleHideAndSeekMessage(ctx) {
   const text = ctx.message?.text?.trim().replace(/\s+/g, " ");
   if (!text || !ctx.chat || !ctx.from) return false;
   if (text === "غميضة") { await startHideGame(ctx); return true; }
-  if (text === "دخول") return joinHideGame(ctx);
-  if (text === ".ابدا") return beginHideGame(ctx);
-  if (text === ".انهاء") return endHideGame(ctx);
   return false;
 }
