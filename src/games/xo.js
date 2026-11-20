@@ -89,12 +89,13 @@ async function withGameLock(id, callback) {
   const previous = locks.get(id) || Promise.resolve();
   let release;
   const current = new Promise(resolve => { release = resolve; });
-  locks.set(id, previous.then(() => current));
+  const queued = previous.then(() => current);
+  locks.set(id, queued);
   await previous;
   try { return await callback(); }
   finally {
     release();
-    if (locks.get(id) === current) locks.delete(id);
+    if (locks.get(id) === queued) locks.delete(id);
   }
 }
 
