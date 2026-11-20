@@ -543,8 +543,8 @@ function renderMiniGame(){
  const heading=game.game_type==='dots'?'المربعات':'اختبر ذاكرتك';
  const cover=onlineMode&&onlineGameImages[game.game_type]?'<img class="online-game-cover" src="'+escapeLobbyText(onlineGameImages[game.game_type])+'" alt="صورة اللعبة">':'';
  shell.innerHTML=cover+'<div class="c4-heading"><h2>'+heading+'</h2><p>'+escapeLobbyText(playerLabel)+'</p></div><div class="mg-score" id="mg-score"></div><div class="mg-status"><span id="mg-status"></span><b id="mg-clock"></b></div><div class="mg-progress"><div id="mg-progress-bar"></div></div><div id="mg-board"></div><div class="c4-result" id="mg-result"></div><div class="c4-hint">'+(onlineMode?'وضع أونلاين — بدون نقاط':'الرهان لكل لاعب: '+game.wager.toLocaleString('en-US')+' نقطة')+'</div>'+(onlineMode?(game.status==='playing'&&!game.spectator?'<button class="c4-withdraw" id="mg-withdraw">انسحاب</button>':''):'');
- 
- else{const mainBack=document.getElementById('back-home');if(mainBack)mainBack.textContent='رجوع للقائمة الرئيسية';const withdraw=shell.querySelector('#mg-withdraw');if(withdraw)withdraw.onclick=()=>withdrawOnlineGame(game.game_type,game.id,withdraw);}
+
+ if(onlineMode){const mainBack=document.getElementById('back-home');if(mainBack)mainBack.textContent='رجوع للقائمة الرئيسية';const withdraw=shell.querySelector('#mg-withdraw');if(withdraw)withdraw.onclick=()=>withdrawOnlineGame(game.game_type,game.id,withdraw);}
  if(game.status!=='playing'){
   shell.querySelector('#mg-result').classList.add('show');
   shell.querySelector('#mg-result').textContent=game.status==='draw'?'🤝 انتهت المباراة بالتعادل':'🏆 فاز '+winnerDisplayName(game)+'!';
