@@ -5,16 +5,14 @@ import JSZip from 'jszip';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { WebSocketServer, WebSocket } from 'ws';
-import type {
+import {
   CarromDisc,
   CarromPlayerState,
   FourPlayerMode,
+  MAX_SHOT_SPEED,
   PieceKind,
   PlayerCount,
   QueenStatus,
-} from './src/game/carromPhysics.ts';
-import {
-  MAX_SHOT_SPEED,
   createInitialCoins,
   createStriker,
   findNearestClearSlider,
@@ -289,16 +287,6 @@ function startShotSimulation(room: CarromRoom) {
     }
 
     const { events, anyMoving } = stepCarromPhysics(g.coins, g.striker, dt);
-    // The server owns online physics, so it must also advance pocket animations;
-    // otherwise clients keep receiving pocketAnim=0 and render the coin outside the pocket.
-    for (const coin of g.coins) {
-      if (coin.pocketed && coin.pocketAnim !== undefined && coin.pocketAnim < 1) {
-        coin.pocketAnim = Math.min(1, coin.pocketAnim + dt * 4.5);
-      }
-    }
-    if (g.striker?.pocketed && g.striker.pocketAnim !== undefined && g.striker.pocketAnim < 1) {
-      g.striker.pocketAnim = Math.min(1, g.striker.pocketAnim + dt * 4.5);
-    }
     for (const ev of events) {
       if (ev.type === 'clack' && ev.intensity > 0.14) {
         broadcastRoom(room, {
@@ -454,25 +442,6 @@ function handleSocketLeave(ws: WebSocket, permanent: boolean) {
 async function startServer() {
   const app = express();
   app.use(express.json());
-
-
-  app.post('/api/internal/inline-room', (req, res) => {
-    if (!process.env.BOT_TOKEN || req.headers['x-bot-token'] !== process.env.BOT_TOKEN) {
-      res.sendStatus(403); return;
-    }
-    const hostId = `tg_${String(req.body?.userId || '').replace(/[^0-9]/g, '')}`;
-    if (hostId === 'tg_') { res.status(400).json({ok:false,error:'Invalid host'}); return; }
-    const name = sanitizeName(req.body?.name, 'اللاعب الأول');
-    const roomId = makeRoomId();
-    const room: CarromRoom = {
-      id: roomId, hostId, status: 'lobby', playerCount: 2, fourMode: 'teams',
-      createdAt: Date.now(),
-      players: [{ id: hostId, name, connected: false, withdrawn: false, ws: null }],
-      spectators: new Map(), game: null, interval: null,
-    };
-    rooms.set(roomId, room);
-    res.json({ok:true,roomId});
-  });
 
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true, activeRooms: rooms.size });

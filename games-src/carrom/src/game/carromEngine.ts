@@ -388,12 +388,10 @@ export class CarromGameEngine {
 
   private toBoardPos(clientX: number, clientY: number): { x: number; y: number } {
     const rect = this.canvas.getBoundingClientRect();
-    const x = ((clientX - rect.left) / Math.max(1, rect.width)) * BOARD_SIZE;
-    const y = ((clientY - rect.top) / Math.max(1, rect.height)) * BOARD_SIZE;
-    if (this.config.mode === 'online' && this.config.localSlotIndex === 1) {
-      return { x: BOARD_SIZE - x, y: BOARD_SIZE - y };
-    }
-    return { x, y };
+    return {
+      x: ((clientX - rect.left) / Math.max(1, rect.width)) * BOARD_SIZE,
+      y: ((clientY - rect.top) / Math.max(1, rect.height)) * BOARD_SIZE,
+    };
   }
 
   private onPointerDown = (e: PointerEvent) => {
@@ -685,7 +683,6 @@ export class CarromGameEngine {
       canInteract: this.canHumanInteract(),
       aim: this.aimState ?? this.remoteAimState,
       sparks: this.sparks,
-      flip: this.config.mode === 'online' && this.config.localSlotIndex === 1,
     });
 
     this.rafId = requestAnimationFrame(this.loop);

@@ -62,7 +62,6 @@ interface GravityRoom {
   hostId: string;
   status: 'lobby' | 'playing' | 'finished';
   targetScore: number;
-  maxPlayers: number;
   createdAt: number;
   players: RoomPlayer[];
   spectators: Map<string, RoomSpectator>;
@@ -126,7 +125,7 @@ function serializeRoomLobby(room: GravityRoom) {
       status: room.status,
       targetScore: room.targetScore,
       minPlayers: 2,
-      maxPlayers: room.maxPlayers,
+      maxPlayers: 5,
       players: room.players.map((p, idx) => {
         const color = PLAYER_PALETTE[idx] ?? PLAYER_PALETTE[0];
         return {
@@ -475,24 +474,6 @@ async function startServer() {
   const app = express();
   app.use(express.json());
 
-
-  app.post('/api/internal/inline-room', (req, res) => {
-    if (!process.env.BOT_TOKEN || req.headers['x-bot-token'] !== process.env.BOT_TOKEN) {
-      res.sendStatus(403); return;
-    }
-    const hostId = `tg_${String(req.body?.userId || '').replace(/[^0-9]/g, '')}`;
-    if (hostId === 'tg_') { res.status(400).json({ok:false,error:'Invalid host'}); return; }
-    const name = sanitizeName(req.body?.name, 'اللاعب الأول');
-    const roomId = makeRoomId();
-    const room: GravityRoom = {
-      id: roomId, hostId, status: 'lobby', targetScore: 3, maxPlayers: 5, createdAt: Date.now(),
-      players: [{ id: hostId, name, score: 0, withdrawn: false, connected: false, ws: null }],
-      spectators: new Map(), game: null, interval: null,
-    };
-    rooms.set(roomId, room);
-    res.json({ok:true,roomId});
-  });
-
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true, activeRooms: rooms.size });
   });
@@ -609,7 +590,6 @@ async function startServer() {
           hostId: playerId,
           status: 'lobby',
           targetScore,
-          maxPlayers: 5,
           createdAt: Date.now(),
           players: [
             {
@@ -683,8 +663,8 @@ async function startServer() {
           return;
         }
 
-        if (room.players.length >= room.maxPlayers) {
-          sendJson(ws, { type: 'error', message: `الغرفة مكتملة (الحد الأقصى ${room.maxPlayers} لاعبين)` });
+        if (room.players.length >= 5) {
+          sendJson(ws, { type: 'error', message: 'الغرفة مكتملة (الحد الأقصى 5 لاعبين)' });
           return;
         }
 
@@ -717,15 +697,8 @@ async function startServer() {
 
       if (type === 'update_settings') {
         if (room.hostId !== sess.playerId || room.status !== 'lobby') return;
-        if (msg.targetScore !== undefined) {
-          room.targetScore = Number(msg.targetScore) === 5 ? 5 : 3;
-        }
-        const requestedMax = Number(msg.maxPlayers);
-        if (Number.isInteger(requestedMax) && requestedMax >= 2 && requestedMax <= 5 && requestedMax >= room.players.length) room.maxPlayers = requestedMax;
-        if (typeof msg.name === 'string') {
-          const host = room.players.find((p) => p.id === room.hostId);
-          if (host) host.name = sanitizeName(msg.name, host.name);
-        }
+        const targetScore = Number(msg.targetScore) === 5 ? 5 : 3;
+        room.targetScore = targetScore;
         broadcastRoom(room, serializeRoomLobby(room));
         return;
       }

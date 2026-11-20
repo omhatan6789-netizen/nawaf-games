@@ -113,7 +113,7 @@ export default function App() {
   const initialRoomCode = useMemo(() => getInitialRoomCodeFromUrl(), []);
   const clientId = useMemo(() => getStableClientId(), []);
 
-  const [screen, setScreen] = useState<'choice' | 'setup' | 'playing'>(initialRoomCode ? 'setup' : 'choice');
+  const [screen, setScreen] = useState<'setup' | 'playing'>('setup');
   const [mode, setMode] = useState<GameMode>(() =>
     initialRoomCode ? 'online' : 'bot'
   );
@@ -494,43 +494,6 @@ export default function App() {
 
   const isHost = onlineRoom ? onlineRoom.hostId === myOnlineId : false;
 
-  if (screen === 'choice') {
-    return (
-      <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center px-4 py-6">
-        <main className="w-full max-w-[460px] flex flex-col gap-5">
-          <div className="text-center">
-            <CarromPreviewSvg />
-            <h1 className="text-2xl font-black text-white mt-3">الكيرم 🎯</h1>
-            <p className="text-sm text-white/65 mt-2">اختر طريقة اللعب</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => { setMode('bot'); setOnlineRoom(null); setScreen('setup'); }}
-            className="nawaf-primary w-full py-4 text-base font-black"
-          >
-            🤖 لعب ضد البوت
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              const webApp = window.Telegram?.WebApp as any;
-              if (typeof webApp?.switchInlineQuery !== 'function') {
-                showToast('افتح اللعبة من داخل تيليجرام لاختيار المحادثة');
-                return;
-              }
-              webApp.switchInlineQuery('الكيرم', ['users', 'groups', 'channels']);            }}
-            className="nawaf-secondary w-full py-4 text-base font-black"
-          >
-            👥 لعب ضد شخص بالتيليجرام
-          </button>
-          <button type="button" onClick={() => { window.location.href = '/miniapp/'; }} className="text-xs font-bold text-white/55 py-2">
-            الرجوع للقائمة الرئيسية
-          </button>
-        </main>
-      </div>
-    );
-  }
-
   // =========================================================================
   // GAMEPLAY SCREEN (Fits cleanly inside 100dvh without scrolling)
   // =========================================================================
@@ -551,9 +514,8 @@ export default function App() {
               type="button"
               onClick={handleExitGameplay}
               className="nawaf-pill whitespace-nowrap shrink-0"
-              style={{ background: '#ef233c', color: '#fff', borderColor: '#ff8a91' }}
             >
-              انسحاب
+              خروج
             </button>
 
             <div className="text-center min-w-0">
@@ -723,7 +685,7 @@ export default function App() {
         <header className="flex items-center justify-between gap-3 py-1">
           <button
             type="button"
-            onClick={() => { window.location.href = '/miniapp/'; }}
+            onClick={() => window.Telegram?.WebApp?.close?.()}
             className="nawaf-pill whitespace-nowrap shrink-0"
           >
             القائمة
@@ -767,7 +729,7 @@ export default function App() {
               لعبة الكيرم الأصلية
             </h1>
             <p className="text-sm text-white/75 m-0 mt-1.5">
-              حرّك قرص التسديد بالسحّاب، اسحب للخلف للتصويب، وأدخل الأقراص في الجيوب!
+              حرّك قرص التسديد بالسحّاب، اسحب للخلف للتصويب، وتحدَّ بوت نواف أو أصدقاءك أونلاين!
             </p>
           </div>
 
@@ -791,6 +753,65 @@ export default function App() {
               />
             </div>
 
+            {mode === 'local' && playerCount === 2 && (
+              <div>
+                <label
+                  htmlFor="carrom-p2-name"
+                  className="block text-xs font-bold text-white/75 mb-1.5"
+                >
+                  اسم اللاعب الثاني (نفس الجهاز)
+                </label>
+                <input
+                  id="carrom-p2-name"
+                  type="text"
+                  maxLength={24}
+                  value={localP2Name}
+                  onChange={(e) => setLocalP2Name(e.target.value)}
+                  placeholder="اكتب اسم اللاعب الثاني..."
+                  className="w-full rounded-xl border border-white/25 bg-[#12070a] px-3.5 py-2.5 text-sm font-bold text-white outline-none focus:border-[#ff9ba3]"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Game Mode Selection */}
+          <div>
+            <div className="text-xs font-bold text-white/75 mb-2">طريقة اللعب</div>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('bot');
+                  setOnlineRoom(null);
+                }}
+                className={`nawaf-choice py-3 px-2 text-xs sm:text-sm ${
+                  mode === 'bot' ? 'active' : ''
+                }`}
+              >
+                🤖 ضد بوت نواف
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('local');
+                  setOnlineRoom(null);
+                }}
+                className={`nawaf-choice py-3 px-2 text-xs sm:text-sm ${
+                  mode === 'local' ? 'active' : ''
+                }`}
+              >
+                👥 نفس الجهاز
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('online')}
+                className={`nawaf-choice py-3 px-2 text-xs sm:text-sm ${
+                  mode === 'online' ? 'active' : ''
+                }`}
+              >
+                🌐 أونلاين
+              </button>
+            </div>
           </div>
 
           {/* Bot Difficulty */}
@@ -1085,15 +1106,46 @@ export default function App() {
 
             <button
               type="button"
-              onClick={() => { window.location.href = '/miniapp/'; }}
-              className="nawaf-secondary w-full flex items-center justify-center gap-2"
+              onClick={() => setExportOpen(true)}
+              className="nawaf-secondary flex items-center justify-center gap-2"
             >
-              الرجوع للقائمة الرئيسية
+              <Code2 className="w-4 h-4 text-[#ff9ba3]" />
+              <span>كود الإضافة لمشروعك في GitHub (nawaf-bot-v2)</span>
             </button>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  downloadZipFromEndpoint(
+                    '/api/export/project.zip',
+                    'carrom-game-project.zip'
+                  ).catch((err) => showToast(err.message));
+                }}
+                className="nawaf-choice py-2.5 px-3 text-xs flex items-center justify-center gap-2"
+              >
+                <FolderArchive className="w-4 h-4 text-[#facc15]" />
+                <span>تحميل المشروع كامل (ZIP)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  downloadZipFromEndpoint(
+                    '/api/export/nawaf-addon.zip',
+                    'nawaf-bot-v2-carrom-addon.zip'
+                  ).catch((err) => showToast(err.message));
+                }}
+                className="nawaf-choice py-2.5 px-3 text-xs flex items-center justify-center gap-2"
+              >
+                <Download className="w-4 h-4 text-[#60a5fa]" />
+                <span>تحميل إضافة البوت (ZIP)</span>
+              </button>
+            </div>
           </div>
         </section>
       </main>
 
+      <GitHubExportModal open={exportOpen} onClose={() => setExportOpen(false)} />
     </div>
   );
 }

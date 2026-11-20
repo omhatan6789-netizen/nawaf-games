@@ -91,14 +91,7 @@ function getInitialRoomCodeFromUrl(): string {
   const queryRoom = params.get('room') || params.get('lobby');
   if (queryRoom) return queryRoom.trim().toUpperCase();
 
-  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-  const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param
-    || hashParams.get('tgWebAppStartParam')
-    || params.get('tgWebAppStartParam')
-    || hashParams.get('startapp')
-    || params.get('startapp')
-    || params.get('start_param')
-    || '';
+  const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param || '';
   if (startParam.startsWith('gravity_')) {
     return startParam.slice(8).trim().toUpperCase();
   }
@@ -121,16 +114,15 @@ function getStableClientId(): string {
 }
 
 export default function App() {
-  const [initialRoomCode, setInitialRoomCode] = useState(() => getInitialRoomCodeFromUrl());
+  const initialRoomCode = useMemo(() => getInitialRoomCodeFromUrl(), []);
   const clientId = useMemo(() => getStableClientId(), []);
 
-  const [screen, setScreen] = useState<'choice' | 'setup' | 'playing'>(initialRoomCode ? 'setup' : 'choice');
+  const [screen, setScreen] = useState<'setup' | 'playing'>('setup');
   const [mode, setMode] = useState<GravityMode>(() =>
     initialRoomCode ? 'online' : 'bot'
   );
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('سهل');
   const [targetScore, setTargetScore] = useState<number>(3);
-  const [maxPlayers, setMaxPlayers] = useState<number>(5);
   const [playerName, setPlayerName] = useState<string>(
     () => getTelegramPlayerName() || 'اللاعب الأول'
   );
@@ -171,17 +163,6 @@ export default function App() {
   useEffect(() => {
     window.Telegram?.WebApp?.ready?.();
     window.Telegram?.WebApp?.expand?.();
-    const readRoomLaunch = () => {
-      const code = getInitialRoomCodeFromUrl();
-      if (!code) return;
-      setInitialRoomCode(code);
-      setJoinCodeInput(code);
-      setMode('online');
-      setScreen('setup');
-    };
-    readRoomLaunch();
-    const retry = window.setTimeout(readRoomLaunch, 350);
-    return () => window.clearTimeout(retry);
   }, []);
 
   const showToast = useCallback((msg: string) => {
@@ -421,7 +402,6 @@ export default function App() {
       clientId,
       name: playerName.trim() || 'اللاعب الأول',
       targetScore,
-      maxPlayers,
     });
   };
 
@@ -489,48 +469,6 @@ export default function App() {
   const isHost = onlineRoom ? onlineRoom.hostId === myOnlineId : false;
   const isSpectatingNow =
     mode === 'online' && (amISpectator || hud.spectating);
-
-  if (screen === 'choice') {
-    return (
-      <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center px-4 py-6 bg-[#0d0508]">
-        <main className="w-full max-w-[460px] flex flex-col gap-5">
-          <div className="text-center">
-            <div className="mx-auto mb-3 flex items-center justify-center w-24 h-24 rounded-3xl border border-white/15 bg-[#5cb5f9]/15 text-5xl shadow-lg">🏃‍♂️</div>
-            <h1 className="text-2xl font-black text-white">تحدي الجاذبية</h1>
-            <p className="text-sm text-white/65 mt-2">اختر طريقة اللعب</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => { setMode('bot'); setOnlineRoom(null); setScreen('setup'); }}
-            className="nawaf-primary w-full py-4 text-base font-black"
-          >
-            🤖 لعب ضد البوت
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              const webApp = window.Telegram?.WebApp as any;
-              if (typeof webApp?.switchInlineQuery !== 'function') {
-                showToast('افتح اللعبة من داخل تيليجرام لاختيار المحادثة');
-                return;
-              }
-              try {
-                webApp.switchInlineQuery('جري الجاذبية');
-              } catch {
-                showToast('تعذر فتح اختيار المحادثة؛ تأكد أنك فتحت اللعبة من تيليجرام');
-              }
-            }}
-            className="nawaf-secondary w-full py-4 text-base font-black"
-          >
-            👥 لعب ضد شخص بالتيليجرام
-          </button>
-          <button type="button" onClick={() => { window.location.href = '/miniapp/'; }} className="text-xs font-bold text-white/55 py-2">
-            الرجوع للقائمة الرئيسية
-          </button>
-        </main>
-      </div>
-    );
-  }
 
   // Full-height Portrait Gameplay Screen
   if (screen === 'playing') {
@@ -600,22 +538,22 @@ export default function App() {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                handleExitGameplay();
-              }}
-              className="rounded-full bg-[#ef233c] text-white border border-[#ff8a91] px-3.5 py-1.5 text-xs font-black shadow-lg cursor-pointer hover:bg-[#d91d35]"
-            >
-              انسحاب
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
                 toggleMute();
               }}
               className="rounded-full bg-white/90 text-slate-900 w-8 h-8 flex items-center justify-center shadow-lg cursor-pointer"
               aria-label={muted ? 'تشغيل الصوت' : 'كتم الصوت'}
             >
               {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleExitGameplay();
+              }}
+              className="rounded-full bg-white text-slate-900 px-3.5 py-1.5 text-xs font-black shadow-lg cursor-pointer hover:bg-slate-100"
+            >
+              خروج
             </button>
           </div>
 
@@ -634,7 +572,7 @@ export default function App() {
                   }}
                   className="rounded-full bg-[#ef233c] text-white px-3 py-1 text-xs font-black shrink-0 cursor-pointer"
                 >
-                  انسحاب
+                  خروج
                 </button>
               </div>
             ) : (
@@ -750,7 +688,7 @@ export default function App() {
         <header className="flex items-center justify-between gap-3 py-1">
           <button
             type="button"
-            onClick={() => { window.location.href = '/miniapp/'; }}
+            onClick={() => window.Telegram?.WebApp?.close?.()}
             className="nawaf-pill whitespace-nowrap shrink-0"
           >
             القائمة
@@ -811,7 +749,7 @@ export default function App() {
               تحدي الجاذبية — يمين ويسار
             </h1>
             <p className="text-sm text-white/75 m-0 mt-1.5">
-              {mode === 'bot' ? 'تحدَّ بوت نواف وحاول الوصول إلى نقاط الفوز أولًا.' : 'انضم إلى غرفة اللعبة والعب مع بقية اللاعبين.'}
+              العب ضد البوت أو أونلاين مع 2 إلى 5 لاعبين من أجهزتهم بنفس الشاشة!
             </p>
           </div>
 
@@ -830,16 +768,70 @@ export default function App() {
                 maxLength={24}
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                onBlur={() => {
-                  if (mode === 'online' && onlineRoom && isHost) {
-                    sendWs({ type: 'update_settings', name: playerName.trim() || 'اللاعب الأول' });
-                  }
-                }}
                 placeholder="اكتب اسمك..."
                 className="w-full rounded-xl border border-white/25 bg-[#12070a] px-3.5 py-2.5 text-sm font-bold text-white outline-none focus:border-[#ff9ba3]"
               />
             </div>
 
+            {mode === 'local' && (
+              <div>
+                <label
+                  htmlFor="local-p2-name"
+                  className="block text-xs font-bold text-white/75 mb-1.5"
+                >
+                  اسم اللاعب الثاني (نفس الجهاز)
+                </label>
+                <input
+                  id="local-p2-name"
+                  type="text"
+                  maxLength={24}
+                  value={localBlueName}
+                  onChange={(e) => setLocalBlueName(e.target.value)}
+                  placeholder="اكتب اسم اللاعب الثاني..."
+                  className="w-full rounded-xl border border-white/25 bg-[#12070a] px-3.5 py-2.5 text-sm font-bold text-white outline-none focus:border-[#60a5fa]"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Mode Selection */}
+          <div>
+            <div className="text-xs font-bold text-white/75 mb-2">طريقة اللعب</div>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('bot');
+                  setOnlineRoom(null);
+                }}
+                className={`nawaf-choice py-3 px-2 text-xs sm:text-sm ${
+                  mode === 'bot' ? 'active' : ''
+                }`}
+              >
+                🤖 ضد البوت
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('local');
+                  setOnlineRoom(null);
+                }}
+                className={`nawaf-choice py-3 px-2 text-xs sm:text-sm ${
+                  mode === 'local' ? 'active' : ''
+                }`}
+              >
+                👥 نفس الجهاز
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('online')}
+                className={`nawaf-choice py-3 px-2 text-xs sm:text-sm ${
+                  mode === 'online' ? 'active' : ''
+                }`}
+              >
+                🌐 أونلاين (2-5)
+              </button>
+            </div>
           </div>
 
           {/* Bot Difficulty (ONLY سهل / متوسط / صعب — NO seconds sub-labels!) */}
@@ -857,22 +849,6 @@ export default function App() {
                     }`}
                   >
                     {lvl}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {mode === 'online' && (!onlineRoom || isHost) && (
-            <div>
-              <div className="text-xs font-bold text-white/75 mb-2">عدد اللاعبين في الغرفة</div>
-              <div className="grid grid-cols-4 gap-2">
-                {[2, 3, 4, 5].map((count) => (
-                  <button key={count} type="button" onClick={() => {
-                    setMaxPlayers(count);
-                    if (onlineRoom && isHost) sendWs({ type: 'update_settings', maxPlayers: count });
-                  }} className={`nawaf-choice py-3 px-2 text-sm font-black ${(onlineRoom?.maxPlayers ?? maxPlayers) === count ? 'active' : ''}`}>
-                    {count} لاعبين
                   </button>
                 ))}
               </div>
@@ -965,7 +941,7 @@ export default function App() {
                       </div>
                     </div>
                     <div className="rounded-full bg-white/10 border border-white/20 px-3 py-1 text-xs font-black tabular-nums">
-                      اللاعبون ({onlineRoom.players.length}/{onlineRoom.maxPlayers})
+                      اللاعبون ({onlineRoom.players.length}/5)
                     </div>
                   </div>
 
@@ -1115,15 +1091,45 @@ export default function App() {
             )}
             <button
               type="button"
-              onClick={() => { window.location.href = '/miniapp/'; }}
-              className="nawaf-secondary w-full flex items-center justify-center gap-2"
+              onClick={() => setExportOpen(true)}
+              className="nawaf-secondary flex items-center justify-center gap-2"
             >
-              الرجوع للقائمة الرئيسية
+              <Code2 className="w-4 h-4 text-[#ff9ba3]" />
+              <span>كود الإضافة لمشروعك في GitHub (nawaf-bot-v2)</span>
             </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  downloadZipFromEndpoint(
+                    '/api/export/project.zip',
+                    'gravity-game-project.zip'
+                  ).catch(() => showToast('تعذر تحميل ملف ZIP'));
+                }}
+                className="nawaf-secondary flex items-center justify-center gap-2 text-xs sm:text-sm"
+              >
+                <FolderArchive className="w-4 h-4 text-[#facc15]" />
+                <span>تحميل المشروع كامل (ZIP)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  downloadZipFromEndpoint(
+                    '/api/export/nawaf-addon.zip',
+                    'nawaf-bot-v2-gravity-addon.zip'
+                  ).catch(() => showToast('تعذر تحميل ملف ZIP'));
+                }}
+                className="nawaf-secondary flex items-center justify-center gap-2 text-xs sm:text-sm"
+              >
+                <FolderArchive className="w-4 h-4 text-[#60a5fa]" />
+                <span>تحميل إضافة البوت (ZIP)</span>
+              </button>
+            </div>
           </div>
         </section>
       </main>
 
+      <GitHubExportModal open={exportOpen} onClose={() => setExportOpen(false)} />
     </div>
   );
 }
