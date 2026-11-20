@@ -54,6 +54,10 @@ export async function handleBigGameRouterMessage(ctx) {
     if (game === "word_race") return handleWordRaceRouter(ctx, text);
     return false;
   }
+  if (text === ".اضافة" || /^\.اضافة\s+(?:احمر|ازرق|اخضر|اصفر)$/.test(text)) {
+    if (game === "word_race") return handleWordRaceRouter(ctx, text);
+    return false;
+  }
   if (text === ".التصويت") {
     if (game === "liar") return forceLiarVoting(ctx);
     return false;
