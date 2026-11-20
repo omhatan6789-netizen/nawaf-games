@@ -745,19 +745,18 @@ async function startServer() {
         const rt = room.game.runtimes[pIdx];
         if (!rt || rt.dead || rt.flipCooldown > 0) return;
 
-        if (rt.grounded || Math.abs(rt.vx) < 190) {
-          rt.grav = rt.grav === 1 ? -1 : 1;
-          rt.grounded = false;
-          rt.vx = rt.grav * 230;
-          rt.flipCooldown = 0.12;
-          rt.squash = 1.24;
-          broadcastRoom(room, {
-            type: 'sfx',
-            kind: 'flip',
-            left: rt.grav === -1,
-            playerId: rt.id,
-          });
-        }
+        // Accept a gravity flip immediately while airborne too; only the short cooldown prevents accidental repeats.
+        rt.grav = rt.grav === 1 ? -1 : 1;
+        rt.grounded = false;
+        rt.vx = rt.grav * 230;
+        rt.flipCooldown = 0.08;
+        rt.squash = 1.24;
+        broadcastRoom(room, {
+          type: 'sfx',
+          kind: 'flip',
+          left: rt.grav === -1,
+          playerId: rt.id,
+        });
       }
     });
 
