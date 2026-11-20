@@ -4,21 +4,25 @@ import { pool } from "./db.js";
 let inlineLobbySchemaReady = null;
 async function ensureInlineLobbyGameTypes() {
   if (!inlineLobbySchemaReady) {
-    inlineLobbySchemaReady = pool.query(`
-      DO $
-      DECLARE constraint_row RECORD;
-      BEGIN
-        FOR constraint_row IN
-          SELECT conname
-          FROM pg_constraint
-          WHERE conrelid = 'online_game_lobbies'::regclass
-            AND contype = 'c'
-            AND pg_get_constraintdef(oid) ILIKE '%game_type%'
-        LOOP
-          EXECUTE format('ALTER TABLE online_game_lobbies DROP CONSTRAINT %I', constraint_row.conname);
-        END LOOP;
-      END $;
-    `).catch(error => {
+    inlineLobbySchemaReady = (async () => {
+      const existing = await pool.query(
+        `SELECT conname
+         FROM pg_constraint
+         WHERE conrelid = 'online_game_lobbies'::regclass
+           AND contype = 'c'
+           AND pg_get_constraintdef(oid) ILIKE '%game_type%'`
+      );
+      for (const row of existing.rows) {
+        const safeName = String(row.conname).replace(/"/g, '""');
+        await pool.query(`ALTER TABLE online_game_lobbies DROP CONSTRAINT "${safeName}"`);
+      }
+      await pool.query(`
+        ALTER TABLE online_game_lobbies
+        ADD CONSTRAINT online_game_lobbies_game_type_check
+        CHECK (game_type IN ('connect','dots','memory','word','match','find','number','sort','carrom','gravity','snowball'))
+        NOT VALID
+      `);
+    })().catch(error => {
       inlineLobbySchemaReady = null;
       throw error;
     });
