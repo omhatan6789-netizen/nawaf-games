@@ -254,7 +254,7 @@ function finishGame(){
   else {const draw=winners.length!==1;showGameEndOverlay({winnerName:draw?"":winners[0]?.name,isDraw:draw,gameType,subtitle:draw?"تعادل! أحسنتم جميعًا 👏":("أبدع "+winners[0].name+" وجمع "+high+" أزواج 🏆")});}
  }else{
   const win=Number(current.winner_id)===Number(tg?.initDataUnsafe?.user?.id||0);if(countdown)clearInterval(countdown);countdown=null;
-  showGameEndOverlay({winnerName:win?telegramDisplayName():(current.players||[]).find(p=>Number(p.id)===Number(current.winner_id))?.name||"لم يفز أحد",isDraw:false,gameType,title:current.winner_id?"🎉 انتهت اللعبة":"انتهت اللعبة",subtitle:win?"عرفت الرقم الصحيح! مبروك 🎉":(current.winner_id?"سبقك لاعب آخر للرقم الصحيح":"انتهت المحاولات، الرقم كان "+current.secret)});
+  showGameEndOverlay({winnerName:win?telegramDisplayName():(current.players||[]).find(p=>Number(p.id)===Number(current.winner_id))?.name||"لم يفز أحد",isDraw:false,gameType,title:current.winner_id?"🎉 انتهت اللعبة":"انتهت اللعبة",subtitle:win?"عرفت الرقم الصحيح! مبروك 🎉":(current.end_reason==="attempts_exhausted"?"خلصت محاولاتك، فاز بوت نواف 🤖 الرقم الصحيح كان "+current.secret:(current.winner_id?"سبقك لاعب آخر للرقم الصحيح":"انتهت المحاولات، الرقم كان "+current.secret))});
  }
 }
 window.startCasualGame=async function(startParam){
