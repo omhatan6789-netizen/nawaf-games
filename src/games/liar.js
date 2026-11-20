@@ -5,7 +5,8 @@ import { getBigGame, lockBigGame, unlockBigGame } from "./big-game-lock.js";
 export const activeLiarGames = new Map();
 const DISCUSSION_MS=300000, VOTE_MS=60000, GUESS_MS=30000;
 const MIN_PLAYERS=3, CORRECT_VOTE_POINTS=40, LIAR_CAUGHT_GUESS_POINTS=20, LIAR_FREE_GUESS_POINTS=40;
-const WORD_  ["ذيب", "أسد"],
+const WORD_PAIRS = [
+  ["ذيب", "أسد"],
   ["خنزير", "بقرة"],
   ["حصان", "جمل"],
   ["فيل", "زرافة"],
