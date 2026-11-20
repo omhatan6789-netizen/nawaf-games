@@ -20,7 +20,8 @@ const homeKeyboard = () => new InlineKeyboard()
   .text("📋 الألوان المعدلة", "minipanel:colors").row()
   .text("🔘 إدارة الأزرار", "minipanel:buttons").row()
   .text("🎧 إدارة الأصوات", "minipanel:sounds").row()
-  .text("🖼️ صورة الميني آب", "minipanel:banner");
+  .text("🖼️ صورة الميني آب", "minipanel:banner").row()
+  .text("🎮 صور الألعاب", "minipanel:game-images");
 
 function paletteKeyboard() {
   const kb = new InlineKeyboard();
@@ -53,6 +54,15 @@ export async function ensureMiniAppPanelSchema() {
     updated_by BIGINT,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS online_game_images (
+    game_type TEXT PRIMARY KEY,
+    photo_file_id TEXT NOT NULL,
+    updated_by BIGINT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`);
+  await pool.query("ALTER TABLE online_game_images DROP CONSTRAINT IF EXISTS online_game_images_game_type_check");
+  await pool.query(`ALTER TABLE online_game_images ADD CONSTRAINT online_game_images_game_type_check
+    CHECK (game_type IN ('connect','dots','memory','word','match','find','number','sort','carrom','gravity','snowball'))`);
 }
 
 export async function handleMiniAppPanelCallback(ctx) {
@@ -99,6 +109,18 @@ export async function handleMiniAppPanelCallback(ctx) {
       const id = Number(data.split(":").at(-1));
       const result = await pool.query("DELETE FROM mini_app_sounds WHERE id=$1 RETURNING title", [id]);
       await ctx.editMessageText(result.rows[0] ? `تم حذف الصوت «${esc(result.rows[0].title)}» ✅` : "الصوت غير موجود.", { parse_mode: "HTML", reply_markup: back() });
+    } else if (data === "minipanel:game-images") {
+      const games = [["connect","كونكت 4 🔴"],["dots","المربعات 🟦"],["memory","اختبر ذاكرتك 🧠"],["word","خمن الكلمة 🔤"],["match","تطابق البطاقات 🃏"],["find","Find Match 🔎"],["number","خمن الرقم 🔢"],["sort","ترتيب الأرقام 🔢"],["carrom","الكيرم 🎯"],["gravity","جري الجاذبية 🏃"],["snowball","كرة الثلج ❄️"]];
+      const kb = new InlineKeyboard();
+      for (const [type,label] of games) kb.text(label,"minipanel:game-image:"+type).row();
+      kb.text("↩️ لوحة الميني","minipanel:menu");
+      await ctx.editMessageText("اختر اللعبة التي تريد إضافة صورتها أو استبدالها:",{reply_markup:kb});
+    } else if (data.startsWith("minipanel:game-image:")) {
+      const gameType=data.split(":").at(-1);
+      const allowed=["connect","dots","memory","word","match","find","number","sort","carrom","gravity","snowball"];
+      if(!allowed.includes(gameType)) return true;
+      sessions.set(ctx.from.id,{action:"game_image",step:"photo",gameType});
+      await ctx.editMessageText("أرسل الآن صورة اللعبة. ستظهر في بطاقة القائمة وواجهة الدخول ودعوة تيليجرام.",{reply_markup:back()});
     } else if (data === "minipanel:banner") {
       sessions.set(ctx.from.id, { action: "banner", step: "media" });
       await ctx.editMessageText("ارسل صورة أو فيديو أو GIF للميني آب (حتى 20 ميجابايت):", { reply_markup: back() });
@@ -159,6 +181,18 @@ export async function handleMiniAppPanelMessage(ctx) {
   }
   if (session.action === "color" && session.step === "custom") {
     await saveColor(ctx, session.button, text);
+    return true;
+  }
+  if (session.action === "game_image" && session.step === "photo") {
+    const photo=ctx.message?.photo?.at(-1);
+    if(!photo){await ctx.reply("أرسل صورة عادية للعبة، أو اكتب إلغاء.");return true;}
+    await pool.query(`INSERT INTO online_game_images(game_type,photo_file_id,updated_by,updated_at)
+      VALUES($1,$2,$3,NOW()) ON CONFLICT(game_type) DO UPDATE
+      SET photo_file_id=EXCLUDED.photo_file_id,updated_by=EXCLUDED.updated_by,updated_at=NOW()`,
+      [session.gameType,photo.file_id,ctx.from.id]);
+    const labels={connect:"كونكت 4",dots:"المربعات",memory:"اختبر ذاكرتك",word:"خمن الكلمة",match:"تطابق البطاقات",find:"Find Match",number:"خمن الرقم",sort:"ترتيب الأرقام",carrom:"الكيرم",gravity:"جري الجاذبية",snowball:"كرة الثلج"};
+    sessions.delete(ctx.from.id);
+    await ctx.reply("تم حفظ صورة لعبة "+(labels[session.gameType]||session.gameType)+"، وستظهر في القائمة وواجهة اللعبة ودعوات تيليجرام ✅",{reply_markup:back()});
     return true;
   }
   if (session.action === "banner") {
