@@ -15,6 +15,8 @@ const clean = value => String(value ?? "").replace(/\s+/g, " ").replace(/^\W+/, 
 const esc = value => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 const back = () => new InlineKeyboard().text("↩️ لوحة الميني", "minipanel:menu");
 const homeText = "⚙️ لوحة التحكم الخاصة بالميني آب\nاختر القسم اللي تبي تديره:";
+const GAME_IMAGES = [["connect","كونكت 4 🔴"],["dots","المربعات 🟦"],["memory","اختبر ذاكرتك 🧠"],["word","خمن الكلمة 🔤"],["match","تطابق البطاقات 🃏"],["find","Find Match 🔎"],["number","خمن الرقم 🔢"],["sort","ترتيب الأرقام 🔢"],["carrom","الكيرم 🎯"],["gravity","جري الجاذبية 🏃"],["snowball","كرة الثلج ❄️"]];
+const gameImagesKeyboard = () => { const kb=new InlineKeyboard(); for(const [type,label] of GAME_IMAGES) kb.text(label,"minipanel:game-image:"+type).row(); return kb.text("↩️ لوحة الميني","minipanel:menu"); };
 const homeKeyboard = () => new InlineKeyboard()
   .text("🎨 تعديل لون زر بالميني", "minipanel:color").row()
   .text("📋 الألوان المعدلة", "minipanel:colors").row()
@@ -110,11 +112,7 @@ export async function handleMiniAppPanelCallback(ctx) {
       const result = await pool.query("DELETE FROM mini_app_sounds WHERE id=$1 RETURNING title", [id]);
       await ctx.editMessageText(result.rows[0] ? `تم حذف الصوت «${esc(result.rows[0].title)}» ✅` : "الصوت غير موجود.", { parse_mode: "HTML", reply_markup: back() });
     } else if (data === "minipanel:game-images") {
-      const games = [["connect","كونكت 4 🔴"],["dots","المربعات 🟦"],["memory","اختبر ذاكرتك 🧠"],["word","خمن الكلمة 🔤"],["match","تطابق البطاقات 🃏"],["find","Find Match 🔎"],["number","خمن الرقم 🔢"],["sort","ترتيب الأرقام 🔢"],["carrom","الكيرم 🎯"],["gravity","جري الجاذبية 🏃"],["snowball","كرة الثلج ❄️"]];
-      const kb = new InlineKeyboard();
-      for (const [type,label] of games) kb.text(label,"minipanel:game-image:"+type).row();
-      kb.text("↩️ لوحة الميني","minipanel:menu");
-      await ctx.editMessageText("اختر اللعبة التي تريد إضافة صورتها أو استبدالها:",{reply_markup:kb});
+      await ctx.editMessageText("اختر اللعبة التي تريد إضافة صورتها أو استبدالها:",{reply_markup:gameImagesKeyboard()});
     } else if (data.startsWith("minipanel:game-image:")) {
       const gameType=data.split(":").at(-1);
       const allowed=["connect","dots","memory","word","match","find","number","sort","carrom","gravity","snowball"];
@@ -155,6 +153,11 @@ export async function handleMiniAppPanelCallback(ctx) {
 export async function handleMiniAppPanelMessage(ctx) {
   if (ctx.chat?.type !== "private" || Number(ctx.from?.id) !== OWNER_ID) return false;
   const text = ctx.message?.text?.trim() || "";
+  if (text === "اضف صورة لعبة") {
+    sessions.set(ctx.from.id,{action:"game_image_select"});
+    await ctx.reply("اختر اللعبة التي تريد إضافة صورتها أو استبدالها:",{reply_markup:gameImagesKeyboard()});
+    return true;
+  }
   if (["لوحة الميني", "لوحة الميني آب", "لوحة الميني اب"].includes(text)) {
     sessions.delete(ctx.from.id);
     await ctx.reply(homeText, { reply_markup: homeKeyboard() });
@@ -183,6 +186,7 @@ export async function handleMiniAppPanelMessage(ctx) {
     await saveColor(ctx, session.button, text);
     return true;
   }
+  if (session.action === "game_image_select") return true;
   if (session.action === "game_image" && session.step === "photo") {
     const photo=ctx.message?.photo?.at(-1);
     if(!photo){await ctx.reply("أرسل صورة عادية للعبة، أو اكتب إلغاء.");return true;}
