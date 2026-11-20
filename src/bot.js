@@ -36,6 +36,7 @@ import { handleBigGameRouterMessage } from "./games/big-game-router.js";
 import { handleLiarMessage, handleLiarCallback } from "./games/liar.js";
 import { handlePenaltyMessage, handlePenaltyDirectionMessage, handlePenaltyDirectionCallback, handlePenaltyDistributionCallback } from "./games/penalties.js";
 import { handleWordRaceMessage, handleWordRaceCallback } from "./games/word-race.js";
+import { handleImageQuizMessage, handleImageQuizPhoto, handleImageQuizCallback } from "./games/image-quiz.js";
 
 const aliasExecutionKeys = new Set();
 
@@ -119,6 +120,7 @@ export function createBot() {
   bot.callbackQuery(/^penalty:distribution:/, handlePenaltyDistributionCallback);
   bot.callbackQuery(/^penalty:direction:/, handlePenaltyDirectionCallback);
   bot.callbackQuery(/^wr:/, handleWordRaceCallback);
+  bot.callbackQuery(/^iq:/, handleImageQuizCallback);
   bot.callbackQuery(/^cmdmenu:/, async (ctx) => { await handleCommandsMenuCallback(ctx); });
   bot.callbackQuery(/^minipanel:/, async (ctx) => { await handleMiniAppPanelCallback(ctx); });
 
@@ -161,6 +163,8 @@ export function createBot() {
       if (await handleLiarMessage(ctx)) return;
       if (await handlePenaltyMessage(ctx)) return;
       if (await handleWordRaceMessage(ctx)) return;
+      if (await handleImageQuizMessage(ctx)) return;
+      if (await handleImageQuizPhoto(ctx)) return;
       if (await handleBigGameRouterMessage(ctx)) return;
       if (await handlePenaltyDirectionMessage(ctx)) return;
       if (await handleHideAndSeekMessage(ctx)) return;
