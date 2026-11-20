@@ -37,6 +37,7 @@ import { handleLiarMessage, handleLiarCallback } from "./games/liar.js";
 import { handlePenaltyMessage, handlePenaltyDirectionMessage, handlePenaltyDirectionCallback, handlePenaltyDistributionCallback } from "./games/penalties.js";
 import { handleWordRaceMessage, handleWordRaceCallback } from "./games/word-race.js";
 import { handleImageQuizMessage, handleImageQuizPhoto, handleImageQuizCallback } from "./games/image-quiz.js";
+import { handleDemonNawafMessage, handleDemonNawafCallback, startDemonNawaf } from "./games/demon-nawaf.js";
 
 const aliasExecutionKeys = new Set();
 
@@ -121,10 +122,12 @@ export function createBot() {
   bot.callbackQuery(/^penalty:direction:/, handlePenaltyDirectionCallback);
   bot.callbackQuery(/^wr:/, handleWordRaceCallback);
   bot.callbackQuery(/^iq:/, handleImageQuizCallback);
+  bot.callbackQuery(/^dn:/, handleDemonNawafCallback);
   bot.callbackQuery(/^cmdmenu:/, async (ctx) => { await handleCommandsMenuCallback(ctx); });
   bot.callbackQuery(/^minipanel:/, async (ctx) => { await handleMiniAppPanelCallback(ctx); });
 
   bot.command("start", async (ctx) => {
+    if (String(ctx.match || "").trim() === "demon_nawaf") { await startDemonNawaf(ctx); return; }
     if (await handleWhisperStart(ctx)) return;
     try { await recordPrivateStart(ctx); }
     catch (error) { console.error("Recording private /start failed:", error); }
@@ -165,6 +168,7 @@ export function createBot() {
       if (await handleWordRaceMessage(ctx)) return;
       if (await handleImageQuizMessage(ctx)) return;
       if (await handleImageQuizPhoto(ctx)) return;
+      if (await handleDemonNawafMessage(ctx)) return;
       if (await handleBigGameRouterMessage(ctx)) return;
       if (await handlePenaltyDirectionMessage(ctx)) return;
       if (await handleHideAndSeekMessage(ctx)) return;
