@@ -19,6 +19,7 @@ import { ensureMiniAppPanelSchema } from "./mini-app-panel.js";
 import { ensureAiAssistantSchema } from "./ai-assistant-schema.js";
 import { ensureImageQuizSchema } from "./image-quiz-schema.js";
 import { ensureDemonNawafSchema } from "./games/demon-nawaf.js";
+import { ensureConnect4Schema } from "./connect4-schema.js";
 import { pool } from "./db.js";
 import { registerMiniGameRoutes } from "./mini-games-api.js";
 import { registerWordGameRoutes } from "./word-game-api.js";
@@ -36,6 +37,7 @@ ensureMiniAppPanelSchema().catch(error => console.error("Mini App panel schema i
 ensureAiAssistantSchema().catch(error => console.error("AI assistant schema initialization failed:", error));
 ensureImageQuizSchema().catch(error => console.error("Image quiz schema initialization failed:", error));
 ensureDemonNawafSchema().catch(error => console.error("Demon Nawaf schema initialization failed:", error));
+ensureConnect4Schema().catch(error => console.error("Connect Four schema initialization failed:", error));
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
