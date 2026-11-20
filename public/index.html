@@ -260,7 +260,6 @@ const onlineMiniGameId=c4StartParam.startsWith('online_mg_')?c4StartParam.slice(
 const onlineLobbyId=c4StartParam.startsWith('online_lobby_')?c4StartParam.slice(13):'';
 const onlineMode=!!(onlineConnectId||onlineMiniGameId);
 let c4GameIdFromUrl=onlineConnectId||new URLSearchParams(window.location.search).get('game_id');
-const c4ChallengeIdFromStart=c4StartParam.startsWith('c4c_')?c4StartParam.slice(4):new URLSearchParams(window.location.search).get('challenge_id');
 const miniGameChallengeIdFromStart=onlineMiniGameId||(c4StartParam.startsWith('mg_')?c4StartParam.slice(3):new URLSearchParams(window.location.search).get('mini_game_id'));
 let miniGame=null,miniGamePollTimer=null,miniGameChallengePollTimer=null,miniGameTimer=null,miniGameTick=null,miniGameBusy=false,miniGameInputLocked=true;
 let memoryPlaybackTimers=[],memoryPresentationKey=null;
@@ -1078,7 +1077,6 @@ document.getElementById('back-home').onclick=showHome;
   }
   else if(onlineLobbyId){startOnlineLobby();}
   else if(miniGameChallengeIdFromStart){home.hidden=true;page.hidden=false;pageTitle.textContent='الألعاب';startMiniGameChallenge();}
-  else if(c4ChallengeIdFromStart){home.hidden=true;page.hidden=false;pageTitle.textContent='كونكت 4';startConnect4Challenge();}
   else if(c4GameIdFromUrl){home.hidden=true;page.hidden=false;pageTitle.textContent='كونكت 4';startConnect4();}
  }catch(e){console.error('Mini App extensions load failed:',e);const box=document.createElement('div');box.className='empty';box.textContent='تعذر تحميل الإضافات: '+(e?.message||'خطأ غير معروف');document.getElementById('custom').replaceChildren(box);}
 
