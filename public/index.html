@@ -275,10 +275,10 @@ function showMiniGameMultiplayerInfo(type){openInlineGamePicker(type);}
 function showMiniGameDifficulty(type){
  stopMiniGameTimers();const shell=c4Shell(),title=type==='dots'?'المربعات 🟦':'اختبر ذاكرتك 🧠';
  const levels=[['سهل','مناسب للتجربة'],['متوسط','تحدي متوازن'],['صعب','خصم أذكى'],['مستحيل','أقوى مستوى']];
- shell.innerHTML='<div class="c4-heading"><h2>'+title+'</h2><p>اختر مستوى البوت</p></div><div class="c4-levels" id="mg-difficulty"></div><button class="c4-secondary" id="mg-back">رجوع</button>';
+ shell.innerHTML='<div class="c4-heading"><h2>'+title+'</h2><p>اختر مستوى البوت</p></div><div class="c4-levels" id="mg-difficulty"></div><button class="c4-secondary" id="mg-home" style="margin-top:22px">↩ الرجوع للقائمة الرئيسية</button>';
  const root=shell.querySelector('#mg-difficulty');
  levels.forEach(([level,desc])=>{const b=document.createElement('button');b.className='c4-level';b.innerHTML='<b>'+level+'</b><small>'+desc+'</small>';b.onclick=()=>startMiniGameSolo(type,level);root.appendChild(b);});
- shell.querySelector('#mg-back').onclick=()=>showMiniGameInstructions(type);
+ shell.querySelector('#mg-home').onclick=showHome;
 }
 
 let c4Difficulty='متوسط',c4Game=null,c4Timer=null,c4Tick=null,c4Busy=false,c4Seconds=15,c4BotTimer=null,c4PollTimer=null,c4RpsChoice=null,c4ChallengePollTimer=null;
@@ -476,7 +476,7 @@ function renderMiniGameSolo(){
  stopSoloMiniGameClock();const game=miniSoloGame;if(!game)return;
  const shell=c4Shell(),state=game.state,isDots=game.game_type==='dots';
  shell.innerHTML='<div class="c4-heading"><h2>'+(isDots?'المربعات 🟦':'اختبر ذاكرتك 🧠')+'</h2><p>أنت × البوت · المستوى '+game.difficulty+'</p></div><div class="mg-score" id="mg-score"></div><div class="mg-status"><span id="mg-status"></span><b id="mg-clock"></b></div><div class="mg-progress"><div id="mg-progress-bar"></div></div><div id="mg-board"></div><div class="c4-result" id="mg-result"></div><button class="c4-secondary" id="mg-again">لعب مرة ثانية</button><button class="c4-secondary" id="mg-back">رجوع للألعاب</button>';
- shell.querySelector('#mg-back').onclick=showGames;shell.querySelector('#mg-again').onclick=()=>showMiniGameDifficulty(game.game_type);
+ shell.querySelector('#mg-back').onclick=showHome;shell.querySelector('#mg-again').onclick=()=>showMiniGameDifficulty(game.game_type);
  if(game.status!=='playing'){
   shell.querySelector('#mg-status').textContent='انتهت اللعبة';shell.querySelector('#mg-clock').textContent='—';
   const draw=game.status==='draw';
