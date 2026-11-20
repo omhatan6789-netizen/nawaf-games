@@ -239,10 +239,11 @@ export default function App() {
         setAmISpectator(false);
         latestSnapshotRef.current = null;
         setMatchResult(null);
-        setScreen('setup');
+        setScreen('home');
       } else if (type === 'room_state') {
         const room = data.room as OnlineRoomState;
         setOnlineRoom(room);
+        if (room.status === 'waiting') setScreen('lobby');
         if (room.status === 'playing') {
           setMatchResult(null);
           setScreen('playing');
@@ -408,10 +409,10 @@ export default function App() {
       sendWs({ type: 'leave_room' });
       setOnlineRoom(null);
       latestSnapshotRef.current = null;
-      setScreen('setup');
+      setScreen('home');
       return;
     }
-    setScreen('setup');
+    setScreen('home');
   };
 
   const toggleMute = () => {
