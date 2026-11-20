@@ -137,6 +137,7 @@ export default function App() {
         <button className="nawaf-secondary flex items-center justify-center gap-2" onClick={chooseTelegram}><Users/> لعب ضد شخص بالتيليجرام</button>
         {error && <p className="text-sm text-red-200">{error}</p>}
       </section>
+      <button className="nawaf-secondary w-full mt-3" onClick={() => {window.location.href='/miniapp/';}}>↩ الرجوع للقائمة الرئيسية</button>
     </main>}
 
     {screen === 'setup' && <main className="w-full max-w-[540px] mx-auto">
@@ -262,6 +263,7 @@ export default function App() {
         <button className="nawaf-secondary flex items-center justify-center gap-2" onClick={chooseTelegram}><Users/> لعب ضد شخص بالتيليجرام</button>
         {error && <p className="text-sm text-red-200">{error}</p>}
       </section>
+      <button className="nawaf-secondary w-full mt-3" onClick={() => {window.location.href='/miniapp/';}}>↩ الرجوع للقائمة الرئيسية</button>
     </main>}
 
     {screen === 'setup' && <main className="w-full max-w-[540px] mx-auto">
