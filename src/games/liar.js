@@ -130,8 +130,7 @@ const WORD_PAIRS = [
   ["تركيا", "اليونان"],
   ["ذهب", "فضة"],
   ["صيف", "شتاء"],
-  ["بحر", "سماء"]=[
-PAIRS
+  ["بحر", "سماء"]
 ];
 const norm=v=>String(v||"").trim().toLowerCase().replace(/[\u064B-\u065F\u0670]/g,"").replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/\s+/g," ");
 const mention=u=>"["+(u?.first_name||"مستخدم")+"](tg://user?id="+u.id+")";
