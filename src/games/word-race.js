@@ -173,7 +173,7 @@ export async function handleWordRaceCallback(ctx) {
     else await stageButtons(ctx, s); return true;
   }
   if (data.startsWith("wr:teams:")) {
-    if (s.hostId !== uid || s.started) return true;
+    if (!await isController(s, uid, s.chatId) || s.started) return true;
     const count = Number(data.split(":")[2]); if (count < 2 || count > 4) return true;
     s.teamCount = count; const chosen = teams.slice(0, count), players = [...s.players.values()].sort(() => Math.random() - .5);
     players.forEach((p, i) => { p.team = chosen[i % chosen.length]; });
