@@ -365,7 +365,7 @@ html, body, #root { overscroll-behavior: none; }
   overscroll-behavior: none; touch-action: none;
   -webkit-user-select: none; user-select: none;
 }
-.snowball-fullscreen-stage, .snowball-fullscreen-stage * { touch-action: none; }
+.snowball-fullscreen-stage, .snowball-fullscreen-stage * { touch-action: none; -webkit-tap-highlight-color: transparent !important; -webkit-touch-callout: none; }
 `);
 fs.writeFileSync(path.join(snowballDest, 'src/App.tsx'), snowballApp);
 
