@@ -51,6 +51,7 @@ const port = Number(process.env.PORT || 10000);
 const gameDefinitions = [
   { name: "carrom", port: 10001 },
   { name: "gravity", port: 10002 },
+  { name: "snowball", port: 10003 },
 ];
 const gameProcesses = new Map();
 const gameProxies = new Map();
@@ -238,6 +239,10 @@ server.on("upgrade", (req, socket, head) => {
   }
   if (pathname === "/ws/gravity") {
     gameProxies.get("gravity")?.ws(req, socket, head);
+    return;
+  }
+  if (pathname === "/ws/snowball") {
+    gameProxies.get("snowball")?.ws(req, socket, head);
     return;
   }
   socket.destroy();
