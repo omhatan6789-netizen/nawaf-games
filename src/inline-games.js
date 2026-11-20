@@ -9,7 +9,7 @@ async function ensureInlineLobbyGameTypes() {
       DROP CONSTRAINT IF EXISTS online_game_lobbies_game_type_check;
       ALTER TABLE online_game_lobbies
       ADD CONSTRAINT online_game_lobbies_game_type_check
-      CHECK (game_type IN ('connect','dots','memory','match','find','number','sort'));
+      CHECK (game_type IN ('connect','dots','memory','match','find','number','sort')) NOT VALID;
     `).catch(error => {
       inlineLobbySchemaReady = null;
       throw error;
