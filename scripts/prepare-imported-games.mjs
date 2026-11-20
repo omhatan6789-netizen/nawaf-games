@@ -290,7 +290,7 @@ export default function App() {
       </section>
     </main>}
 
-    {screen === 'playing' && <div className="w-full h-dvh sm:h-[min(94dvh,860px)] sm:max-w-[460px] sm:rounded-[28px] sm:border-[3px] sm:border-white/20 sm:shadow-2xl overflow-hidden relative">
+    {screen === 'playing' && <div className="snowball-fullscreen-stage">
       <SnowballArena key={matchKey} mode={mode} difficulty={difficulty} playerName={playerName}
         onlineSnapshot={snapshot || undefined} onlineClient={clientRef.current || undefined}
         latestOnlineShot={shot} remoteAimSync={aim} onExit={home} onGameOver={gameOver}/>
@@ -313,7 +313,7 @@ export default function App() {
 `;
 
 fs.writeFileSync(path.join(gravityDest, 'src/App.tsx'), gravityApp);
-fs.writeFileSync(path.join(snowballDest, 'src/App.tsx'), snowballApp);
+fs.appendFileSync(path.join(snowballDest, 'src/index.css'), String.raw\`\n/* Keep Telegram's Mini App viewport fixed while aiming and dragging. */\nhtml, body, #root { overscroll-behavior: none; }\n.snowball-fullscreen-stage { position: fixed; inset: 0; z-index: 20; width: 100vw; height: 100dvh; min-height: 100dvh; overflow: hidden; overscroll-behavior: none; touch-action: none; -webkit-user-select: none; user-select: none; }\n.snowball-fullscreen-stage, .snowball-fullscreen-stage * { touch-action: none; }\n`);\nfs.writeFileSync(path.join(snowballDest, 'src/App.tsx'), snowballApp);
 
 for (const [dir, wsPath, gameType] of [[gravityDest, '/ws/gravity', 'gravity'], [snowballDest, '/ws/snowball', 'snowball']]) {
   const clientFile = path.join(dir, 'src/game/onlineClient.ts');
