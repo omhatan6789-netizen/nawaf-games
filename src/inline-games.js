@@ -1,6 +1,23 @@
 import crypto from "node:crypto";
 import { pool } from "./db.js";
 
+let inlineLobbySchemaReady = null;
+async function ensureInlineLobbyGameTypes() {
+  if (!inlineLobbySchemaReady) {
+    inlineLobbySchemaReady = pool.query(`
+      ALTER TABLE online_game_lobbies
+      DROP CONSTRAINT IF EXISTS online_game_lobbies_game_type_check;
+      ALTER TABLE online_game_lobbies
+      ADD CONSTRAINT online_game_lobbies_game_type_check
+      CHECK (game_type IN ('connect','dots','memory','match','find','number','sort'));
+    `).catch(error => {
+      inlineLobbySchemaReady = null;
+      throw error;
+    });
+  }
+  return inlineLobbySchemaReady;
+}
+
 const GAME_INFO = {
   connect: ["كونكت 4 🔴", "لعبة توصيل أربعة أقراص"],
   dots: ["المربعات 🟦", "ارسم الخطوط واجمع أكبر عدد من المربعات"],
@@ -88,8 +105,10 @@ export async function handleInlineGamesQuery(ctx) {
       "DELETE FROM online_game_lobbies WHERE created_at < NOW() - INTERVAL '2 days' AND status <> 'playing'"
     ).catch(() => {});
 
+    await ensureInlineLobbyGameTypes();
     const results = [];
     for (const gameType of selectGames(ctx.inlineQuery.query)) {
+      try {
       const [title, description] = GAME_INFO[gameType];
       const room = await createLobby(gameType, ctx.from);
       const roomUrl = `https://t.me/${username}?startapp=${room.startapp}`;
@@ -126,6 +145,9 @@ export async function handleInlineGamesQuery(ctx) {
             reply_markup: replyMarkup,
           };
       results.push(result);
+      } catch (gameError) {
+        console.error(`Inline game result failed for ${gameType}:`, gameError?.message || gameError);
+      }
     }
 
     await ctx.answerInlineQuery(results, { cache_time: 0, is_personal: true });
