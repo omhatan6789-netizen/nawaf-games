@@ -228,7 +228,7 @@ function showGameEntry(type,emoji,name,hint){
  shell.querySelector('#entry-bot').onclick=()=>{
   if(type==='connect')showConnect4Setup();
   else if(type==='word')showWordTrainingSetup();
-  else if(type==='match'||type==='number')window.startCasualSetup(type);
+  else if(type==='match'||type==='find'||type==='number')window.startCasualSetup(type);
   else if(type==='sort')window.startNumberSortSetup();
   else if(type==='dots'||type==='memory')showMiniGameDifficulty(type);
  };
@@ -240,7 +240,8 @@ function showGames(){
   ['🟦','المربعات','ارسم الخطوط واجمع المربعات','dots'],
   ['🧠','اختبر ذاكرتك','احفظ التسلسل وتحدَّ لاعبًا آخر','memory'],
   ['🔤','خمن الكلمة','تحدَّ حتى 10 لاعبين أو تدرب لحالك','word'],
-  ['🃏','Find Match','طابق البطاقات واجمع أكبر عدد','match'],
+  ['🃏','تطابق البطاقات','طابق البطاقات واجمع أكبر عدد','match'],
+  ['🔎','Find Match','اعثر على الغرض المشترك قبل خصمك','find'],
   ['🎯','خمن الرقم','اكتشف الرقم مع تلميحات أعلى أو أقل','number'],
   ['🔢','ترتيب الأرقام','رتّب اللوحة قبل انتهاء الوقت','sort'],
   ['🎯','الكيرم','صوّب واضرب الأقراص نحو الجيوب','carrom'],
