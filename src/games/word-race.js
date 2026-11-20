@@ -12,6 +12,7 @@ const colors = ["#ff4173", "#00dcff", "#b155ff", "#ff9619", "#50ffaa", "#ffe13c"
 const nameOf = u => (String([u?.first_name, u?.last_name].filter(Boolean).join(" ") || "لاعب").trim()).slice(0, 32);
 const teamName = t => info[t][0] + " " + info[t][1];
 const group = c => ["group", "supergroup"].includes(c?.type);
+const isController = async (s, userId, chatId) => Number(userId) === s.hostId || await getRankLevel(userId, chatId) >= 6;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[c]);
 
 async function sendBoard(ctx, s) {
@@ -134,7 +135,7 @@ export async function handleWordRaceMessage(ctx) {
   }
   if (!s) return false;
   if (text === ".الطور" && !s.started) {
-    if (s.hostId !== ctx.from.id && await getRankLevel(ctx.from.id, ctx.chat.id) < 2) { await ctx.reply("❌ هذا الأمر خاص بأدمن اللعبة."); return true; }
+    if (!await isController(s, ctx.from.id, ctx.chat.id)) { await ctx.reply("❌ هذا الأمر خاص بأدمن اللعبة."); return true; }
     if (s.players.size < 2) { await ctx.reply("❌ لازم يكون فيه لاعبين اثنين على الأقل."); return true; }
     await ctx.reply("اختر الطور الذي تريده", { reply_markup: { inline_keyboard: [[{ text: "فردي", callback_data: "wr:mode:solo" }, { text: "فرق", callback_data: "wr:mode:teams" }]] } }); return true;
   }
@@ -166,7 +167,7 @@ export async function handleWordRaceCallback(ctx) {
   const s = ctx.callbackQuery.message ? activeWordRaces.get(ctx.callbackQuery.message.chat.id) : null; if (!s || s.finished) return true;
   const uid = ctx.from.id;
   if (data.startsWith("wr:mode:")) {
-    if (s.hostId !== uid || s.started) return true;
+    if (!await isController(s, uid, s.chatId) || s.started) return true;
     s.mode = data.split(":")[2]; await ctx.deleteMessage().catch(() => {});
     if (s.mode === "teams") await ctx.api.sendMessage(s.chatId, "اختر عدد الأفرقة!", { reply_markup: { inline_keyboard: [[{ text: "فريقين 2", callback_data: "wr:teams:2" }, { text: "ثلاث أفرقة 3", callback_data: "wr:teams:3" }, { text: "أربع أفرقة 4", callback_data: "wr:teams:4" }]] } });
     else await stageButtons(ctx, s); return true;
@@ -179,7 +180,7 @@ export async function handleWordRaceCallback(ctx) {
     await ctx.deleteMessage().catch(() => {}); await distribution(ctx, s); await stageButtons(ctx, s); return true;
   }
   if (data.startsWith("wr:stages:")) {
-    if (s.hostId !== uid) return true;
+    if (!await isController(s, uid, s.chatId)) return true;
     const n = Number(data.split(":")[2]); if (n < 4 || n > 9) return true;
     s.stages = n; await ctx.deleteMessage().catch(() => {});
     const body = s.mode === "teams" ? "تم اعتماد التعديلات! 👍🏻\n\nطور اللعبة: فِرَق\nعدد الفرق: " + s.teamCount + "\nعدد المراحل: " + n + "\nالادمن يكتب .ابدا  لبدا اللعبة!" : "تم اعتماد التعديلات! 👍🏻\n\nطور اللعبة: فردي\nعدد المراحل: " + n + "\nالادمن يكتب .ابدا  لبدا اللعبة!";
@@ -218,7 +219,7 @@ export async function handleWordRaceRouter(ctx, text) {
     if (p) { s.players.delete(ctx.from.id); await ctx.reply("🚪 خرج " + p.name + " من لعبة سباق الكلمات🐎!\n👥 العدد: " + s.players.size); } return true;
   }
   if (text === ".ابدا") {
-    if (s.hostId !== ctx.from.id) return false;
+    if (!await isController(s, ctx.from.id, ctx.chat.id)) { await ctx.reply("❌ هذا الأمر خاص بأدمن اللعبة."); return true; }
     if (s.players.size < 2) { await ctx.reply("❌ لازم يكون فيه لاعبين اثنين على الأقل."); return true; }
     if (!s.mode) { await ctx.reply("❌ اختر الطور أولًا باستخدام .الطور."); return true; }
     if (s.mode === "teams") {
@@ -240,14 +241,14 @@ export async function handleWordRaceRouter(ctx, text) {
     if (!s.waitingContinue) return true; s.waitingContinue = false; s.round++; await requestWord(ctx, s); return true;
   }
   if (text === ".توزيع") {
-    if (ctx.from.id !== s.hostId) return false;
+    if (!await isController(s, ctx.from.id, ctx.chat.id)) { await ctx.reply("❌ هذا الأمر خاص بأدمن اللعبة."); return true; }
     if (s.started) return true;
     if (s.mode !== "teams") { await ctx.reply("❌ التوزيع متاح في طور الفرق فقط."); return true; }
     const chosen = teams.slice(0, s.teamCount), players = [...s.players.values()].sort(() => Math.random() - .5);
     players.forEach((p, i) => { p.team = chosen[i % chosen.length]; }); await distribution(ctx, s); return true;
   }
   if (text === ".اضافة" || /^\.اضافة\s+(احمر|ازرق|اخضر|اصفر)$/.test(text)) {
-    if (s.hostId !== ctx.from.id && await getRankLevel(ctx.from.id, ctx.chat.id) < 2) { await ctx.reply("❌ هذا الأمر خاص بأدمن اللعبة."); return true; }
+    if (!await isController(s, ctx.from.id, ctx.chat.id)) { await ctx.reply("❌ هذا الأمر خاص بأدمن اللعبة."); return true; }
     const target = ctx.message.reply_to_message?.from; if (!target) { await ctx.reply("❌ لازم ترد على رسالة اللاعب."); return true; }
     const team = text.match(/^\.اضافة\s+(احمر|ازرق|اخضر|اصفر)$/)?.[1], old = s.players.get(target.id), name = nameOf(target);
     if (team) {
