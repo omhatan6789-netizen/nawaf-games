@@ -40,7 +40,7 @@ fs.mkdirSync(snowballDest, { recursive: true });
 const common = ['index.html', 'package.json', 'tsconfig.json', 'vite.config.ts', 'server.ts',
   'src/index.css', 'src/main.tsx', 'src/game/onlineClient.ts', 'src/game/telegram.ts', 'src/game/types.ts'];
 copyFiles(gravitySource, gravityDest, [...common, 'src/components/GravityRunArena.tsx',
-  'src/game/gravityLevel.ts', 'src/game/gravityPhysics.ts', 'src/game/sound.ts', 'src/game/ballistics.ts']);
+  'src/game/gravityLevel.ts', 'src/game/gravityPhysics.ts', 'src/game/sound.ts', 'src/game/ballistics.ts', 'public/assets/aistudio/IMG_7493_3386b8c5.jpeg']);
 copyFiles(snowballSource, snowballDest, [...common, 'src/components/SnowballArena.tsx', 'src/game/ballistics.ts', 'src/game/sound.ts']);
 
 for (const dir of [gravityDest, snowballDest]) {
@@ -65,6 +65,7 @@ declare global { interface Window { Telegram?: { WebApp?: { switchInlineQuery?: 
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
+  const [cover, setCover] = useState('./assets/aistudio/IMG_7493_3386b8c5.jpeg');
   const [mode, setMode] = useState<PlayMode>('bot');
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [playerName, setPlayerName] = useState('انت');
@@ -105,6 +106,7 @@ export default function App() {
     initTelegramWebApp();
     const name = getTelegramDisplayName();
     setPlayerName(name);
+    fetch('/api/mini-app').then(r => r.json()).then(data => { if (data.online_game_images?.gravity) setCover(data.online_game_images.gravity); }).catch(() => {});
     const room = getInitialRoomCodeFromUrl();
     if (room) { setMode('online'); setScreen('lobby'); ensureClient().joinRoom(room, name); }
     return () => { clientRef.current?.destroy(); clientRef.current = null; };
@@ -128,7 +130,7 @@ export default function App() {
 
   return <div className="min-h-dvh w-full flex flex-col items-center justify-center px-4 py-5 text-white">
     {screen === 'home' && <main className="w-full max-w-[540px] mx-auto text-center">
-      <div className="mx-auto mb-5 flex h-44 items-center justify-center rounded-3xl border border-white/20 bg-gradient-to-br from-[#7d1321] via-[#251018] to-[#08090f] text-7xl shadow-2xl">⚡</div>
+      <div className="mx-auto mb-5 h-44 overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-[#7d1321] via-[#251018] to-[#08090f] shadow-2xl">{cover ? <img src={cover} alt="جري الجاذبية" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-7xl">⚡</div>}</div>
       <h1 className="text-3xl sm:text-4xl font-black mb-2">جري الجاذبية</h1>
       <p className="text-white/70 font-bold mb-6">اقلب الجاذبية وتجاوز الأشواك والصناديق!</p>
       <section className="nawaf-panel grid gap-3">
@@ -196,6 +198,7 @@ declare global { interface Window { Telegram?: { WebApp?: { switchInlineQuery?: 
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
+  const [cover, setCover] = useState('');
   const [mode, setMode] = useState<PlayMode>('bot');
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [playerName, setPlayerName] = useState('انت');
@@ -234,6 +237,7 @@ export default function App() {
     initTelegramWebApp();
     const name = getTelegramDisplayName();
     setPlayerName(name);
+    fetch('/api/mini-app').then(r => r.json()).then(data => { if (data.online_game_images?.snowball) setCover(data.online_game_images.snowball); }).catch(() => {});
     const room = getInitialRoomCodeFromUrl();
     if (room) { setMode('online'); setScreen('lobby'); ensureClient().joinRoom(room, name); }
     return () => { clientRef.current?.destroy(); clientRef.current = null; };
@@ -252,7 +256,7 @@ export default function App() {
 
   return <div className="min-h-dvh w-full flex flex-col items-center justify-center px-4 py-5 text-white">
     {screen === 'home' && <main className="w-full max-w-[540px] mx-auto text-center">
-      <div className="mx-auto mb-5 flex h-44 items-center justify-center rounded-3xl border border-white/20 bg-gradient-to-br from-[#1b5a82] via-[#172033] to-[#08090f] text-7xl shadow-2xl">❄️</div>
+      <div className="mx-auto mb-5 h-44 overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-[#1b5a82] via-[#172033] to-[#08090f] shadow-2xl">{cover ? <img src={cover} alt="كرة الثلج" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-7xl">❄️</div>}</div>
       <h1 className="text-3xl sm:text-4xl font-black mb-2">كرة الثلج</h1>
       <p className="text-white/70 font-bold mb-6">اسحب وصوّب كرة الثلج نحو الخصم قبل ما يطيّحك</p>
       <section className="nawaf-panel grid gap-3">
