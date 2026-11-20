@@ -114,7 +114,7 @@ export default function App() {
   const clientId = useMemo(() => getStableClientId(), []);
 
   const [screen, setScreen] = useState<'home' | 'setup' | 'playing'>('home');
-  const [gameCover, setGameCover] = useState('/miniapp/');
+  const [gameCover, setGameCover] = useState('');
   const [mode, setMode] = useState<GameMode>(() =>
     initialRoomCode ? 'online' : 'bot'
   );
@@ -503,7 +503,7 @@ export default function App() {
       <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center px-4 py-8 text-white" style={{background:'radial-gradient(ellipse at 50% 0%,#a20e18 0%,#650a10 48%,#16090b 100%)'}}>
         <main className="w-full max-w-[560px] flex flex-col gap-6">
           <div className="h-[min(43vh,350px)] overflow-hidden rounded-[34px] border border-white/20 bg-black/30 shadow-2xl">
-            <img src={gameCover} alt="الكيرم" className="w-full h-full object-cover" onError={(e)=>{(e.currentTarget as HTMLImageElement).style.display='none';}} />
+            {gameCover ? <img src={gameCover} alt="الكيرم" className="w-full h-full object-cover" onError={(e)=>{(e.currentTarget as HTMLImageElement).style.display='none';}} /> : <div className="w-full h-full flex items-center justify-center text-8xl">🎯</div>}
           </div>
           <div className="text-center">
             <h1 className="text-4xl font-black">الكيرم 🎯</h1>
