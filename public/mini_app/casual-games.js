@@ -100,7 +100,7 @@ window.startCasualSetup=function(type){
  const levels=root.querySelector("#casual-levels");
  [["سهل","تحدي بسيط"],["متوسط","متوازن"],["صعب","أذكى"],["مستحيل","أعلى صعوبة"]].forEach(([v,d])=>{const b=document.createElement("button");b.className="c4-level"+(v===difficulty?" active":"");b.innerHTML=v+"<small>"+d+"</small>";b.onclick=()=>{difficulty=v;if(!isMatch&&!isFind){root.querySelector("#casual-attempts").value=({"سهل":12,"متوسط":7,"صعب":5,"مستحيل":3})[v];}levels.querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b));};levels.append(b);});
  root.querySelector("#casual-create").onclick=async()=>{try{const settings=isFind?{difficulty,target_score:Number(root.querySelector("#casual-target-score").value)}:(isMatch?{card_count:Number(root.querySelector("#casual-count").value),difficulty}:{min:Number(root.querySelector("#casual-min").value),max:Number(root.querySelector("#casual-max").value),attempts:Number(root.querySelector("#casual-attempts").value),difficulty});if(!isFind)settings.turn_seconds=Math.min(60,Math.max(5,Number(root.querySelector("#casual-turn-seconds").value)||20));current=await api("create","",{game_type:type,mode,settings});if(mode==="online")renderLobby();else renderGame();}catch(e){err(e);}};
- root.querySelector("#casual-back").onclick=()=>{stop();showHome();};
+ 
 };
 function shareRoom(){const link="https://t.me/"+botUsername+"?startapp=casual_"+gameType+"_"+current.id;const share="https://t.me/share/url?url="+encodeURIComponent(link);if(tg?.openTelegramLink)tg.openTelegramLink(share);else if(navigator.clipboard)navigator.clipboard.writeText(link);}
 function renderLobby(){
@@ -110,8 +110,8 @@ function renderLobby(){
  (owner?(isFind?'<label class="c4-label">النقاط المطلوبة للفوز</label><select id="casual-target-score" style="width:100%;padding:13px;border-radius:12px;background:#17090b;color:white">'+Array.from({length:10},(_,i)=>'<option value="'+(i+1)+'"'+(Number(current.settings.target_score||5)===i+1?' selected':'')+'>'+(i+1)+' نقاط</option>').join('')+'</select>':(isMatch?'<label class="c4-label">عدد البطاقات</label><select id="casual-count" style="width:100%;padding:13px;border-radius:12px;background:#17090b;color:white"><option>12</option><option selected>16</option><option>20</option><option>24</option><option>30</option></select>':
  '<label class="c4-label">أقل رقم</label><input id="casual-min" type="number" value="'+current.settings.min+'"><label class="c4-label">أعلى رقم</label><input id="casual-max" type="number" value="'+current.settings.max+'"><label class="c4-label">عدد المحاولات</label><input id="casual-attempts" type="number" value="'+current.settings.attempts+'">'))+(isFind?'':'<label class="c4-label">مدة الدور (5–60 ثانية)</label><input id="casual-turn-seconds" type="number" min="5" max="60" step="5" value="'+(current.settings.turn_seconds||20)+'" style="width:100%;padding:13px;border-radius:12px;background:#17090b;color:white">')+'<button class="c4-secondary" id="casual-save">حفظ الإعدادات</button>':'')+
  (owner?'<button class="c4-start" id="casual-start" style="display:block;width:100%;min-height:54px;margin:12px 0 0" '+(players.length<2?"disabled":"")+'>ابدأ اللعبة</button>':'<div class="c4-hint">بانتظار صاحب الغرفة لبدء اللعبة</div>')+
- '<button class="c4-secondary" id="casual-back">رجوع للألعاب</button><div class="c4-hint">بدون نقاط أو رهانات</div></div>';
- root.querySelector("#casual-back").onclick=()=>{stop();showHome();};
+ '<div class="c4-hint">بدون نقاط أو رهانات</div></div>';
+ 
  const save=root.querySelector("#casual-save");if(save)save.onclick=async()=>{try{const settings=isFind?{difficulty:current.settings.difficulty,target_score:Number(root.querySelector("#casual-target-score").value)}:(isMatch?{card_count:Number(root.querySelector("#casual-count").value)}:{min:Number(root.querySelector("#casual-min").value),max:Number(root.querySelector("#casual-max").value),attempts:Number(root.querySelector("#casual-attempts").value)});if(!isFind)settings.turn_seconds=Number(root.querySelector("#casual-turn-seconds").value);current=await request("configure",{settings});renderLobby();}catch(e){err(e);}};
  const start=root.querySelector("#casual-start");if(start)start.onclick=async()=>{try{current=await request("start");renderGame();}catch(e){err(e);}};
  schedulePoll();
@@ -156,7 +156,7 @@ function renderGame(){
   const me=Number(tg?.initDataUnsafe?.user?.id||0),players=current.players||[],turn=players[current.turn_index]||players[0],isPlayer=players.some(p=>Number(p.id)===me),myTurn=isPlayer&&Number(turn?.id)===me;
   root.innerHTML=heading("تطابق البطاقات 🃏","طابق الأزواج واجمع أكبر عدد")+
   '<div class="mg-score">'+players.map((p,i)=>'<span>'+safe(p.name)+': '+(current.scores?.[i]||0)+'</span>').join("")+'</div>'+
-  '<div class="c4-panel"><div class="c4-result show" id="casual-status">'+(!isPlayer?"👀 أنت متفرج على المباراة":(current.bot_pending?"البوت يفكر...":(myTurn?"دورك، اختر بطاقتين":"دور "+safe(turn?.name))))+'</div><div id="casual-board" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-top:12px"></div><button class="c4-secondary" id="casual-back">رجوع للألعاب</button></div>';
+  '<div class="c4-panel"><div class="c4-result show" id="casual-status">'+(!isPlayer?"👀 أنت متفرج على المباراة":(current.bot_pending?"البوت يفكر...":(myTurn?"دورك، اختر بطاقتين":"دور "+safe(turn?.name))))+'</div><div id="casual-board" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-top:12px"></div></div>';
   addTurnControls(root,isPlayer,myTurn);const board=root.querySelector("#casual-board");
   board.style.gridTemplateColumns="repeat("+(current.cards.length<=16?4:5)+",minmax(0,1fr))";
   const botBusy=!!current.bot_revealing;
@@ -180,7 +180,7 @@ function renderGame(){
    nextMemoryVisual[key]={value:card.value,matched:!!card.matched};
   });
   memoryLastCards=nextMemoryVisual;
-  root.querySelector("#casual-back").onclick=()=>{stop();showGames();};
+  
   if(!hideTimer && current.first!==null && current.second!==null){
    hideTimer=setTimeout(async()=>{
     hideTimer=null;
@@ -212,7 +212,7 @@ function renderGame(){
   const myTurn=isPlayer&&(current.mode!=="online"||Number(players[current.turn_index||0]?.id)===me);
   root.innerHTML=heading("خمن الرقم 🔢","اختر رقمًا بين "+current.min+" و "+current.max)+
   '<div class="mg-score">'+players.map((p)=>'<span>'+safe(p.name)+'</span>').join("")+'</div>'+
-  '<div class="c4-panel"><div class="c4-result show" id="casual-hint">'+(current.hint||"بانتظار أول تخمين")+'</div><div class="c4-label">المحاولات: '+current.attempts_used+' / '+current.max_attempts+'</div><input id="casual-guess" type="number" min="'+current.min+'" max="'+current.max+'" placeholder="اكتب رقمك" style="width:100%;padding:14px;border-radius:12px;background:#17090b;color:white;font-size:18px;text-align:center"><div class="word-history" id="casual-history"></div><button class="c4-start" id="casual-guess-btn" style="display:block;width:100%;min-height:52px;margin-top:14px;font-size:18px">تخمين</button><button class="c4-secondary" id="casual-back" style="margin-top:16px">↩️ الرجوع للقائمة الرئيسية</button></div>';
+  '<div class="c4-panel"><div class="c4-result show" id="casual-hint">'+(current.hint||"بانتظار أول تخمين")+'</div><div class="c4-label">المحاولات: '+current.attempts_used+' / '+current.max_attempts+'</div><input id="casual-guess" type="number" min="'+current.min+'" max="'+current.max+'" placeholder="اكتب رقمك" style="width:100%;padding:14px;border-radius:12px;background:#17090b;color:white;font-size:18px;text-align:center"><div class="word-history" id="casual-history"></div><button class="c4-start" id="casual-guess-btn" style="display:block;width:100%;min-height:52px;margin-top:14px;font-size:18px">تخمين</button></div>';
   addTurnControls(root,isPlayer,myTurn);root.querySelector("#casual-history").innerHTML=guesses.map(g=>'<div class="custom-card">'+safe(g.name)+' — '+g.guess+' : '+safe(g.hint)+'</div>').join("");
   const input=root.querySelector("#casual-guess"),btn=root.querySelector("#casual-guess-btn");
   if(!isPlayer){input.disabled=true;btn.disabled=true;root.querySelector("#casual-hint").textContent="👀 أنت متفرج على المباراة.";}
@@ -220,7 +220,7 @@ function renderGame(){
   else if(current.attempts_used>=current.max_attempts){input.disabled=true;btn.disabled=true;root.querySelector("#casual-hint").textContent="انتهت محاولاتك، انتظر بقية اللاعبين.";}
   btn.onclick=async()=>{if(lock||input.disabled)return;lock=true;btn.disabled=true;try{current=await request("action",{move:{guess:Number(input.value)}});renderGame();}catch(e){err(e);btn.disabled=false;}finally{lock=false;}};
   input.addEventListener("keydown",e=>{if(e.key==="Enter")btn.click();});
-  root.querySelector("#casual-back").onclick=()=>{stop();showGames();};
+  
 
  }
  schedulePoll();
