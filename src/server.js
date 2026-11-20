@@ -42,8 +42,9 @@ ensureAiAssistantSchema().catch(error => console.error("AI assistant schema init
 ensureImageQuizSchema().catch(error => console.error("Image quiz schema initialization failed:", error));
 ensureDemonNawafSchema().catch(error => console.error("Demon Nawaf schema initialization failed:", error));
 ensureConnect4Schema().catch(error => console.error("Connect Four schema initialization failed:", error));
-ensureCasualGamesSchema(pool).catch(error => console.error("Casual games schema initialization failed:", error));
-ensureNumberSortSchema(pool).catch(error => console.error("Number sort schema initialization failed:", error));
+if (pool) {
+  await Promise.all([ensureCasualGamesSchema(pool), ensureNumberSortSchema(pool)]).catch(error => console.error("Mini-game schema initialization failed:", error));
+}
 
 const app = express();
 const port = Number(process.env.PORT || 10000);
