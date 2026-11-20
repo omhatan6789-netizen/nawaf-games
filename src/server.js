@@ -5,6 +5,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import httpProxy from "http-proxy";
 import { createBot } from "./bot.js";
+import { ensureButtonColorsSchema } from "./button-colors.js";
 import { checkDatabase } from "./db.js";
 import { flushPendingActivity } from "./activity.js";
 import { ensureModerationSchema } from "./moderation-schema.js";
@@ -25,6 +26,7 @@ import { registerMiniGameRoutes } from "./mini-games-api.js";
 import { registerWordGameRoutes } from "./word-game-api.js";
 import { registerOnlineLobbyRoutes } from "./online-lobbies-api.js";
 
+ensureButtonColorsSchema().catch(error => console.error("Button colors schema initialization failed:", error));
 ensureModerationSchema().catch(error => console.error("Moderation schema initialization failed:", error));
 ensureProfileRepliesSchema().catch(error => console.error("Profile replies schema initialization failed:", error));
 ensureEconomySchema().catch(error => console.error("Economy schema initialization failed:", error));
