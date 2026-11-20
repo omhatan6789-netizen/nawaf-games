@@ -23,7 +23,8 @@ const homeKeyboard = () => new InlineKeyboard()
   .text("🔘 إدارة الأزرار", "minipanel:buttons").row()
   .text("🎧 إدارة الأصوات", "minipanel:sounds").row()
   .text("🖼️ صورة الميني آب", "minipanel:banner").row()
-  .text("🎮 صور الألعاب", "minipanel:game-images");
+  .text("🎮 صور الألعاب", "minipanel:game-images").row()
+  .text("🔢 تخصيص لعبة ترتيب الأرقام", "minipanel:number-sort");
 
 function paletteKeyboard() {
   const kb = new InlineKeyboard();
@@ -111,6 +112,40 @@ export async function handleMiniAppPanelCallback(ctx) {
       const id = Number(data.split(":").at(-1));
       const result = await pool.query("DELETE FROM mini_app_sounds WHERE id=$1 RETURNING title", [id]);
       await ctx.editMessageText(result.rows[0] ? `تم حذف الصوت «${esc(result.rows[0].title)}» ✅` : "الصوت غير موجود.", { parse_mode: "HTML", reply_markup: back() });
+    } else if (data === "minipanel:number-sort") {
+      const q=await pool.query("SELECT background_file_id,tile_color FROM number_sort_settings WHERE id=1");
+      const cfg=q.rows[0]||{};
+      const kb=new InlineKeyboard()
+        .text("🖼️ تغيير الخلفية بصورة","minipanel:sortbg").row()
+        .text("🎨 تغيير لون المربعات","minipanel:sortcolor").row()
+        .text("↩️ استعادة الخلفية الافتراضية","minipanel:sortresetbg").row()
+        .text("↩️ استعادة اللون الافتراضي","minipanel:sortresetcolor").row()
+        .text("↩️ لوحة الميني","minipanel:menu");
+      await ctx.editMessageText("🔢 تخصيص لعبة ترتيب الأرقام\n━━━━━━━━━━━━\nلون المربعات: "+(cfg.tile_color||"#7f1d2d")+"\nالخلفية: "+(cfg.background_file_id?"صورة مخصصة":"الافتراضية"),{reply_markup:kb});
+    } else if (data === "minipanel:sortbg") {
+      sessions.set(ctx.from.id,{action:"number_sort_bg",step:"media"});
+      await ctx.editMessageText("أرسل صورة الخلفية الجديدة للعبة ترتيب الأرقام فقط. اكتب إلغاء للتراجع.",{reply_markup:back()});
+    } else if (data === "minipanel:sortcolor") {
+      const kb=new InlineKeyboard();
+      PALETTE.forEach(([label,color],i)=>{kb.text(label,"minipanel:sortpick:"+color);if(i%3===2)kb.row();});
+      kb.row().text("✏️ إدخال لون #RRGGBB","minipanel:sortcustom").row().text("↩️ رجوع","minipanel:number-sort");
+      sessions.set(ctx.from.id,{action:"number_sort_color",step:"palette"});
+      await ctx.editMessageText("اختر لون مربعات الأرقام أو أدخل كود HEX. الأرقام ستبقى بيضاء.",{reply_markup:kb});
+    } else if (data.startsWith("minipanel:sortpick:")) {
+      const color=data.slice("minipanel:sortpick:".length);
+      if(!/^#[0-9a-fA-F]{6}$/.test(color))return true;
+      await pool.query("UPDATE number_sort_settings SET tile_color=$1,updated_at=NOW() WHERE id=1",[color.toLowerCase()]);
+      sessions.delete(ctx.from.id);
+      await ctx.editMessageText("تم تغيير لون المربعات إلى "+color.toLowerCase()+" ✅",{reply_markup:back()});
+    } else if (data === "minipanel:sortcustom") {
+      sessions.set(ctx.from.id,{action:"number_sort_color",step:"custom"});
+      await ctx.editMessageText("أرسل كود اللون بصيغة #RRGGBB، مثال #12a4ff.",{reply_markup:back()});
+    } else if (data === "minipanel:sortresetbg") {
+      await pool.query("UPDATE number_sort_settings SET background_file_id=NULL,updated_at=NOW() WHERE id=1");
+      await ctx.editMessageText("تمت استعادة خلفية اللعبة الافتراضية ✅",{reply_markup:back()});
+    } else if (data === "minipanel:sortresetcolor") {
+      await pool.query("UPDATE number_sort_settings SET tile_color='#7f1d2d',updated_at=NOW() WHERE id=1");
+      await ctx.editMessageText("تمت استعادة لون المربعات الافتراضي ✅",{reply_markup:back()});
     } else if (data === "minipanel:game-images") {
       await ctx.editMessageText("اختر اللعبة التي تريد إضافة صورتها أو استبدالها:",{reply_markup:gameImagesKeyboard()});
     } else if (data.startsWith("minipanel:game-image:")) {
@@ -184,6 +219,23 @@ export async function handleMiniAppPanelMessage(ctx) {
   }
   if (session.action === "color" && session.step === "custom") {
     await saveColor(ctx, session.button, text);
+    return true;
+  }
+  if (session.action === "number_sort_bg" && session.step === "media") {
+    const msg=ctx.message;
+    const media=msg?.photo?.at(-1)||(msg?.document&&/^image\\//.test(msg.document.mime_type||"")?msg.document:null);
+    if(!media){await ctx.reply("أرسل صورة عادية أو ملف صورة، أو اكتب إلغاء.");return true;}
+    if((media.file_size||0)>20*1024*1024){await ctx.reply("الصورة أكبر من 20 ميجابايت.");return true;}
+    await pool.query("UPDATE number_sort_settings SET background_file_id=$1,updated_at=NOW() WHERE id=1",[media.file_id]);
+    sessions.delete(ctx.from.id);
+    await ctx.reply("تم تحديث خلفية لعبة ترتيب الأرقام فقط ✅",{reply_markup:back()});
+    return true;
+  }
+  if (session.action === "number_sort_color" && session.step === "custom") {
+    if(!/^#[0-9a-fA-F]{6}$/.test(text)){await ctx.reply("اللون غير صحيح. أرسله بصيغة #RRGGBB.");return true;}
+    await pool.query("UPDATE number_sort_settings SET tile_color=$1,updated_at=NOW() WHERE id=1",[text.toLowerCase()]);
+    sessions.delete(ctx.from.id);
+    await ctx.reply("تم تغيير لون المربعات إلى "+text.toLowerCase()+"، والأرقام ستبقى بيضاء دائمًا ✅",{reply_markup:back()});
     return true;
   }
   if (session.action === "game_image_select") return true;
