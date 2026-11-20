@@ -19,6 +19,7 @@
   const suffix = window.location.search + window.location.hash;
   if (startParam.startsWith('carrom_')) window.location.replace('/carrom/' + suffix);
   else if (startParam.startsWith('gravity_')) window.location.replace('/gravity/' + suffix);
+  else if (startParam.startsWith('snowball_')) window.location.replace('/snowball/' + suffix);
 })();
 </script>
 <style>
@@ -224,6 +225,7 @@ function showGames(){
   ['🔢','ترتيب الأرقام','رتّب اللوحة قبل انتهاء الوقت','sort'],
   ['🎯','الكيرم','صوّب واضرب الأقراص نحو الجيوب','carrom'],
   ['🏃‍♂️','جري الجاذبية','اقفز وبدّل الجاذبية وتجاوز العقبات','gravity'],
+  ['❄️','كرة الثلج','صوّب وارمِ كرات الثلج على خصمك','snowball'],
  ];
  games.forEach(([emoji,name,hint,type])=>{
   const card=document.createElement('button');card.className='custom-card game-card';card.type='button';card.style.width='100%';card.style.cursor='pointer';
@@ -236,7 +238,7 @@ function showGames(){
    const placeholder=document.createElement('div');placeholder.className='game-cover-placeholder';placeholder.textContent=emoji;card.appendChild(placeholder);
   }
   const label=document.createElement('span');label.className='label';label.textContent=name;card.appendChild(label);
-  card.onclick=()=>{if(type==='carrom'||type==='gravity'){location.href='/'+type;return;}if(type==='connect'){showConnect4ModeChoice();return;}if(type==='word'){showWordSetup();return;}if(type==='match'||type==='number'){window.startCasualSetup(type);return;}if(type==='sort'){window.startNumberSortSetup();return;}showMiniGameInstructions(type);};
+  card.onclick=()=>{if(type==='carrom'||type==='gravity'||type==='snowball'){location.href='/'+type;return;}if(type==='connect'){showConnect4ModeChoice();return;}if(type==='word'){showWordSetup();return;}if(type==='match'||type==='number'){window.startCasualSetup(type);return;}if(type==='sort'){window.startNumberSortSetup();return;}showMiniGameInstructions(type);};
   pageContent.appendChild(card);
  });
 }
@@ -275,7 +277,7 @@ const c4Levels=[['سهل','مناسب للتجربة'],['متوسط','تحدي �
 function stopC4Timer(){if(c4Timer)clearTimeout(c4Timer);if(c4Tick)clearInterval(c4Tick);if(c4BotTimer)clearTimeout(c4BotTimer);if(c4PollTimer)clearTimeout(c4PollTimer);if(c4ChallengePollTimer)clearTimeout(c4ChallengePollTimer);c4Timer=null;c4Tick=null;c4BotTimer=null;c4PollTimer=null;c4ChallengePollTimer=null;}
 function c4Shell(){document.body.classList.add('c4-active');pageContent.innerHTML='<div class="c4-shell" id="c4-shell"></div>';return document.getElementById('c4-shell');}
 function openInlineGamePicker(type){
- const queries={connect:'كونكت 4',dots:'المربعات',memory:'الذاكرة',word:'خمن الكلمة',carrom:'الكيرم',gravity:'جري الجاذبية'};
+ const queries={connect:'كونكت 4',dots:'المربعات',memory:'الذاكرة',word:'خمن الكلمة',carrom:'الكيرم',gravity:'جري الجاذبية',snowball:'كرة الثلج'};
  const query=queries[type];if(!query)return;
  if(typeof tg?.switchInlineQuery!=='function'){alert('افتح الميني آب من داخل تطبيق تيليجرام لاختيار المحادثة.');return;}
  try{tg.switchInlineQuery(query,['users','groups','channels']);}catch(e){alert('تعذر فتح اختيار المحادثة. حدّث تيليجرام وحاول مرة ثانية.');}
