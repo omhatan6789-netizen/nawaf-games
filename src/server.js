@@ -160,6 +160,19 @@ app.get("/tg-file/:fileId", async (req, res) => {
   }
 });
 
+app.get("/number-sort/background", async (_req, res) => {
+  try {
+    const result = await pool.query("SELECT background_file_id FROM number_sort_settings WHERE id=1");
+    const fileId = result.rows[0]?.background_file_id;
+    if (!fileId) return res.sendStatus(404);
+    const { buffer, contentType } = await telegramFile(fileId);
+    res.set("Cache-Control", "public, max-age=3600").type(contentType).send(buffer);
+  } catch (error) {
+    console.error("Number Sort background failed:", error.message);
+    res.sendStatus(404);
+  }
+});
+
 app.get("/mini-app/sound/:id", async (req, res) => {
   try {
     const result = await pool.query("SELECT file_id,mime_type,media_kind FROM mini_app_sounds WHERE id=$1", [Number(req.params.id)]);
