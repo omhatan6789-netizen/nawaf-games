@@ -33,6 +33,7 @@ import { handleRpsMessage, handleRpsCallback } from "./games/rock-paper-scissors
 import { handleXoMessage, handleXoCallback } from "./games/xo.js";
 import { handleHideAndSeekMessage, handleHideAndSeekCallback } from "./games/hide-and-seek.js";
 import { handleBigGameRouterMessage } from "./games/big-game-router.js";
+import { handleLiarMessage, handleLiarCallback } from "./games/liar.js";
 
 const aliasExecutionKeys = new Set();
 
@@ -110,6 +111,9 @@ export function createBot() {
   bot.callbackQuery(/^rps:/, handleRpsCallback);
   bot.callbackQuery(/^xo:/, handleXoCallback);
   bot.callbackQuery(/^(hide|search):/, handleHideAndSeekCallback);
+  bot.callbackQuery(/^liar:/, handleLiarCallback);
+  bot.callbackQuery(/^liar_vote:/, handleLiarCallback);
+  bot.callbackQuery(/^liar_guess:/, handleLiarCallback);
   bot.callbackQuery(/^cmdmenu:/, async (ctx) => { await handleCommandsMenuCallback(ctx); });
   bot.callbackQuery(/^minipanel:/, async (ctx) => { await handleMiniAppPanelCallback(ctx); });
 
@@ -149,6 +153,7 @@ export function createBot() {
       if (await handleYouTubeAudioMessage(ctx)) return;
       if (await handleRpsMessage(ctx)) return;
       if (await handleXoMessage(ctx)) return;
+      if (await handleLiarMessage(ctx)) return;
       if (await handleBigGameRouterMessage(ctx)) return;
       if (await handleHideAndSeekMessage(ctx)) return;
       if (await handleAiAssistantMessage(ctx)) return;
