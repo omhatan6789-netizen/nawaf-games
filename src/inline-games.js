@@ -87,28 +87,36 @@ export async function handleInlineGamesQuery(ctx) {
       const roomUrl = `https://t.me/${username}?startapp=${room.startapp}`;
       const messageText = gameType === "word"
         ? `🔤 تحدي جماعي — ${title}\n\nبدأ ${playerName(ctx.from)} تحديًا في خمن الكلمة. افتحوا اللعبة من الزر بالأسفل وابدؤوا التحدي!`
-        : `🎮 تحدي — ${title}\n\nاضغطوا الزر بالأسفل لفتح اللعبة والانضمام إلى التحدي داخل الميني آب.`;
+        : `🎮 @${username} — ${title}\n\nاضغطوا الزر بالأسفل لفتح اللعبة والانضمام إلى التحدي داخل الميني آب.`;
 
       const image = await pool.query(
         "SELECT photo_file_id FROM online_game_images WHERE game_type=$1",
         [gameType]
       ).catch(() => ({ rows: [] }));
       const fileId = image.rows[0]?.photo_file_id;
-      const result = {
-        type: "article",
-        id: room.id,
-        title,
-        description,
-        input_message_content: { message_text: messageText },
-        reply_markup: {
-          inline_keyboard: [[{ text: "ابدأ اللعب", url: roomUrl }]]
-        },
+      const imageUrl = fileId
+        ? `https://nawaf-bot-node-xsna.onrender.com/tg-file/${encodeURIComponent(fileId)}`
+        : null;
+      const replyMarkup = {
+        inline_keyboard: [[{ text: "ابدأ اللعب", url: roomUrl }]]
       };
-      if (fileId) {
-        result.thumbnail_url = `https://nawaf-bot-node-xsna.onrender.com/tg-file/${encodeURIComponent(fileId)}`;
-        result.thumbnail_width = 80;
-        result.thumbnail_height = 80;
-      }
+      const result = imageUrl
+        ? {
+            type: "photo",
+            id: room.id,
+            photo_url: imageUrl,
+            thumbnail_url: imageUrl,
+            caption: messageText,
+            reply_markup: replyMarkup,
+          }
+        : {
+            type: "article",
+            id: room.id,
+            title,
+            description,
+            input_message_content: { message_text: messageText },
+            reply_markup: replyMarkup,
+          };
       results.push(result);
     }
 
