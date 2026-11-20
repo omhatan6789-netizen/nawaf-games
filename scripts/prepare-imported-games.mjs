@@ -43,6 +43,16 @@ copyFiles(gravitySource, gravityDest, [...common, 'src/components/GravityRunAren
   'src/game/gravityLevel.ts', 'src/game/gravityPhysics.ts', 'src/game/sound.ts', 'src/game/ballistics.ts']);
 copyFiles(snowballSource, snowballDest, [...common, 'src/components/SnowballArena.tsx', 'src/game/ballistics.ts', 'src/game/sound.ts']);
 
+for (const dir of [gravityDest, snowballDest]) {
+  const viteFile = path.join(dir, 'vite.config.ts');
+  let vite = fs.readFileSync(viteFile, 'utf8');
+  if (!vite.includes("base: './'")) {
+    if (!vite.includes('return {\n    plugins:')) throw new Error('Could not set relative Vite base in ' + viteFile);
+    vite = vite.replace('return {\n    plugins:', "return {\n    base: './',\n    plugins:");
+    fs.writeFileSync(viteFile, vite);
+  }
+}
+
 const gravityApp = String.raw`import { useEffect, useRef, useState } from 'react';
 import { Bot, Users } from 'lucide-react';
 import { GravityRunArena } from './components/GravityRunArena';
