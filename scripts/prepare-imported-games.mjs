@@ -43,7 +43,7 @@ copyFiles(gravitySource, gravityDest, [...common, 'src/components/GravityRunAren
   'src/game/gravityLevel.ts', 'src/game/gravityPhysics.ts', 'src/game/sound.ts', 'src/game/ballistics.ts']);
 copyFiles(snowballSource, snowballDest, [...common, 'src/components/SnowballArena.tsx', 'src/game/ballistics.ts', 'src/game/sound.ts']);
 
-const gravityApp = String.raw\`import { useEffect, useRef, useState } from 'react';
+const gravityApp = String.raw`import { useEffect, useRef, useState } from 'react';
 import { Bot, Users } from 'lucide-react';
 import { GravityRunArena } from './components/GravityRunArena';
 import { OnlineGameClient, type GravityFlipPayload } from './game/onlineClient';
@@ -172,9 +172,9 @@ export default function App() {
     </div>}
   </div>;
 }
-\`;
+`;
 
-const snowballApp = String.raw\`import { useEffect, useRef, useState } from 'react';
+const snowballApp = String.raw`import { useEffect, useRef, useState } from 'react';
 import { Bot, Users } from 'lucide-react';
 import { SnowballArena } from './components/SnowballArena';
 import { OnlineGameClient, type AimSyncPayload } from './game/onlineClient';
@@ -296,7 +296,7 @@ export default function App() {
     </div>}
   </div>;
 }
-\`;
+`;
 
 fs.writeFileSync(path.join(gravityDest, 'src/App.tsx'), gravityApp);
 fs.writeFileSync(path.join(snowballDest, 'src/App.tsx'), snowballApp);
@@ -304,8 +304,8 @@ fs.writeFileSync(path.join(snowballDest, 'src/App.tsx'), snowballApp);
 for (const [dir, wsPath, gameType] of [[gravityDest, '/ws/gravity', 'gravity'], [snowballDest, '/ws/snowball', 'snowball']]) {
   const clientFile = path.join(dir, 'src/game/onlineClient.ts');
   const client = fs.readFileSync(clientFile, 'utf8');
-  const oldUrl = "const url = \`\${proto}//\${window.location.host}/ws\`;";
-  const newUrl = "const wsPath = window.location.pathname.startsWith('/snowball') ? '/ws/snowball' : '/ws/gravity';\n    const url = \`\${proto}//\${window.location.host}\${wsPath}\`;";
+  const oldUrl = "const url = `\${proto}//\${window.location.host}/ws`;";
+  const newUrl = "const wsPath = window.location.pathname.startsWith('/snowball') ? '/ws/snowball' : '/ws/gravity';\n    const url = `\${proto}//\${window.location.host}\${wsPath}`;";
   if (!client.includes(oldUrl)) throw new Error('Could not patch WebSocket path in ' + clientFile);
   fs.writeFileSync(clientFile, client.replace(oldUrl, newUrl));
 
