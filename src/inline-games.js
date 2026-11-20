@@ -5,11 +5,19 @@ let inlineLobbySchemaReady = null;
 async function ensureInlineLobbyGameTypes() {
   if (!inlineLobbySchemaReady) {
     inlineLobbySchemaReady = pool.query(`
-      ALTER TABLE online_game_lobbies
-      DROP CONSTRAINT IF EXISTS online_game_lobbies_game_type_check;
-      ALTER TABLE online_game_lobbies
-      ADD CONSTRAINT online_game_lobbies_game_type_check
-      CHECK (game_type IN ('connect','dots','memory','match','find','number','sort')) NOT VALID;
+      DO $
+      DECLARE constraint_row RECORD;
+      BEGIN
+        FOR constraint_row IN
+          SELECT conname
+          FROM pg_constraint
+          WHERE conrelid = 'online_game_lobbies'::regclass
+            AND contype = 'c'
+            AND pg_get_constraintdef(oid) ILIKE '%game_type%'
+        LOOP
+          EXECUTE format('ALTER TABLE online_game_lobbies DROP CONSTRAINT %I', constraint_row.conname);
+        END LOOP;
+      END $;
     `).catch(error => {
       inlineLobbySchemaReady = null;
       throw error;
@@ -127,23 +135,15 @@ export async function handleInlineGamesQuery(ctx) {
       const replyMarkup = {
         inline_keyboard: [[{ text: "ابدأ اللعب", url: roomUrl }]]
       };
-      const result = imageUrl
-        ? {
-            type: "photo",
-            id: room.id,
-            photo_url: imageUrl,
-            thumbnail_url: imageUrl,
-            caption: messageText,
-            reply_markup: replyMarkup,
-          }
-        : {
-            type: "article",
-            id: room.id,
-            title,
-            description,
-            input_message_content: { message_text: messageText },
-            reply_markup: replyMarkup,
-          };
+      const result = {
+        type: "article",
+        id: room.id,
+        title,
+        description,
+        input_message_content: { message_text: messageText },
+        reply_markup: replyMarkup,
+        ...(imageUrl ? { thumbnail_url: imageUrl, thumbnail_width: 320, thumbnail_height: 320 } : {}),
+      };
       results.push(result);
       } catch (gameError) {
         console.error(`Inline game result failed for ${gameType}:`, gameError?.message || gameError);
