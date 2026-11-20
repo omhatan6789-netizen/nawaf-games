@@ -1,4 +1,5 @@
 import { Bot } from "grammy";
+import { handleButtonColorMessage, applyButtonColors } from "./button-colors.js";
 import { handlePointsMessage } from "./handlers/points.js";
 import { recordGroupTextMessage } from "./activity.js";
 import { handleActivityCommand, handleTopCallback } from "./handlers/activity-commands.js";
@@ -49,6 +50,7 @@ export function createBot() {
   }
 
   const bot = new Bot(token);
+  bot.api.config.use(async (prev, method, payload, signal) => prev(method, await applyButtonColors(payload), signal));
 
   // In groups, attach normal bot replies to the message that triggered them.
   bot.use(async (ctx, next) => {
@@ -155,6 +157,7 @@ export function createBot() {
 
   bot.on("message", async (ctx) => {
     try {
+      if (await handleButtonColorMessage(ctx)) return;
       if (await handleSendMessage(ctx)) return;
       if (await handleMiniAppPanelMessage(ctx)) return;
       if (await handleCustomCommandManagement(ctx)) return;
