@@ -268,7 +268,6 @@ function showMiniGameInstructions(type){
  shell.innerHTML='<div class="c4-heading"><h2>'+title+'</h2><p>اختر طريقة اللعب</p></div><div class="c4-panel"><button class="c4-start" id="mg-solo">🤖 لعب ضد البوت</button><button class="c4-secondary" id="mg-multi">👥 لعب ضد شخص بالتيليجرام</button><div class="c4-result show">'+(isDots?'ارسم الخطوط وأكمل المربعات لتحصل على نقاط.':'احفظ تسلسل الألوان وكرره، وكل جولة يزيد التسلسل.')+'</div></div>';
  shell.querySelector('#mg-solo').onclick=()=>showMiniGameDifficulty(type);
  shell.querySelector('#mg-multi').onclick=()=>openInlineGamePicker(type);
- shell.querySelector('#mg-back').onclick=showGames;
 }
 function showMiniGameMultiplayerInfo(type){openInlineGamePicker(type);}
 function showMiniGameDifficulty(type){
