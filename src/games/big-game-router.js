@@ -3,6 +3,7 @@ import { getBigGame } from "./big-game-lock.js";
 import { activeLiarGames, joinLiarGame, leaveLiarGame, beginLiarGame, endLiarGame, forceLiarVoting } from "./liar.js";
 import { activePenaltyGames, joinPenaltyGame, distributePenalties, manualTeamCommand, beginPenalties, continuePenalties, endPenaltyGame } from "./penalties.js";
 import { activeWordRaces, handleWordRaceRouter } from "./word-race.js";
+import { activeImageQuizzes, handleImageQuizRouter } from "./image-quiz.js";
 
 export function getActiveBigGame(chatId) {
   const active = getBigGame(chatId);
@@ -11,6 +12,7 @@ export function getActiveBigGame(chatId) {
   if (active.key === "liar" && activeLiarGames.has(Number(chatId))) return "liar";
   if (active.key === "penalties" && activePenaltyGames.has(Number(chatId))) return "penalties";
   if (active.key === "word_race" && activeWordRaces.has(Number(chatId))) return "word_race";
+  if (active.key === "image_quiz" && activeImageQuizzes.has(Number(chatId))) return "image_quiz";
   return active.key;
 }
 
@@ -25,11 +27,13 @@ export async function handleBigGameRouterMessage(ctx) {
     if (game === "liar") return joinLiarGame(ctx);
     if (game === "penalties") return joinPenaltyGame(ctx);
     if (game === "word_race") return handleWordRaceRouter(ctx, text);
+    if (game === "image_quiz") return handleImageQuizRouter(ctx, text);
     return false;
   }
   if (text === ".خروج") {
     if (game === "liar") return leaveLiarGame(ctx);
     if (game === "word_race") return handleWordRaceRouter(ctx, text);
+    if (game === "image_quiz") return handleImageQuizRouter(ctx, text);
     return false;
   }
   if (text === ".ابدا") {
@@ -37,6 +41,7 @@ export async function handleBigGameRouterMessage(ctx) {
     if (game === "liar") return beginLiarGame(ctx);
     if (game === "penalties") return beginPenalties(ctx);
     if (game === "word_race") return handleWordRaceRouter(ctx, text);
+    if (game === "image_quiz") return handleImageQuizRouter(ctx, text);
     return false;
   }
   if (text === ".وزع") {
@@ -56,6 +61,7 @@ export async function handleBigGameRouterMessage(ctx) {
   }
   if (text === ".اضافة" || /^\.اضافة\s+(?:احمر|ازرق|اخضر|اصفر)$/.test(text)) {
     if (game === "word_race") return handleWordRaceRouter(ctx, text);
+    if (game === "image_quiz") return handleImageQuizRouter(ctx, text);
     return false;
   }
   if (text === ".التصويت") {
@@ -67,6 +73,7 @@ export async function handleBigGameRouterMessage(ctx) {
     if (game === "liar") return endLiarGame(ctx);
     if (game === "penalties") return endPenaltyGame(ctx);
     if (game === "word_race") return handleWordRaceRouter(ctx, text);
+    if (game === "image_quiz") return handleImageQuizRouter(ctx, text);
     return false;
   }
   return false;
