@@ -34,6 +34,7 @@ import { handleXoMessage, handleXoCallback } from "./games/xo.js";
 import { handleHideAndSeekMessage, handleHideAndSeekCallback } from "./games/hide-and-seek.js";
 import { handleBigGameRouterMessage } from "./games/big-game-router.js";
 import { handleLiarMessage, handleLiarCallback } from "./games/liar.js";
+import { handlePenaltyMessage, handlePenaltyDirectionMessage, handlePenaltyDirectionCallback, handlePenaltyDistributionCallback } from "./games/penalties.js";
 
 const aliasExecutionKeys = new Set();
 
@@ -114,6 +115,8 @@ export function createBot() {
   bot.callbackQuery(/^liar:/, handleLiarCallback);
   bot.callbackQuery(/^liar_vote:/, handleLiarCallback);
   bot.callbackQuery(/^liar_guess:/, handleLiarCallback);
+  bot.callbackQuery(/^penalty:distribution:/, handlePenaltyDistributionCallback);
+  bot.callbackQuery(/^penalty:direction:/, handlePenaltyDirectionCallback);
   bot.callbackQuery(/^cmdmenu:/, async (ctx) => { await handleCommandsMenuCallback(ctx); });
   bot.callbackQuery(/^minipanel:/, async (ctx) => { await handleMiniAppPanelCallback(ctx); });
 
@@ -154,7 +157,9 @@ export function createBot() {
       if (await handleRpsMessage(ctx)) return;
       if (await handleXoMessage(ctx)) return;
       if (await handleLiarMessage(ctx)) return;
+      if (await handlePenaltyMessage(ctx)) return;
       if (await handleBigGameRouterMessage(ctx)) return;
+      if (await handlePenaltyDirectionMessage(ctx)) return;
       if (await handleHideAndSeekMessage(ctx)) return;
       if (await handleAiAssistantMessage(ctx)) return;
       if (await handleDeveloperPanelMessage(ctx)) return;
