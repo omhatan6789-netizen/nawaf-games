@@ -212,6 +212,49 @@ export default function App() {
   const shotSeq = useRef(0);
   screenRef.current = screen;
 
+  // Lock the Telegram Mini App viewport while a Snowball match is active.
+  useEffect(() => {
+    if (screen !== 'playing') return;
+    const html = document.documentElement;
+    const body = document.body;
+    const previous = {
+      htmlOverflow: html.style.overflow,
+      bodyOverflow: body.style.overflow,
+      bodyPosition: body.style.position,
+      bodyWidth: body.style.width,
+      bodyHeight: body.style.height,
+      bodyTop: body.style.top,
+      bodyLeft: body.style.left,
+    };
+    const scrollY = window.scrollY;
+    const preventScroll = (event: Event) => event.preventDefault();
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.width = '100%';
+    body.style.height = '100%';
+    body.style.top = '0';
+    body.style.left = '0';
+    document.addEventListener('touchmove', preventScroll, { passive: false, capture: true });
+    document.addEventListener('wheel', preventScroll, { passive: false, capture: true });
+    const webApp = (window as any).Telegram?.WebApp;
+    webApp?.expand?.();
+    webApp?.disableVerticalSwipes?.();
+    return () => {
+      document.removeEventListener('touchmove', preventScroll, true);
+      document.removeEventListener('wheel', preventScroll, true);
+      html.style.overflow = previous.htmlOverflow;
+      body.style.overflow = previous.bodyOverflow;
+      body.style.position = previous.bodyPosition;
+      body.style.width = previous.bodyWidth;
+      body.style.height = previous.bodyHeight;
+      body.style.top = previous.bodyTop;
+      body.style.left = previous.bodyLeft;
+      window.scrollTo(0, scrollY);
+      webApp?.enableVerticalSwipes?.();
+    };
+  }, [screen]);
+
   const ensureClient = () => {
     if (!clientRef.current) {
       clientRef.current = new OnlineGameClient({
