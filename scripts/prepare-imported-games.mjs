@@ -333,6 +333,32 @@ for (const [dir, wsPath, gameType] of [[gravityDest, '/ws/gravity', 'gravity'], 
 
   const serverFile = path.join(dir, 'server.ts');
   let server = fs.readFileSync(serverFile, 'utf8');
+  const roomsMarker = "const rooms = new Map<string, GameRoom>();";
+  const cleanup = gameType === 'gravity'
+    ? [
+      "const inlineRoomCreatedAt = new Map<string, number>();",
+      "setInterval(() => {",
+      "  const now = Date.now();",
+      "  for (const [id, createdAt] of inlineRoomCreatedAt) {",
+      "    const room = rooms.get(id);",
+      "    if (!room || room.players.p1 || room.players.p2 || room.players.p3) { inlineRoomCreatedAt.delete(id); continue; }",
+      "    if (now - createdAt > 30 * 60 * 1000) { rooms.delete(id); inlineRoomCreatedAt.delete(id); }",
+      "  }",
+      "}, 60_000).unref();"
+    ].join('\n')
+    : [
+      "const inlineRoomCreatedAt = new Map<string, number>();",
+      "setInterval(() => {",
+      "  const now = Date.now();",
+      "  for (const [id, createdAt] of inlineRoomCreatedAt) {",
+      "    const room = rooms.get(id);",
+      "    if (!room || room.players.p1 || room.players.p2) { inlineRoomCreatedAt.delete(id); continue; }",
+      "    if (now - createdAt > 30 * 60 * 1000) { rooms.delete(id); inlineRoomCreatedAt.delete(id); }",
+      "  }",
+      "}, 60_000).unref();"
+    ].join('\n');
+  if (!server.includes(roomsMarker)) throw new Error('Could not add inline room cleanup in ' + serverFile);
+  server = server.replace(roomsMarker, roomsMarker + '\n' + cleanup);
   const health = "  app.get('/api/health', (_req, res) => {\n    res.json({ ok: true, rooms: rooms.size });\n  });";
   const endpoint = gameType === 'gravity'
     ? [
@@ -342,6 +368,7 @@ for (const [dir, wsPath, gameType] of [[gravityDest, '/ws/gravity', 'gravity'], 
       "    const setup = generateMatchSetup();",
       "    const room: GameRoom = { roomId, gameType: 'gravity', status: 'waiting', players: { p1: null, p2: null, p3: null }, terrain: setup.terrain, turn: 'p1', turnCount: 1, p1X: setup.p1X, p2X: setup.p2X, p1Hp: MAX_HP, p2Hp: MAX_HP, shotLocked: false, gravity: null, winner: null };",
       "    rooms.set(roomId, room);",
+      "    inlineRoomCreatedAt.set(roomId, Date.now());",
       "    res.json({ ok: true, roomId });",
       "  });"
     ].join('\n')
