@@ -238,7 +238,7 @@ function showGames(){
    const placeholder=document.createElement('div');placeholder.className='game-cover-placeholder';placeholder.textContent=emoji;card.appendChild(placeholder);
   }
   const label=document.createElement('span');label.className='label';label.textContent=name;card.appendChild(label);
-  card.onclick=()=>{if(type==='carrom'||type==='gravity'||type==='snowball'){location.href='/'+type;return;}if(type==='connect'){showConnect4ModeChoice();return;}if(type==='word'){showWordSetup();return;}if(type==='match'||type==='number'){window.startCasualSetup(type);return;}if(type==='sort'){window.startNumberSortSetup();return;}showMiniGameInstructions(type);};
+  card.onclick=()=>{if(type==='carrom'||type==='gravity'||type==='snowball'){location.href='/'+type+'/';return;}if(type==='connect'){showConnect4ModeChoice();return;}if(type==='word'){showWordSetup();return;}if(type==='match'||type==='number'){window.startCasualSetup(type);return;}if(type==='sort'){window.startNumberSortSetup();return;}showMiniGameInstructions(type);};
   pageContent.appendChild(card);
  });
 }
