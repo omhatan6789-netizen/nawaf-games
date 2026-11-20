@@ -32,6 +32,7 @@ import { handleAiAssistantMessage } from "./ai-assistant.js";
 import { handleRpsMessage, handleRpsCallback } from "./games/rock-paper-scissors.js";
 import { handleXoMessage, handleXoCallback } from "./games/xo.js";
 import { handleHideAndSeekMessage, handleHideAndSeekCallback } from "./games/hide-and-seek.js";
+import { handleBigGameRouterMessage } from "./games/big-game-router.js";
 
 const aliasExecutionKeys = new Set();
 
@@ -148,6 +149,7 @@ export function createBot() {
       if (await handleYouTubeAudioMessage(ctx)) return;
       if (await handleRpsMessage(ctx)) return;
       if (await handleXoMessage(ctx)) return;
+      if (await handleBigGameRouterMessage(ctx)) return;
       if (await handleHideAndSeekMessage(ctx)) return;
       if (await handleAiAssistantMessage(ctx)) return;
       if (await handleDeveloperPanelMessage(ctx)) return;
