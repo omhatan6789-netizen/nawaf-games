@@ -67,6 +67,19 @@ function draw(s,e,p){const r=s.boxes.length,c=s.boxes[0].length,y=Number(e?.r),x
 function soloState(row){const s=dec(row.game_state)||{};return {id:String(row.id),game_type:row.game_type,difficulty:row.difficulty,status:row.status,
  your_turn:Number(row.turn_player_id)===Number(row.user_id),turn_player_id:Number(row.turn_player_id),turn_started_at:ms(row.turn_started_at),
  turn_seconds:TURN[row.game_type],player_name:"أنت",bot_name:"بوت نواف",state:s};}
+
+async function settleConnect4Wager(client,row,winnerId){
+ const wager=Number(row.wager||0);if(wager<=0||row.wager_settled)return;
+ const ids=[Number(row.user_id),Number(row.player2_id)];
+ for(const id of ids)await client.query("INSERT INTO points(user_id,points) VALUES($1,0) ON CONFLICT(user_id) DO NOTHING",[id]);
+ if(winnerId==null){
+  await client.query("UPDATE points SET points=points+$2 WHERE user_id=ANY($1::bigint[])",[ids,wager]);
+ }else{
+  await client.query("UPDATE points SET points=points+$2 WHERE user_id=$1",[Number(winnerId),wager*2]);
+ }
+ await client.query("UPDATE connect4_games SET wager_settled=TRUE WHERE id=$1",[row.id]);
+}
+
 async function locked(pool,sql,args,fn){const c=await pool.connect();try{await c.query("BEGIN");const q=await c.query(sql,args);if(!q.rows[0])throw err("اللعبة غير موجودة");const v=await fn(c,q.rows[0]);await c.query("COMMIT");return v;}catch(e){await c.query("ROLLBACK");throw e;}finally{c.release();}}
 function route(app,path,pool,token,fn){app.post(path,async(req,res)=>{try{const user=verify(req.body?.initData,token);const result=await fn(req.body||{},user);res.json({ok:true,...result});}catch(e){res.status(e.status||400).json({ok:false,error:e.message||"تعذر تنفيذ الحركة"});}});}
 
@@ -79,10 +92,40 @@ export function registerMiniGameRoutes(app,pool,token){
    [id,u.id,d,JSON.stringify(board),starts]);
   return {game:{...connectState(q.rows[0],u.id),rps_result:starts?"bot_starts":"player_starts",rps_player_choice:r,rps_bot_choice:choices[r][starts?0:1]}};
  });
- route(app,"/api/connect4/state",pool,token,async(body,u)=>({game:await locked(pool,"SELECT * FROM connect4_games WHERE id=$1 AND (user_id=$2 OR player2_id=$2) FOR UPDATE",[body.game_id,u.id],async(c,row)=>connectState(row,u.id))}));
- route(app,"/api/connect4/move",pool,token,async(body,u)=>({game:await locked(pool,"SELECT * FROM connect4_games WHERE id=$1 AND user_id=$2 FOR UPDATE",[body.game_id,u.id],async(c,row)=>{
-  if(row.game_mode!=="bot")throw err("هذه المباراة ليست ضد البوت");if(row.status!=="playing")return connectState(row,u.id);if(row.bot_move_pending)throw err("انتظر حركة البوت");
-  const col=Number(body.column),b=dec(row.board);if(!Number.isInteger(col)||!legal(b).includes(col))throw err("هذا العمود غير صالح أو ممتلئ");
+ route(app,"/api/connect4/state",pool,token,async(body,u)=>({game:await locked(pool,"SELECT * FROM connect4_games WHERE id=$1 AND (user_id=$2 OR player2_id=$2) FOR UPDATE",[body.game_id,u.id],async(c,row)=>{
+  if(row.game_mode==="human"&&row.status==="playing"){
+   const expired=await c.query("SELECT NOW()>$1::timestamptz+($2*INTERVAL '1 second') AS expired",[row.turn_started_at,15]);
+   if(expired.rows[0]?.expired){
+    const b=dec(row.board),valid=legal(b),timedOut=Number(row.turn_player_id),piece=timedOut===Number(row.user_id)?1:2;
+    let status="draw",col=null,cells=[],winnerId=null;
+    if(valid.length){col=valid[Math.floor(Math.random()*valid.length)];drop(b,col,piece);cells=win(b,piece)||[];status=cells.length?"won":legal(b).length?"playing":"draw";winnerId=status==="won"?timedOut:null;}
+    if(status!=="playing")await settleConnect4Wager(c,row,winnerId);
+    const next=timedOut===Number(row.user_id)?Number(row.player2_id):Number(row.user_id);
+    const q=await c.query("UPDATE connect4_games SET board=$2::jsonb,status=$3,last_move=$4,winning_cells=$5::jsonb,winner_id=$6,turn_player_id=$7,turn_started_at=NOW(),updated_at=NOW() WHERE id=$1 RETURNING *",[row.id,JSON.stringify(b),status,col,JSON.stringify(cells),winnerId,next]);
+    row=q.rows[0];
+   }
+  }
+  return connectState(row,u.id);
+ })}));
+ route(app,"/api/connect4/move",pool,token,async(body,u)=>({game:await locked(pool,"SELECT * FROM connect4_games WHERE id=$1 AND (user_id=$2 OR player2_id=$2) FOR UPDATE",[body.game_id,u.id],async(c,row)=>{
+  if(row.status!=="playing")return connectState(row,u.id);
+  const b=dec(row.board),valid=legal(b);
+  if(row.game_mode==="human"){
+   if(Number(row.turn_player_id)!==Number(u.id))throw err("انتظر دور اللاعب الآخر");
+   const time=await c.query("SELECT NOW()>$1::timestamptz+($2*INTERVAL '1 second') AS expired",[row.turn_started_at,15]);
+   if(!valid.length){await settleConnect4Wager(c,row,null);return connectState(row,u.id);}
+   const col=time.rows[0]?.expired?valid[Math.floor(Math.random()*valid.length)]:Number(body.column);
+   if(!Number.isInteger(col)||!valid.includes(col))throw err("هذا العمود غير صالح أو ممتلئ");
+   const piece=Number(u.id)===Number(row.user_id)?1:2;drop(b,col,piece);
+   const cells=win(b,piece)||[],status=cells.length?"won":legal(b).length?"playing":"draw",winnerId=status==="won"?Number(u.id):null;
+   if(status!=="playing")await settleConnect4Wager(c,row,winnerId);
+   const next=Number(u.id)===Number(row.user_id)?Number(row.player2_id):Number(row.user_id);
+   const q=await c.query("UPDATE connect4_games SET board=$2::jsonb,status=$3,last_move=$4,winning_cells=$5::jsonb,winner_id=$6,turn_player_id=$7,turn_started_at=NOW(),updated_at=NOW() WHERE id=$1 RETURNING *",[row.id,JSON.stringify(b),status,col,JSON.stringify(cells),winnerId,next]);
+   return connectState(q.rows[0],u.id);
+  }
+  if(Number(row.user_id)!==Number(u.id))throw err("هذه المباراة ضد البوت وليست تحديًا بين لاعبين");
+  if(row.bot_move_pending)throw err("انتظر حركة البوت");
+  const col=Number(body.column);if(!Number.isInteger(col)||!valid.includes(col))throw err("هذا العمود غير صالح أو ممتلئ");
   drop(b,col,1);const cells=win(b,1)||[],status=cells.length?"won":legal(b).length?"playing":"draw";
   const q=await c.query("UPDATE connect4_games SET board=$2::jsonb,status=$3,last_move=$4,winning_cells=$5::jsonb,bot_move_pending=$6,turn_started_at=NOW(),updated_at=NOW() WHERE id=$1 RETURNING *",
    [row.id,JSON.stringify(b),status,col,JSON.stringify(cells),status==="playing"]);return connectState(q.rows[0],u.id);
@@ -114,4 +157,51 @@ export function registerMiniGameRoutes(app,pool,token){
   if(row.game_type==="dots"){const list=edges(s);if(list.length){const e=list[Math.floor(Math.random()*list.length)];const done=draw(s,e,2);if(s.scores[0]+s.scores[1]>=16)status=s.scores[1]>s.scores[0]?"lost":s.scores[1]<s.scores[0]?"won":"draw";else if(done.length)turn=-1;}}
   const q=await c.query("UPDATE mini_game_solo SET game_state=$2::jsonb,turn_player_id=$3,status=$4,turn_started_at=NOW(),updated_at=NOW() WHERE id=$1 RETURNING *",[row.id,JSON.stringify(s),turn,status]);return soloState(q.rows[0]);
  })}));
+
+ route(app,"/api/connect4/challenge/state",pool,token,async(body,u)=>{
+  const id=String(body.challenge_id||"").replace(/-/g,"");
+  if(!/^[0-9a-f]{32}$/i.test(id))throw err("رابط التحدي غير صالح");
+  const q=await pool.query("SELECT * FROM connect4_challenges WHERE id=$1 AND (challenger_id=$2 OR opponent_id=$2)",[id,u.id]);
+  const row=q.rows[0];if(!row)throw err("هذا التحدي ليس لك أو لم يعد موجودًا");
+  if(row.status==="playing"&&row.game_id){
+   const gameQ=await pool.query("SELECT * FROM connect4_games WHERE id=$1",[row.game_id]);
+   if(!gameQ.rows[0])throw err("تعذر العثور على المباراة");
+   const game=connectState(gameQ.rows[0],u.id);
+   game.challenge_starter_id=Number(gameQ.rows[0].turn_player_id||gameQ.rows[0].user_id);
+   game.challenge_rps_result=row.rps_result;
+   game.challenge_starter_name=row.rps_result==="challenger_starts"?row.challenger_name:row.opponent_name;
+   return {result:{phase:"playing",game}};
+  }
+  if(row.status!=="choosing")throw err("هذا التحدي لم يعد متاحًا");
+  const first=Number(u.id)===Number(row.challenger_id);
+  const own=first?row.challenger_choice:row.opponent_choice;
+  const other=first?row.opponent_choice:row.challenger_choice;
+  return {result:{phase:"choosing",challenger_name:row.challenger_name,opponent_name:row.opponent_name,my_choice:own,opponent_chosen:Boolean(other),tie:row.rps_result==="tie",wager:Number(row.wager)}};
+ });
+ route(app,"/api/connect4/challenge/choice",pool,token,async(body,u)=>({result:await locked(pool,"SELECT * FROM connect4_challenges WHERE id=$1 AND (challenger_id=$2 OR opponent_id=$2) FOR UPDATE",[String(body.challenge_id||"").replace(/-/g,""),u.id],async(c,row)=>{
+  const choice=body.choice;if(!["r","p","s"].includes(choice))throw err("اختر حجر أو ورقة أو مقص");
+  if(row.status==="playing"&&row.game_id){const g=await c.query("SELECT * FROM connect4_games WHERE id=$1",[row.game_id]);if(!g.rows[0])throw err("تعذر العثور على المباراة");return {phase:"playing",game:connectState(g.rows[0],u.id)};}
+  if(row.status!=="choosing")throw err("هذا التحدي لم يعد متاحًا");
+  const first=Number(u.id)===Number(row.challenger_id),column=first?"challenger_choice":"opponent_choice";
+  if(row[column])throw err("سجلت اختيارك بالفعل، انتظر اللاعب الآخر");
+  const update=await c.query("UPDATE connect4_challenges SET "+column+"=$2,rps_result=NULL,updated_at=NOW() WHERE id=$1 RETURNING *",[row.id,choice]);
+  const current=update.rows[0];
+  if(!current.challenger_choice||!current.opponent_choice)return {phase:"choosing",my_choice:choice,opponent_chosen:false};
+  const a=current.challenger_choice,b=current.opponent_choice;
+  const winner=a===b?0:([["r","s"],["p","r"],["s","p"]].some(([x,y])=>a===x&&b===y)?1:2);
+  if(winner===0){
+   await c.query("UPDATE connect4_challenges SET challenger_choice=NULL,opponent_choice=NULL,rps_result='tie',updated_at=NOW() WHERE id=$1",[row.id]);
+   return {phase:"choosing",tie:true,my_choice:null,opponent_chosen:false};
+  }
+  const starter=winner===1?Number(row.challenger_id):Number(row.opponent_id);
+  const board=Array.from({length:R},()=>Array(C).fill(0)),gameId=crypto.randomUUID();
+  const gameQ=await c.query("INSERT INTO connect4_games(id,user_id,player2_id,difficulty,board,game_mode,chat_id,player1_name,player2_name,turn_player_id,wager) VALUES($1,$2,$3,'متوسط',$4::jsonb,'human',$5,$6,$7,$8,$9) RETURNING *",
+   [gameId,Number(row.challenger_id),Number(row.opponent_id),JSON.stringify(board),Number(row.chat_id),row.challenger_name,row.opponent_name,starter,Number(row.wager)]);
+  const result=winner===1?"challenger_starts":"opponent_starts";
+  await c.query("UPDATE connect4_challenges SET status='playing',game_id=$2,rps_result=$3,updated_at=NOW() WHERE id=$1",[row.id,gameId,result]);
+  const game=connectState(gameQ.rows[0],u.id);
+  game.challenge_starter_id=starter;game.challenge_rps_result=result;game.challenge_starter_name=winner===1?row.challenger_name:row.opponent_name;
+  return {phase:"playing",game};
+ })}));
+
 }
