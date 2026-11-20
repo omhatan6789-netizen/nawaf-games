@@ -7,7 +7,8 @@ const GAME_INFO = {
   memory: ["Memory Match 🧠", "اختبر ذاكرتك وطابق الألوان والتسلسل"],
   word: ["خمن الكلمة 🔤", "تحدَّ حتى 10 لاعبين واكتشفوا الكلمة قبل انتهاء الوقت"],
   carrom: ["الكيرم 🎯", "صوّب الأقراص نحو الجيوب وتحدَّ لاعبًا آخر"],
-  gravity: ["جري الجاذبية 🏃", "بدّل الجاذبية وتنافس مع لاعب آخر في سباق البقاء"],
+  gravity: ["جري الجاذبية 🏃", "بدّل الجاذبية وتجاوز العقبات مع لاعب آخر"],
+  snowball: ["كرة الثلج ❄️", "صوّب كرات الثلج وتحدَّ لاعبًا آخر"],
 };
 
 const WORDS = ["سيارة", "مدرسة", "مكتبة", "طائرة", "حاسوب", "نافذة", "حديقة", "مفتاح", "مصباح", "وسادة", "حقيبة", "ثلاجة", "غسالة", "مروحة", "تلفاز", "سفينة", "دراجة", "طاولة", "ملعقة", "تفاحة"];
@@ -20,6 +21,7 @@ function selectGames(query = "") {
   if (/(ذاكرة|ذاكرت|memory)/i.test(value)) return ["memory"];
   if (/(خمن|كلمة|word)/i.test(value)) return ["word"];
   if (/(كيرم|carrom)/i.test(value)) return ["carrom"];
+  if (/(كرة الثلج|ثلج|snowball)/i.test(value)) return ["snowball"];
   if (/(جري الجاذبية|الجاذبية|gravity)/i.test(value)) return ["gravity"];
   return Object.keys(GAME_INFO);
 }
@@ -31,8 +33,8 @@ function playerName(user) {
 
 async function createLobby(gameType, user) {
   const name = playerName(user);
-  if (gameType === "carrom" || gameType === "gravity") {
-    const port = gameType === "carrom" ? 10001 : 10002;
+  if (gameType === "carrom" || gameType === "gravity" || gameType === "snowball") {
+    const port = gameType === "carrom" ? 10001 : gameType === "gravity" ? 10002 : 10003;
     const response = await fetch(`http://127.0.0.1:${port}/api/internal/inline-room`, {
       method: "POST",
       headers: { "content-type": "application/json", "x-bot-token": process.env.BOT_TOKEN },
@@ -41,7 +43,7 @@ async function createLobby(gameType, user) {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.ok || !data.roomId) throw new Error(data.error || "تعذر إنشاء غرفة اللعبة");
-    const prefix = gameType === "carrom" ? "carrom_" : "gravity_";
+    const prefix = gameType === "carrom" ? "carrom_" : gameType === "gravity" ? "gravity_" : "snowball_";
     return { id: data.roomId, startapp: `${prefix}${data.roomId}` };
   }
   if (gameType === "word") {
@@ -84,8 +86,8 @@ export async function handleInlineGamesQuery(ctx) {
       const room = await createLobby(gameType, ctx.from);
       const roomUrl = `https://t.me/${username}?startapp=${room.startapp}`;
       const messageText = gameType === "word"
-        ? `🔤 غرفة أونلاين — ${title}\n\nأنشأ ${playerName(ctx.from)} غرفة خمن الكلمة.\nانضموا من الزر بالأسفل، ويمكن لصاحب الغرفة بدء اللعبة بعد انضمام اللاعبين.`
-        : `🎮 غرفة أونلاين — ${title}\n\nافتحوا الغرفة من الزر بالأسفل للانضمام وضبط الإعدادات وبدء اللعبة داخل الميني آب.`;
+        ? `🔤 تحدي جماعي — ${title}\n\nبدأ ${playerName(ctx.from)} تحديًا في خمن الكلمة. افتحوا اللعبة من الزر بالأسفل وابدؤوا التحدي!`
+        : `🎮 تحدي — ${title}\n\nاضغطوا الزر بالأسفل لفتح اللعبة والانضمام إلى التحدي داخل الميني آب.`;
 
       const image = await pool.query(
         "SELECT photo_file_id FROM online_game_images WHERE game_type=$1",
@@ -99,7 +101,7 @@ export async function handleInlineGamesQuery(ctx) {
         description,
         input_message_content: { message_text: messageText },
         reply_markup: {
-          inline_keyboard: [[{ text: "دخول غرفة اللعبة", url: roomUrl }]]
+          inline_keyboard: [[{ text: "ابدأ اللعب", url: roomUrl }]]
         },
       };
       if (fileId) {
