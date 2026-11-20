@@ -61,7 +61,6 @@ import { closeTelegramWebApp, getInitialRoomCodeFromUrl, getTelegramDisplayName,
 import { GRAVITY_DIFFICULTIES, type Difficulty, type GameResult, type GravityTickPayload, type OnlineRoomSnapshot, type PlayMode } from './game/types';
 
 type Screen = 'home' | 'setup' | 'lobby' | 'playing' | 'over';
-declare global { interface Window { Telegram?: { WebApp?: { switchInlineQuery?: (query: string, types?: Array<'users'|'groups'|'channels'>) => void } } } }
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
@@ -194,7 +193,6 @@ import { closeTelegramWebApp, getInitialRoomCodeFromUrl, getTelegramDisplayName,
 import { DIFFICULTIES, type Difficulty, type GameResult, type OnlineRoomSnapshot, type OnlineShotOutcome, type PlayMode } from './game/types';
 
 type Screen = 'home' | 'setup' | 'lobby' | 'playing' | 'over';
-declare global { interface Window { Telegram?: { WebApp?: { switchInlineQuery?: (query: string, types?: Array<'users'|'groups'|'channels'>) => void } } } }
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
