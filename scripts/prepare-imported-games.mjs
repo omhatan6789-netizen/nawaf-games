@@ -323,7 +323,8 @@ html, body, #root { overscroll-behavior: none; }
   -webkit-user-select: none; user-select: none;
 }
 .snowball-fullscreen-stage, .snowball-fullscreen-stage * { touch-action: none; }
-`);\nfs.writeFileSync(path.join(snowballDest, 'src/App.tsx'), snowballApp);
+`);
+fs.writeFileSync(path.join(snowballDest, 'src/App.tsx'), snowballApp);
 
 for (const [dir, wsPath, gameType] of [[gravityDest, '/ws/gravity', 'gravity'], [snowballDest, '/ws/snowball', 'snowball']]) {
   const clientFile = path.join(dir, 'src/game/onlineClient.ts');
