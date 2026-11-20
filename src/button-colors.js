@@ -15,11 +15,11 @@ function normalize(value) {
 }
 
 export async function ensureButtonColorsSchema() {
-  await db().query(\`CREATE TABLE IF NOT EXISTS button_colors (
+  await db().query(`CREATE TABLE IF NOT EXISTS button_colors (
     button_text TEXT PRIMARY KEY,
     color TEXT NOT NULL DEFAULT 'شفاف',
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  )\`);
+  )`);
   await loadButtonColors();
 }
 
@@ -93,8 +93,8 @@ export async function handleButtonColorMessage(ctx) {
 
   try {
     await db().query(
-      \`INSERT INTO button_colors(button_text,color) VALUES($1,$2)
-       ON CONFLICT(button_text) DO UPDATE SET color=EXCLUDED.color, updated_at=NOW()\`,
+      `INSERT INTO button_colors(button_text,color) VALUES($1,$2)
+       ON CONFLICT(button_text) DO UPDATE SET color=EXCLUDED.color, updated_at=NOW()`,
       [session.button, text]
     );
     colorCache.set(normalize(session.button), text);
