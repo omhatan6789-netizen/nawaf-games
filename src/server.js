@@ -264,6 +264,21 @@ server.on("upgrade", (req, socket, head) => {
 const bot = process.env.ENABLE_TELEGRAM_BOT === "true" ? createBot() : null;
 if (!bot) console.log("Telegram polling is disabled until cutover.");
 if (bot) {
+  const configureMiniAppMenu = async () => {
+    try {
+      await bot.api.setChatMenuButton({
+        menu_button: {
+          type: "web_app",
+          text: "الألعاب",
+          web_app: { url: "https://nawaf-bot-node-xsna.onrender.com/miniapp/" },
+        },
+      });
+      console.log("Telegram Mini App menu button points to the current Node Mini App.");
+    } catch (error) {
+      console.error("Could not update Telegram Mini App menu button:", error?.description || error?.message || error);
+    }
+  };
+  configureMiniAppMenu();
   const startPolling = async () => {
     while (true) {
       try {
