@@ -313,7 +313,17 @@ export default function App() {
 `;
 
 fs.writeFileSync(path.join(gravityDest, 'src/App.tsx'), gravityApp);
-fs.appendFileSync(path.join(snowballDest, 'src/index.css'), String.raw\`\n/* Keep Telegram's Mini App viewport fixed while aiming and dragging. */\nhtml, body, #root { overscroll-behavior: none; }\n.snowball-fullscreen-stage { position: fixed; inset: 0; z-index: 20; width: 100vw; height: 100dvh; min-height: 100dvh; overflow: hidden; overscroll-behavior: none; touch-action: none; -webkit-user-select: none; user-select: none; }\n.snowball-fullscreen-stage, .snowball-fullscreen-stage * { touch-action: none; }\n`);\nfs.writeFileSync(path.join(snowballDest, 'src/App.tsx'), snowballApp);
+fs.appendFileSync(path.join(snowballDest, 'src/index.css'), `
+/* Keep Telegram's Mini App viewport fixed while aiming and dragging. */
+html, body, #root { overscroll-behavior: none; }
+.snowball-fullscreen-stage {
+  position: fixed; inset: 0; z-index: 20; width: 100vw;
+  height: 100dvh; min-height: 100dvh; overflow: hidden;
+  overscroll-behavior: none; touch-action: none;
+  -webkit-user-select: none; user-select: none;
+}
+.snowball-fullscreen-stage, .snowball-fullscreen-stage * { touch-action: none; }
+`);\nfs.writeFileSync(path.join(snowballDest, 'src/App.tsx'), snowballApp);
 
 for (const [dir, wsPath, gameType] of [[gravityDest, '/ws/gravity', 'gravity'], [snowballDest, '/ws/snowball', 'snowball']]) {
   const clientFile = path.join(dir, 'src/game/onlineClient.ts');
