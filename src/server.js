@@ -235,8 +235,23 @@ server.on("upgrade", (req, socket, head) => {
 const bot = process.env.ENABLE_TELEGRAM_BOT === "true" ? createBot() : null;
 if (!bot) console.log("Telegram polling is disabled until cutover.");
 if (bot) {
-  bot.start().then(() => console.log("Telegram polling started."))
-    .catch((error) => console.error("Telegram polling failed:", error));
+  const startPolling = async () => {
+    while (true) {
+      try {
+        await bot.start({ onStart: () => console.log("Telegram polling started.") });
+        return;
+      } catch (error) {
+        const description = error?.description || error?.message || String(error);
+        const conflict = error?.error_code === 409 || /409|terminated by other getUpdates request/i.test(description);
+        console.error("Telegram polling failed:", description);
+        if (!conflict) return;
+        // Render can briefly overlap old and new instances during a rolling deploy.
+        try { await bot.stop(); } catch {}
+        await new Promise(resolve => setTimeout(resolve, 10000));
+      }
+    }
+  };
+  startPolling().catch(error => console.error("Telegram polling restart failed:", error));
 }
 
 async function shutdown(signal) {
