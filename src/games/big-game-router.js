@@ -42,7 +42,7 @@ export async function handleBigGameRouterMessage(ctx) {
     if (game === "penalties") return continuePenalties(ctx);
     return false;
   }
-  if (text.startsWith(".احمر ") || text.startsWith(".ازرق ")) {
+  if (/^\\.(?:احمر|ازرق)(?:\\s+\\d+\\*?)+$/.test(text)) {
     if (game === "penalties") return manualTeamCommand(ctx);
     return false;
   }
