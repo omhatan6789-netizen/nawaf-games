@@ -222,7 +222,7 @@ function showGameEntry(type,emoji,name,hint){
   '<div class="c4-panel" style="display:grid;gap:12px;padding:18px">'+
    '<button class="c4-start" id="entry-bot" style="min-height:76px;font-size:25px">🤖 لعب ضد البوت</button>'+
    '<button class="c4-secondary" id="entry-human" style="min-height:70px;font-size:22px">👥 لعب ضد شخص بالتيليجرام</button>'+
-  '</div><button class="c4-secondary" id="entry-home" style="min-height:60px">↩ الرجوع للقائمة الرئيسية</button></div>';
+  '</div></div>';
  shell.querySelector('#entry-human').onclick=()=>openInlineGamePicker(type);
  shell.querySelector('#entry-bot').onclick=()=>{
   if(type==='connect')showConnect4Setup();
@@ -440,8 +440,7 @@ function showGameEndOverlay({winnerName='',isDraw=false,title='',subtitle=''}={}
  const message=document.createElement('p');message.textContent=subtitle||(isDraw?'كانت مباراة حماسية! يعطيكم العافية على اللعب 👏':('أبدعت يا '+(safeWinner||'بطل')+'! تستاهل الفوز 🏆'));
  const actions=document.createElement('div');actions.className='online-end-actions';
  const close=document.createElement('button');close.textContent='قفل الصفحة';close.onclick=()=>{if(tg&&typeof tg.close==='function')tg.close();else{try{window.close();}catch(e){}showHome();}};
- const homeButton=document.createElement('button');homeButton.textContent='الرجوع للقائمة الرئيسية';homeButton.onclick=()=>{clearOnlineEndOverlay();showHome();};
- actions.append(close,homeButton);card.append(heading,winner,message,actions);overlay.appendChild(card);document.body.appendChild(overlay);
+ actions.append(close);card.append(heading,winner,message,actions);overlay.appendChild(card);document.body.appendChild(overlay);
 }
 function showOnlineEndOverlay(gameType,gameId,resultText){
  const draw=String(resultText||'').includes('تعادل');
