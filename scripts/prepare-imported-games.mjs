@@ -379,6 +379,7 @@ for (const [dir, wsPath, gameType] of [[gravityDest, '/ws/gravity', 'gravity'], 
       "    const setup = generateMatchSetup();",
       "    const room: GameRoom = { roomId, status: 'waiting', players: { p1: null, p2: null }, terrain: setup.terrain, turn: 'p1', turnCount: 1, p1X: setup.p1X, p2X: setup.p2X, p1Hp: MAX_HP, p2Hp: MAX_HP, winner: null, shotLocked: false };",
       "    rooms.set(roomId, room);",
+      "    inlineRoomCreatedAt.set(roomId, Date.now());",
       "    res.json({ ok: true, roomId });",
       "  });"
     ].join('\n');
