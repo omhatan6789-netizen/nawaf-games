@@ -219,7 +219,7 @@ function showGames(){
   ['🟦','المربعات','ارسم الخطوط واجمع المربعات','dots'],
   ['🧠','اختبر ذاكرتك','احفظ التسلسل وتحدَّ لاعبًا آخر','memory'],
   ['🔤','خمن الكلمة','تحدَّ حتى 10 لاعبين أو تدرب لحالك','word'],
-  ['🔎','المتشابه (Find Match)','اعثر على الشكل المشترك قبل خصمك','find'],
+  ['🃏','Find Match','طابق البطاقات واجمع أكبر عدد','match'],
   ['🎯','خمن الرقم','اكتشف الرقم مع تلميحات أعلى أو أقل','number'],
   ['🔢','ترتيب الأرقام','رتّب اللوحة قبل انتهاء الوقت','sort'],
   ['🎯','الكيرم','صوّب واضرب الأقراص نحو الجيوب','carrom'],
@@ -236,7 +236,7 @@ function showGames(){
    const placeholder=document.createElement('div');placeholder.className='game-cover-placeholder';placeholder.textContent=emoji;card.appendChild(placeholder);
   }
   const label=document.createElement('span');label.className='label';label.textContent=name;card.appendChild(label);
-  card.onclick=()=>{if(type==='carrom'||type==='gravity'){location.href='/'+type;return;}if(type==='connect'){showConnect4ModeChoice();return;}if(type==='word'){showWordSetup();return;}if(type==='find'||type==='number'){window.startCasualSetup(type);return;}if(type==='sort'){window.startNumberSortSetup();return;}showMiniGameInstructions(type);};
+  card.onclick=()=>{if(type==='carrom'||type==='gravity'){location.href='/'+type;return;}if(type==='connect'){showConnect4ModeChoice();return;}if(type==='word'){showWordSetup();return;}if(type==='match'||type==='number'){window.startCasualSetup(type);return;}if(type==='sort'){window.startNumberSortSetup();return;}showMiniGameInstructions(type);};
   pageContent.appendChild(card);
  });
 }
