@@ -95,14 +95,8 @@ async function handleMusicAccountMessage(message) {
 
     // The original script reacts to the name even while replies are disabled.
     try {
-      const messageId = Number(message.raw?.id ?? message.id);
-      const chatId = Number(message.chat?.id);
-      if (!Number.isSafeInteger(messageId) || messageId <= 0 || !Number.isSafeInteger(chatId)) {
-        throw new Error(`Invalid reaction target (chatId=${message.chat?.id}, messageId=${message.raw?.id ?? message.id})`);
-      }
       await client.sendReaction({
-        chatId,
-        message: messageId,
+        message,
         emoji: REACTION_EMOJI,
       });
       console.log(`[NAME REACTION] Reacted in chat ${message.chat.id}`);
