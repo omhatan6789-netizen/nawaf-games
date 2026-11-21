@@ -3,7 +3,7 @@ import { convertFromPyrogramSession } from "@mtcute/convert";
 
 const ACCOUNT_ID = 6496915877;
 const TIME_ZONE = "Asia/Riyadh";
-const CLOCK_PATTERN = /\\s+⌁\\s+\\d{1,2}:\\d{2}\\s+(?:AM|PM)$/;
+const CLOCK_PATTERN = /\s+⌁\s+\d{1,2}:\d{2}\s+(?:AM|PM)$/;
 let clientPromise;
 
 function getRiyadhClock() {
@@ -23,7 +23,7 @@ function millisecondsUntilNextMinute() {
 function floodWaitSeconds(error) {
   const direct = Number(error?.seconds ?? error?.value);
   if (Number.isFinite(direct) && direct > 0) return direct;
-  const match = String(error?.message || "").match(/FLOOD_WAIT[_ ](\\d+)/i);
+  const match = String(error?.message || "").match(/FLOOD_WAIT[_ ](\d+)/i);
   return match ? Number(match[1]) : 0;
 }
 
