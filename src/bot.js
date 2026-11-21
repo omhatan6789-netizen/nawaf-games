@@ -30,7 +30,6 @@ import { handleYouTubeAudioMessage, handleYouTubeAudioCallback } from "./youtube
 import { handleCommandsMenuMessage, handleCommandsMenuCallback } from "./commands-menu.js";
 import { handleSendMessage } from "./send.js";
 import { handleMiniAppPanelMessage, handleMiniAppPanelCallback } from "./mini-app-panel.js";
-import { handleAiAssistantMessage } from "./ai-assistant.js";
 import { handleRpsMessage, handleRpsCallback } from "./games/rock-paper-scissors.js";
 import { handleXoMessage, handleXoCallback } from "./games/xo.js";
 import { handleHideAndSeekMessage, handleHideAndSeekCallback } from "./games/hide-and-seek.js";
@@ -177,7 +176,6 @@ export function createBot() {
       if (await handleBigGameRouterMessage(ctx)) return;
       if (await handlePenaltyDirectionMessage(ctx)) return;
       if (await handleHideAndSeekMessage(ctx)) return;
-      if (await handleAiAssistantMessage(ctx)) return;
       if (await handleDeveloperPanelMessage(ctx)) return;
       if (await handleStartEditorMessage(ctx)) return;
       if (await handleDeveloperPanelCommand(ctx)) return;
