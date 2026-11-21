@@ -14,7 +14,6 @@ import { handleRepetitionCommand, handleRepetitionMessage } from "./handlers/rep
 import { handleDeleteMessages } from "./handlers/delete-messages.js";
 import { handleUserIdCommand } from "./handlers/user-id.js";
 import { handlePhotoId } from "./handlers/photo-tools.js";
-import { handleMusicAccountReplyCommand } from "./music-account-replies.js";
 import { handleProfileReplies } from "./profile-replies.js";
 import { handleEconomyMessage, handleEconomyCallback } from "./handlers/economy.js";
 import { handleEconomyExtraMessage, handleEconomyExtraCallback } from "./handlers/economy-extra.js";
@@ -161,7 +160,6 @@ export function createBot() {
   bot.on("message", async (ctx) => {
     try {
       if (await handleButtonColorMessage(ctx)) return;
-      if (await handleMusicAccountReplyCommand(ctx)) return;
       if (await handleSendMessage(ctx)) return;
       if (await handleMiniAppPanelMessage(ctx)) return;
       if (await handleCustomCommandManagement(ctx)) return;
