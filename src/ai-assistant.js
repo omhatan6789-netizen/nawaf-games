@@ -1,4 +1,5 @@
 import { InputFile } from "grammy";
+import { InputMedia } from "@mtcute/node";
 import { pool } from "./db.js";
 
 const OWNER_ID = 8453977662;
@@ -230,7 +231,7 @@ async function sendInternetImage(ctx,query) {
     if (!found) throw new Error("No suitable image found");
     const caption=("📷 " + query.slice(0,300)).slice(0,1000);
     if (ctx.mtClient && ctx.mtMessage) {
-      await ctx.mtClient.replyMedia(ctx.mtMessage,found.buffer,{caption});
+      await ctx.mtClient.replyMedia(ctx.mtMessage,InputMedia.photo(found.buffer),{caption});
     } else {
       await ctx.replyWithPhoto(new InputFile(found.buffer,"internet_image." + found.ext),{caption,reply_parameters:{message_id:ctx.message.message_id}});
       await ctx.api.deleteMessage(ctx.chat.id,status.message_id);
