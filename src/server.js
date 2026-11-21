@@ -5,7 +5,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import httpProxy from "http-proxy";
 import { createBot } from "./bot.js";
-import { startAccountClock } from "./account-clock.js";
+import { startAccountClock } from "./account-clock.js";\nimport { startAutoPrivateReply } from "./auto-private-reply.js";
 import { ensureButtonColorsSchema } from "./button-colors.js";
 import { checkDatabase } from "./db.js";
 import { flushPendingActivity } from "./activity.js";
@@ -216,7 +216,7 @@ app.get("/api/health/games", async (_req, res) => {
   res.status(ok ? 200 : 503).json({ ok, games: results });
 });
 
-startAccountClock().catch(() => console.error("[ACCOUNT CLOCK] Startup failed."));
+startAccountClock().catch(() => console.error("[ACCOUNT CLOCK] Startup failed."));\nstartAutoPrivateReply().catch(() => console.error("[AUTO REPLY] Startup failed."));
 
 const server = app.listen(port, "0.0.0.0", () => {
   console.log(`HTTP server listening on port ${port}`);
