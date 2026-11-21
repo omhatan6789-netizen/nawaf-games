@@ -7,6 +7,7 @@ import httpProxy from "http-proxy";
 import { createBot } from "./bot.js";
 import { startAccountClock } from "./account-clock.js";
 import { startAutoPrivateReply } from "./auto-private-reply.js";
+import { startMusicAccountReplies } from "./music-account-replies.js";
 import { ensureButtonColorsSchema } from "./button-colors.js";
 import { checkDatabase } from "./db.js";
 import { flushPendingActivity } from "./activity.js";
@@ -219,6 +220,7 @@ app.get("/api/health/games", async (_req, res) => {
 
 startAccountClock().catch(() => console.error("[ACCOUNT CLOCK] Startup failed."));
 startAutoPrivateReply().catch(() => console.error("[AUTO REPLY] Startup failed."));
+startMusicAccountReplies().catch(() => console.error("[MUSIC ACCOUNT REPLIES] Startup failed."));
 
 const server = app.listen(port, "0.0.0.0", () => {
   console.log(`HTTP server listening on port ${port}`);
