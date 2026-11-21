@@ -8,7 +8,7 @@ const OFFLINE_REPLY = "نايم";
 const ENABLE_REPLY = "طيب لا تنفخ فعلت لك الردود";
 const DISABLE_REPLY = "طيب عطلته";
 
-const WORD_PATTERN = /(?<![\\p{L}\\p{N}_])نواف(?![\\p{L}\\p{N}_])/u;
+const WORD_PATTERN = /(?<![\p{L}\p{N}_])نواف(?![\p{L}\p{N}_])/u;
 let started = false;
 let repliesEnabled = true;
 
