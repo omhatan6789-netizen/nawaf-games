@@ -67,14 +67,34 @@ export async function handleMusicAccountReplyCommand(ctx) {
 async function handleMusicGroupMessage(message) {
   try {
     if (message.isOutgoing || message.isService) return;
+
+    const text = String(message.text || "").trim();
+    const senderId = Number(message.sender?.id);
+
+    // The music account receives these controls through MTProto, not through
+    // the separate grammY bot update stream.
+    if ((text === "فتح الردود" || text === "قفل الردود") && senderId === OWNER_ID) {
+      const enabled = text === "فتح الردود";
+      await setRepliesEnabled(enabled);
+      await message.replyText(
+        enabled ? "تم فتح ردود حساب الموسيقى." : "تم قفل ردود حساب الموسيقى.",
+      );
+      console.log(`[MUSIC ACCOUNT REPLIES] Setting changed by owner: ${enabled ? "enabled" : "disabled"}`);
+      return;
+    }
+
     const chatType = message.chat?.type;
     if (chatType !== "group" && chatType !== "supergroup") return;
-    if (String(message.text || "").trim() !== NAME_TRIGGER) return;
-    if (!(await areRepliesEnabled())) return;
+    if (text !== NAME_TRIGGER) return;
+
+    const enabled = await areRepliesEnabled();
+    console.log(`[MUSIC ACCOUNT REPLIES] Trigger received in ${chatType}; enabled=${enabled}; sender=${senderId}`);
+    if (!enabled) return;
 
     const client = await getMusicAccountClient();
     const me = await client.getMe();
-    const reply = me.status === "online" ? ONLINE_REPLY : OFFLINE_REPLY;
+    // Match the previous behavior: only an explicitly offline account says "نايم".
+    const reply = me.status === "offline" ? OFFLINE_REPLY : ONLINE_REPLY;
     await message.replyText(reply);
     console.log(`[MUSIC ACCOUNT REPLIES] Replied in group ${message.chat.id}: ${reply}`);
   } catch (error) {
