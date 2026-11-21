@@ -1,11 +1,16 @@
 import { pool } from "./db.js";
-import { OWNER_ID } from "./ranks.js";
 import { getMusicAccountClient } from "./account-clock.js";
 
-const NAME_TRIGGER = "نواف";
+const TARGET_WORD = "نواف";
+const REACTION_EMOJI = "💯";
 const ONLINE_REPLY = "مشغول👾";
 const OFFLINE_REPLY = "نايم";
+const ENABLE_REPLY = "طيب لا تنفخ فعلت لك الردود";
+const DISABLE_REPLY = "طيب عطلته";
+
+const WORD_PATTERN = /(?<![\\p{L}\\p{N}_])نواف(?![\\p{L}\\p{N}_])/u;
 let started = false;
+let repliesEnabled = true;
 
 function db() {
   if (!pool) throw new Error("DATABASE_URL is not configured");
@@ -14,104 +19,112 @@ function db() {
 
 export async function ensureMusicAccountRepliesSchema() {
   await db().query(`
-    CREATE TABLE IF NOT EXISTS music_account_reply_settings (
+    CREATE TABLE IF NOT EXISTS name_reaction_settings (
       id SMALLINT PRIMARY KEY CHECK (id = 1),
-      enabled BOOLEAN NOT NULL DEFAULT TRUE,
+      settings JSONB NOT NULL,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
   await db().query(`
-    INSERT INTO music_account_reply_settings(id, enabled)
-    VALUES (1, TRUE)
+    INSERT INTO name_reaction_settings (id, settings)
+    VALUES (1, '{"replies_enabled": true, "muted": {}, "restricted": {}}'::jsonb)
     ON CONFLICT (id) DO NOTHING
   `);
+
+  const result = await db().query(
+    "SELECT COALESCE((settings->>'replies_enabled')::boolean, TRUE) AS enabled FROM name_reaction_settings WHERE id = 1",
+  );
+  repliesEnabled = result.rows[0]?.enabled ?? true;
+  console.log(`[NAME REACTION] Settings loaded from PostgreSQL. Replies enabled: ${repliesEnabled}`);
 }
 
-async function setRepliesEnabled(enabled) {
+async function saveRepliesEnabled(enabled) {
   await db().query(
-    `INSERT INTO music_account_reply_settings(id, enabled, updated_at)
-     VALUES (1, $1, NOW())
+    `INSERT INTO name_reaction_settings (id, settings, updated_at)
+     VALUES (1, jsonb_build_object('replies_enabled', $1::boolean), NOW())
      ON CONFLICT (id) DO UPDATE
-       SET enabled = EXCLUDED.enabled, updated_at = NOW()`,
+       SET settings = jsonb_set(
+         COALESCE(name_reaction_settings.settings, '{}'::jsonb),
+         '{replies_enabled}',
+         to_jsonb($1::boolean),
+         TRUE
+       ),
+       updated_at = NOW()`,
     [enabled],
   );
+  repliesEnabled = enabled;
 }
 
-async function areRepliesEnabled() {
-  const result = await db().query(
-    "SELECT enabled FROM music_account_reply_settings WHERE id = 1",
-  );
-  return result.rows[0]?.enabled ?? true;
-}
-
-export async function handleMusicAccountReplyCommand(ctx) {
-  const text = ctx.message?.text?.trim();
-  if (text !== "فتح الردود" && text !== "قفل الردود") return false;
-
-  if (Number(ctx.from?.id) !== OWNER_ID) {
-    await ctx.reply("هذا الأمر للمالك الأساسي فقط.");
-    return true;
-  }
-
-  const enabled = text === "فتح الردود";
+async function getAccountReply() {
   try {
-    await setRepliesEnabled(enabled);
-    await ctx.reply(enabled ? "تم فتح ردود حساب الموسيقى." : "تم قفل ردود حساب الموسيقى.");
+    const client = await getMusicAccountClient();
+    const me = await client.getMe();
+    if (me.status === "offline") return OFFLINE_REPLY;
+    return ONLINE_REPLY;
   } catch (error) {
-    console.error("[MUSIC ACCOUNT REPLIES] Could not save setting:", error?.message || error);
-    await ctx.reply("تعذر حفظ إعدادات الردود، حاول مرة ثانية.");
+    console.error("[NAME REACTION] Status error:", error?.message || error);
+    return ONLINE_REPLY;
   }
-  return true;
 }
 
-async function handleMusicGroupMessage(message) {
+async function handleMusicAccountMessage(message) {
   try {
-    if (message.isOutgoing || message.isService) return;
+    const text = String(message.text || message.caption || "").trim();
 
-    const text = String(message.text || "").trim();
-    const senderId = Number(message.sender?.id);
-
-    // The music account receives these controls through MTProto, not through
-    // the separate grammY bot update stream.
-    if ((text === "فتح الردود" || text === "قفل الردود") && senderId === OWNER_ID) {
-      const enabled = text === "فتح الردود";
-      await setRepliesEnabled(enabled);
-      await message.replyText(
-        enabled ? "تم فتح ردود حساب الموسيقى." : "تم قفل ردود حساب الموسيقى.",
-      );
-      console.log(`[MUSIC ACCOUNT REPLIES] Setting changed by owner: ${enabled ? "enabled" : "disabled"}`);
+    // Original Python behavior: only messages sent by the music account
+    // itself can control the replies setting.
+    if (message.isOutgoing) {
+      if (text === "فتح الردود") {
+        await saveRepliesEnabled(true);
+        await message.replyText(ENABLE_REPLY);
+        console.log("[NAME REACTION] Replies enabled by the music account.");
+      } else if (text === "قفل الردود") {
+        await saveRepliesEnabled(false);
+        await message.replyText(DISABLE_REPLY);
+        console.log("[NAME REACTION] Replies disabled by the music account.");
+      }
       return;
     }
 
+    if (message.isService || !text) return;
+
     const chatType = message.chat?.type;
     if (chatType !== "group" && chatType !== "supergroup") return;
-    if (text !== NAME_TRIGGER) return;
+    if (!WORD_PATTERN.test(text)) return;
 
-    const enabled = await areRepliesEnabled();
-    console.log(`[MUSIC ACCOUNT REPLIES] Trigger received in ${chatType}; enabled=${enabled}; sender=${senderId}`);
-    if (!enabled) return;
-
+    // The original script reacts to the name even while replies are disabled.
     const client = await getMusicAccountClient();
-    const me = await client.getMe();
-    // Match the previous behavior: only an explicitly offline account says "نايم".
-    const reply = me.status === "offline" ? OFFLINE_REPLY : ONLINE_REPLY;
+    try {
+      await client.sendReaction({
+        chatId: message.chat.id,
+        messageId: message.id,
+        emoji: REACTION_EMOJI,
+      });
+      console.log(`[NAME REACTION] Reacted in chat ${message.chat.id}`);
+    } catch (error) {
+      console.error("[NAME REACTION] Reaction error:", error?.message || error);
+    }
+
+    if (!repliesEnabled) return;
+
+    const reply = await getAccountReply();
     await message.replyText(reply);
-    console.log(`[MUSIC ACCOUNT REPLIES] Replied in group ${message.chat.id}: ${reply}`);
+    console.log(`[NAME REACTION] Replied: ${reply}`);
   } catch (error) {
-    console.error("[MUSIC ACCOUNT REPLIES] Message handler failed:", error?.message || error);
+    console.error("[NAME REACTION] Message handler failed:", error?.message || error);
   }
 }
 
 export async function startMusicAccountReplies() {
   if (started) return;
   if (!pool) {
-    console.warn("[MUSIC ACCOUNT REPLIES] Disabled: database is not configured.");
+    console.warn("[NAME REACTION] Disabled: database is not configured.");
     return;
   }
 
   await ensureMusicAccountRepliesSchema();
   const client = await getMusicAccountClient();
-  client.onNewMessage.add(handleMusicGroupMessage);
+  client.onNewMessage.add(handleMusicAccountMessage);
   started = true;
-  console.log("[MUSIC ACCOUNT REPLIES] Group name replies started.");
+  console.log("[NAME REACTION] Started successfully.");
 }
