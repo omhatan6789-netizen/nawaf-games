@@ -97,7 +97,7 @@ async function handleMusicAccountMessage(message) {
     try {
       await client.sendReaction({
         chatId: message.chat.id,
-        messageId: message.id,
+        msgId: message.id,
         emoji: REACTION_EMOJI,
       });
       console.log(`[NAME REACTION] Reacted in chat ${message.chat.id}`);
