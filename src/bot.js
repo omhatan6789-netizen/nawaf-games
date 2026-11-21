@@ -13,6 +13,7 @@ import { handleModerationCommand, handleModerationCallback, handleRepetitionPuni
 import { handleRepetitionCommand, handleRepetitionMessage } from "./handlers/repetition.js";
 import { handleDeleteMessages } from "./handlers/delete-messages.js";
 import { handleUserIdCommand } from "./handlers/user-id.js";
+import { handlePhotoId } from "./handlers/photo-tools.js";
 import { handleProfileReplies } from "./profile-replies.js";
 import { handleEconomyMessage, handleEconomyCallback } from "./handlers/economy.js";
 import { handleEconomyExtraMessage, handleEconomyExtraCallback } from "./handlers/economy-extra.js";
@@ -110,6 +111,7 @@ export function createBot() {
     }
   });
 
+  bot.on("message:photo", handlePhotoId);
   bot.on("inline_query", handleInlineGamesQuery);
   bot.callbackQuery(/^tmp:/, handleTemporaryMessageCallback);
   bot.callbackQuery(/^wh_(temp|open):/, handleWhisperCallback);
