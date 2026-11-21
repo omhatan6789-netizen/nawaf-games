@@ -76,11 +76,11 @@ async function handleMusicAccountMessage(message) {
     if (message.isOutgoing) {
       if (text === "فتح الردود") {
         await saveRepliesEnabled(true);
-        await message.replyText(ENABLE_REPLY);
+        await client.replyText(message, ENABLE_REPLY);
         console.log("[NAME REACTION] Replies enabled by the music account.");
       } else if (text === "قفل الردود") {
         await saveRepliesEnabled(false);
-        await message.replyText(DISABLE_REPLY);
+        await client.replyText(message, DISABLE_REPLY);
         console.log("[NAME REACTION] Replies disabled by the music account.");
       }
       return;
@@ -88,7 +88,7 @@ async function handleMusicAccountMessage(message) {
 
     if (message.isService || !text) return;
 
-    const chatType = message.chat?.type;
+    const chatType = message.chat?.chatType || message.chat?.type;
     if (chatType !== "group" && chatType !== "supergroup") return;
     if (!WORD_PATTERN.test(text)) return;
 
@@ -108,7 +108,7 @@ async function handleMusicAccountMessage(message) {
     if (!repliesEnabled) return;
 
     const reply = await getAccountReply();
-    await message.replyText(reply);
+    await client.replyText(message, reply);
     console.log(`[NAME REACTION] Replied: ${reply}`);
   } catch (error) {
     console.error("[NAME REACTION] Message handler failed:", error?.message || error);
