@@ -74,7 +74,7 @@ export async function handleModerationCommand(ctx){
   if(!rows.length)out+="لا يوجد\n";else rows.forEach((r,i)=>{out+=(i+1)+" - "+(r.username?"@"+r.username:'<a href="tg://user?id='+r.user_id+'">'+esc(r.first_name||r.user_id)+'</a>')+"\n";});
   await ctx.reply(out,{parse_mode:"HTML",reply_markup:new InlineKeyboard().text(TABLES[kind][2],"moderation:clear:"+kind)});return true;
  }
- if(text==="كشف"||text.startsWith("كشف ")){
+ if(/^كشف(?:\\s+(?:@?[A-Za-z0-9_]{4,32}|\\d+))?$/.test(text)){
   const t=await targetOf(ctx);if(!t)return true;
   const username=t.username||null,rank=await getRank(t.id,chat);
   const messageResult=await pool.query("SELECT COALESCE(messages,0)::bigint AS messages FROM users WHERE user_id=$1",[String(t.id)]);
