@@ -1,4 +1,5 @@
 import { Bot } from "grammy";
+import { handleAiAssistantMessage } from "./ai-assistant.js";
 import { handleButtonColorMessage, applyButtonColors } from "./button-colors.js";
 import { handlePointsMessage } from "./handlers/points.js";
 import { recordGroupTextMessage } from "./activity.js";
@@ -212,6 +213,7 @@ export function createBot() {
       await handlePointsMessage(ctx);
       await checkAutoReplies(ctx);
       await handleRepetitionMessage(ctx);
+      if (await handleAiAssistantMessage(ctx)) return;
     } catch (error) {
       console.error("Message handler failed:", error);
       try { await ctx.reply("❌ حصل خطأ أثناء تنفيذ الأمر، حاول مرة ثانية."); } catch {}
