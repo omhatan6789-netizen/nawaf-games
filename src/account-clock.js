@@ -3,7 +3,8 @@ import { convertFromPyrogramSession } from "@mtcute/convert";
 
 const ACCOUNT_ID = 6496915877;
 const TIME_ZONE = "Asia/Riyadh";
-const CLOCK_PATTERN = /\s+⌁\s+\d{1,2}:\d{2}\s+(?:AM|PM)$/;
+// Remove every consecutive clock suffix, not just the last one.
+const CLOCK_PATTERN = /(?:\s+⌁\s+\d{1,2}:\d{2}\s+(?:AM|PM))+$/i;
 let clientPromise;
 
 function getRiyadhClock() {
