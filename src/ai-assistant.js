@@ -227,11 +227,23 @@ async function sendInternetImage(ctx,query) {
       if (found) break;
     }
     if (!found) throw new Error("No suitable image found");
-    await ctx.replyWithPhoto(new InputFile(found.buffer,`internet_image.${found.ext}`),{caption:`📷 ${query.slice(0,300)}`.slice(0,1000),reply_parameters:{message_id:ctx.message.message_id}});
-    await ctx.api.deleteMessage(ctx.chat.id,status.message_id);
+    const caption=`📷 ${query.slice(0,300)}`.slice(0,1000);
+    if (ctx.mtClient && ctx.mtMessage) {
+      await ctx.mtClient.replyMedia(ctx.mtMessage,{type:"photo",file:found.buffer,fileName:`internet_image.${found.ext}`,caption});
+      if (status?.id) await ctx.mtClient.deleteMessagesById(ctx.chat.id,[status.id]).catch(()=>{});
+    } else {
+      await ctx.replyWithPhoto(new InputFile(found.buffer,`internet_image.${found.ext}`),{caption,reply_parameters:{message_id:ctx.message.message_id}});
+      await ctx.api.deleteMessage(ctx.chat.id,status.message_id);
+    }
   } catch (error) {
     console.warn("[AI] Image search failed:",error.message);
-    await ctx.api.editMessageText(ctx.chat.id,status.message_id,"ما حصلت صورة مناسبة أقدر أرسلها حاليًا. جرّب اسمًا أو وصفًا مختلفًا.");
+    const fallback="ما حصلت صورة مناسبة أقدر أرسلها حاليًا. جرّب اسمًا أو وصفًا مختلفًا.";
+    if (ctx.mtClient) {
+      if (status?.id) await ctx.mtClient.deleteMessagesById(ctx.chat.id,[status.id]).catch(()=>{});
+      await ctx.reply(fallback);
+    } else {
+      await ctx.api.editMessageText(ctx.chat.id,status.message_id,fallback);
+    }
   }
 }
 
@@ -320,4 +332,34 @@ export async function handleAiAssistantMessage(ctx) {
     await ctx.reply(`يا هلا، ${error.message||"صار خطأ غير متوقع وأنا أجهز الرد. جرّب مرة ثانية بعد قليل."}`);
   }
   return true;
+}
+
+// Route the same assistant logic through the linked MTProto user account.
+export async function handleMusicAccountAiMessage(message, client) {
+  const chat=message?.chat;
+  const sender=message?.sender;
+  const text=String(message?.text||"").trim();
+  const chatType=chat?.chatType||chat?.type;
+  if (!text || !chat || !sender || sender.type!=="user" || sender.isBot) return false;
+  if (chatType!=="group" && chatType!=="supergroup") return false;
+  const management=["تفعيل الذكاء","تعطيل الذكاء","حالة الذكاء"];
+  if (!management.includes(text) && !/^\s*نيوف(?:\s*[,،:!؟-]\s*|\s+|$)[\s\S]*$/i.test(text)) return false;
+  const plainText=(value)=>String(value??"").replace(/<\/?b>/gi,"").replace(/<br\s*\/?\s*>/gi,"\n").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"');
+  const ctx={
+    message:{text,message_id:message.id},
+    chat:{id:chat.id,type:chatType},
+    from:{id:Number(sender.id)},
+    mtClient:client,
+    mtMessage:message,
+    reply:async(value,options={})=>client.replyText(message,plainText(value),{disableWebPreview:Boolean(options?.link_preview_options?.is_disabled)}),
+    api:{
+      getChatMember:async(chatId,userId)=>{
+        const member=await client.getChatMember({chatId,userId});
+        const status=member?.status;
+        return {status:status==="admin"?"administrator":status==="creator"?"creator":status||"left"};
+      },
+      sendChatAction:async(chatId)=>client.sendTyping(chatId,"typing"),
+    },
+  };
+  return handleAiAssistantMessage(ctx);
 }
