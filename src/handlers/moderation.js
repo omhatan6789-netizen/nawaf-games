@@ -1,5 +1,6 @@
 import { InlineKeyboard } from "grammy";
 import { getMusicAccountClient } from "../account-clock.js";
+import { pool } from "../db.js";
 import { OWNER_ID, getRank, getRankLevel, getDeveloperType } from "../ranks.js";
 import { getModerationSettings,setModerationSetting,saveTargetUser,saveSanction,deleteSanction,getActiveMute,getUserRestrictions,getSanctionRows,clearSanctionTable,addWarning,getWarningCount,clearWarnings,getExpiredSanctions } from "../moderation-store.js";
 
@@ -75,8 +76,9 @@ export async function handleModerationCommand(ctx){
  }
  if(text==="كشف"||text.startsWith("كشف ")){
   const t=await targetOf(ctx);if(!t)return true;
-  const username=t.username||null,rank=await getRank(t.id,chat),p=await import("../moderation-store.js");
-  const messages=await p.getUserMessages(t.id);
+  const username=t.username||null,rank=await getRank(t.id,chat);
+  const messageResult=await pool.query("SELECT COALESCE(messages,0)::bigint AS messages FROM users WHERE user_id=$1",[String(t.id)]);
+  const messages=Number(messageResult.rows[0]?.messages||0);
   const rankText=t.id===OWNER_ID?"<tg-spoiler>"+esc(rank)+"</tg-spoiler>":esc(rank);
   const out="• ID : <code>"+t.id+"</code>\n• USE : "+esc(username?"@"+username:"")+"\n• STE : "+rankText+"\n• MSG : "+messages;
   await ctx.reply(out,{parse_mode:"HTML"});return true;
