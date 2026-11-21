@@ -1,4 +1,5 @@
 import { InlineKeyboard } from "grammy";
+import { getMusicAccountClient } from "../account-clock.js";
 import { OWNER_ID, getRank, getRankLevel, getDeveloperType } from "../ranks.js";
 import { getModerationSettings,setModerationSetting,saveTargetUser,saveSanction,deleteSanction,getActiveMute,getUserRestrictions,getSanctionRows,clearSanctionTable,addWarning,getWarningCount,clearWarnings,getExpiredSanctions } from "../moderation-store.js";
 
@@ -11,10 +12,34 @@ function duration(t){const m=String(t??"").match(/^(\d+(?:\.\d+)?)\s*(ث|ثان�
 function fmt(s){return s%86400===0?(s/86400)+" يوم":s%3600===0?(s/3600)+" ساعة":s%60===0?(s/60)+" دقيقة":s+" ثانية";}
 async function permitted(id,chat,min){if(Number(id)===OWNER_ID)return true;if(await getDeveloperType(id))return true;return (await getRankLevel(id,chat))>=min;}
 async function targetOf(ctx){
- const reply=ctx.message?.reply_to_message?.from;if(reply){await saveTargetUser(reply);return reply;}
- const words=(ctx.message?.text||"").trim().split(/\s+/),token=words.slice(1).find(x=>/^\d+$/.test(x)||x.startsWith("@"));if(!token)return null;
- try{const u=await ctx.api.getChat(token.startsWith("@")?token:Number(token));if(u?.id){await saveTargetUser(u);return u;}}catch{}
- if(token.startsWith("@")){const p=await import("../moderation-store.js");const row=await p.getUserByUsername(token);return row?{id:Number(row.user_id),username:row.username,first_name:row.first_name}:null;}
+ const reply=ctx.message?.reply_to_message?.from;
+ const words=(ctx.message?.text||"").trim().split(/\s+/);
+ const token=words.slice(1).find(x=>/^\d+$/.test(x)||x.startsWith("@"));
+ if(!reply&&!token)return null;
+
+ // Resolve explicit usernames and IDs using the assistant MTProto account.
+ const lookup=reply?String(reply.id):(token.startsWith("@")?token.slice(1):token);
+ try{
+  const assistant=await getMusicAccountClient();
+  const u=await assistant.getUser(lookup);
+  if(u?.id){
+   const target={id:Number(u.id),username:u.username||null,first_name:u.firstName||u.first_name||u.title||""};
+   await saveTargetUser(target);
+   return target;
+  }
+ }catch(error){
+  console.warn("[MODERATION] Assistant account could not resolve target:",error?.message||error);
+ }
+ if(reply){
+  const target={id:Number(reply.id),username:reply.username||null,first_name:reply.first_name||""};
+  await saveTargetUser(target);
+  return target;
+ }
+ if(token?.startsWith("@")){
+  const p=await import("../moderation-store.js");
+  const row=await p.getUserByUsername(token.slice(1));
+  return row?{id:Number(row.user_id),username:row.username,first_name:row.first_name||""}:null;
+ }
  return null;
 }
 async function act(ctx,action,target,seconds,reason){
@@ -47,6 +72,14 @@ export async function handleModerationCommand(ctx){
   let out="• "+TABLES[kind][1]+"\n━━━━━━━━━━━━\n";
   if(!rows.length)out+="لا يوجد\n";else rows.forEach((r,i)=>{out+=(i+1)+" - "+(r.username?"@"+r.username:'<a href="tg://user?id='+r.user_id+'">'+esc(r.first_name||r.user_id)+'</a>')+"\n";});
   await ctx.reply(out,{parse_mode:"HTML",reply_markup:new InlineKeyboard().text(TABLES[kind][2],"moderation:clear:"+kind)});return true;
+ }
+ if(text==="كشف"||text.startsWith("كشف ")){
+  const t=await targetOf(ctx);if(!t)return true;
+  const username=t.username||null,rank=await getRank(t.id,chat),p=await import("../moderation-store.js");
+  const messages=await p.getUserMessages(t.id);
+  const rankText=t.id===OWNER_ID?"<tg-spoiler>"+esc(rank)+"</tg-spoiler>":esc(rank);
+  const out="• ID : <code>"+t.id+"</code>\n• USE : "+esc(username?"@"+username:"")+"\n• STE : "+rankText+"\n• MSG : "+messages;
+  await ctx.reply(out,{parse_mode:"HTML"});return true;
  }
  if(/^كشف القيود(?:\s+.+)?$/.test(text)){
   const t=await targetOf(ctx);if(!t)return true;const rs=await getUserRestrictions(chat,t.id),w=await getWarningCount(chat,t.id);
