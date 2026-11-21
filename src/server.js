@@ -217,7 +217,8 @@ app.get("/api/health/games", async (_req, res) => {
   res.status(ok ? 200 : 503).json({ ok, games: results });
 });
 
-startAccountClock().catch(() => console.error("[ACCOUNT CLOCK] Startup failed."));\nstartAutoPrivateReply().catch(() => console.error("[AUTO REPLY] Startup failed."));
+startAccountClock().catch(() => console.error("[ACCOUNT CLOCK] Startup failed."));
+startAutoPrivateReply().catch(() => console.error("[AUTO REPLY] Startup failed."));
 
 const server = app.listen(port, "0.0.0.0", () => {
   console.log(`HTTP server listening on port ${port}`);
