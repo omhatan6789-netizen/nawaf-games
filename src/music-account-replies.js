@@ -68,6 +68,7 @@ async function getAccountReply() {
 }
 
 async function handleMusicAccountMessage(message) {
+  const client = await getMusicAccountClient();
   try {
     const text = String(message.text || message.caption || "").trim();
 
@@ -93,7 +94,6 @@ async function handleMusicAccountMessage(message) {
     if (!WORD_PATTERN.test(text)) return;
 
     // The original script reacts to the name even while replies are disabled.
-    const client = await getMusicAccountClient();
     try {
       await client.sendReaction({
         chatId: message.chat.id,
