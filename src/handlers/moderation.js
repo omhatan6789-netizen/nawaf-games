@@ -74,7 +74,7 @@ export async function handleModerationCommand(ctx){
   if(!rows.length)out+="لا يوجد\n";else rows.forEach((r,i)=>{out+=(i+1)+" - "+(r.username?"@"+r.username:'<a href="tg://user?id='+r.user_id+'">'+esc(r.first_name||r.user_id)+'</a>')+"\n";});
   await ctx.reply(out,{parse_mode:"HTML",reply_markup:new InlineKeyboard().text(TABLES[kind][2],"moderation:clear:"+kind)});return true;
  }
- if(/^كشف(?:\\s+(?:@?[A-Za-z0-9_]{4,32}|\\d+))?$/.test(text)){
+ if(/^كشف(?:\s+(?:@?[A-Za-z0-9_]{4,32}|\d+))?$/.test(text)){
   const t=await targetOf(ctx);if(!t)return true;
   const username=t.username||null,rank=await getRank(t.id,chat);
   const messageResult=await pool.query("SELECT COALESCE(messages,0)::bigint AS messages FROM users WHERE user_id=$1",[String(t.id)]);
@@ -139,7 +139,7 @@ export async function handleRepetitionPunishmentCallback(ctx){
  const [,action,id]=d.split(":");if(!["mute","restrict"].includes(action))return;const chat=ctx.callbackQuery.message.chat.id,userId=Number(id);
  if(!await permitted(ctx.from.id,chat,3)){await ctx.answerCallbackQuery({text:"❌ ليس لديك الصلاحية.",show_alert:true});return;}
  if(await getWarningCount(chat,userId)<3||userId===OWNER_ID||(await getRankLevel(userId,chat))>=(await getRankLevel(ctx.from.id,chat))){await ctx.answerCallbackQuery({text:"❌ لا يمكنك تطبيق العقوبة عليه.",show_alert:true});return;}
- let target;try{const u=await ctx.api.getChat(userId);target={id:u.id,username:u.username,first_name:u.first_name||u.title};}catch{await ctx.answerCallbackQuery({text:"تعذر العثور على المستخدم.",show_alert:true});return;}
+ let target;try{const assistant=await getMusicAccountClient();const u=await assistant.getUser(String(userId));target={id:Number(u.id),username:u.username||null,first_name:u.firstName||u.first_name||u.title||""};await saveTargetUser(target);}catch{await ctx.answerCallbackQuery({text:"تعذر العثور على المستخدم.",show_alert:true});return;}
  const p=await import("../db.js"),r=await p.pool.query("SELECT repetition_punishment_duration FROM protection_settings WHERE chat_id=$1",[String(chat)]),until=new Date(Date.now()+Number(r.rows[0]?.repetition_punishment_duration??300)*1000);
  if(action==="restrict")await ctx.api.restrictChatMember(chat,userId,{can_send_messages:false},{until_date:Math.floor(until.getTime()/1000)});
  await saveSanction(action==="mute"?"bot_mutes":"restrictions",chat,target,until,"التكرار",ctx.me.id);await clearWarnings(chat,userId);
