@@ -4,7 +4,7 @@ import { convertFromPyrogramSession } from "@mtcute/convert";
 const ACCOUNT_ID = 6496915877;
 const TIME_ZONE = "Asia/Riyadh";
 // Remove every consecutive clock suffix, not just the last one.
-const CLOCK_PATTERN = /(?:\\s+⌁\\s+\\d{1,2}:\\d{2}\\s+(?:AM|PM))+$/i;
+const CLOCK_PATTERN = /(?:\s+⌁\s+\d{1,2}:\d{2}\s+(?:AM|PM))+$/i;
 let clientPromise;
 
 function getRiyadhClock() {
@@ -24,7 +24,7 @@ function millisecondsUntilNextMinute() {
 function floodWaitSeconds(error) {
   const direct = Number(error?.seconds ?? error?.value);
   if (Number.isFinite(direct) && direct > 0) return direct;
-  const match = String(error?.message || "").match(/FLOOD_WAIT[_ ](\\d+)/i);
+  const match = String(error?.message || "").match(/FLOOD_WAIT[_ ](\d+)/i);
   return match ? Number(match[1]) : 0;
 }
 
@@ -84,7 +84,7 @@ export async function startAccountClock() {
     try {
       const me = await client.getMe();
       const baseName = String(me.firstName || "").replace(CLOCK_PATTERN, "").trim();
-      const newName = `${baseName} ⌁ ${getRiyadhClock()}`;
+      const newName = baseName + " ⌁ " + getRiyadhClock();
 
       if (me.firstName !== newName) {
         await client.updateProfile({ firstName: newName });
