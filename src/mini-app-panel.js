@@ -15,7 +15,7 @@ const clean = value => String(value ?? "").replace(/\s+/g, " ").replace(/^\W+/, 
 const esc = value => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 const back = () => new InlineKeyboard().text("↩️ لوحة الميني", "minipanel:menu");
 const homeText = "⚙️ لوحة التحكم الخاصة بالميني آب\nاختر القسم اللي تبي تديره:";
-const GAME_IMAGES = [["connect","كونكت 4 🔴"],["dots","المربعات 🟦"],["memory","اختبر ذاكرتك 🧠"],["word","خمن الكلمة 🔤"],["match","تطابق البطاقات 🃏"],["find","Find Match 🔎"],["number","خمن الرقم 🔢"],["sort","ترتيب الأرقام 🔢"],["carrom","الكيرم 🎯"],["gravity","جري الجاذبية 🏃"],["snowball","كرة الثلج ❄️"]];
+const GAME_IMAGES = [["connect","كونكت 4 🔴"],["dots","المربعات 🟦"],["memory","اختبر ذاكرتك 🧠"],["word","خمن الكلمة 🔤"],["match","تطابق البطاقات 🃏"],["find","Find Match 🔎"],["number","خمن الرقم 🔢"],["sort","ترتيب الأرقام 🔢"],["carrom","الكيرم 🎯"],["gravity","جري الجاذبية 🏃"],["snowball","كرة الثلج ❄️"],["darts","السهام 🎯"]];
 const gameImagesKeyboard = () => { const kb=new InlineKeyboard(); for(const [type,label] of GAME_IMAGES) kb.text(label,"minipanel:game-image:"+type).row(); return kb.text("↩️ لوحة الميني","minipanel:menu"); };
 const homeKeyboard = () => new InlineKeyboard()
   .text("🎨 تعديل لون زر بالميني", "minipanel:color").row()
@@ -65,7 +65,7 @@ export async function ensureMiniAppPanelSchema() {
   )`);
   await pool.query("ALTER TABLE online_game_images DROP CONSTRAINT IF EXISTS online_game_images_game_type_check");
   await pool.query(`ALTER TABLE online_game_images ADD CONSTRAINT online_game_images_game_type_check
-    CHECK (game_type IN ('connect','dots','memory','word','match','find','number','sort','carrom','gravity','snowball'))`);
+    CHECK (game_type IN ('connect','dots','memory','word','match','find','number','sort','carrom','gravity','snowball','darts'))`);
 }
 
 export async function handleMiniAppPanelCallback(ctx) {
@@ -150,7 +150,7 @@ export async function handleMiniAppPanelCallback(ctx) {
       await ctx.editMessageText("اختر اللعبة التي تريد إضافة صورتها أو استبدالها:",{reply_markup:gameImagesKeyboard()});
     } else if (data.startsWith("minipanel:game-image:")) {
       const gameType=data.split(":").at(-1);
-      const allowed=["connect","dots","memory","word","match","find","number","sort","carrom","gravity","snowball"];
+      const allowed=["connect","dots","memory","word","match","find","number","sort","carrom","gravity","snowball","darts"];
       if(!allowed.includes(gameType)) return true;
       sessions.set(ctx.from.id,{action:"game_image",step:"photo",gameType});
       await ctx.editMessageText("أرسل الآن صورة اللعبة. ستظهر في بطاقة القائمة وواجهة الدخول ودعوة تيليجرام.",{reply_markup:back()});
@@ -246,7 +246,7 @@ export async function handleMiniAppPanelMessage(ctx) {
       VALUES($1,$2,$3,NOW()) ON CONFLICT(game_type) DO UPDATE
       SET photo_file_id=EXCLUDED.photo_file_id,updated_by=EXCLUDED.updated_by,updated_at=NOW()`,
       [session.gameType,photo.file_id,ctx.from.id]);
-    const labels={connect:"كونكت 4",dots:"المربعات",memory:"اختبر ذاكرتك",word:"خمن الكلمة",match:"تطابق البطاقات",find:"Find Match",number:"خمن الرقم",sort:"ترتيب الأرقام",carrom:"الكيرم",gravity:"جري الجاذبية",snowball:"كرة الثلج"};
+    const labels={connect:"كونكت 4",dots:"المربعات",memory:"اختبر ذاكرتك",word:"خمن الكلمة",match:"تطابق البطاقات",find:"Find Match",number:"خمن الرقم",sort:"ترتيب الأرقام",carrom:"الكيرم",gravity:"جري الجاذبية",snowball:"كرة الثلج",darts:"السهام"};
     sessions.delete(ctx.from.id);
     await ctx.reply("تم حفظ صورة لعبة "+(labels[session.gameType]||session.gameType)+"، وستظهر في القائمة وواجهة اللعبة ودعوات تيليجرام ✅",{reply_markup:back()});
     return true;
