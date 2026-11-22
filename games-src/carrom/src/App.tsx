@@ -807,7 +807,7 @@ export default function App() {
                   mode === 'online' ? 'active' : ''
                 }`}
               >
-                🌐 أونلاين
+🌐 ضد شخص في تيليجرام
               </button>
             </div>
           </div>
@@ -941,23 +941,8 @@ export default function App() {
                     👥 أنشئ غرفة أونلاين جديدة
                   </button>
 
-                  <div className="flex items-center gap-2 pt-1">
-                    <input
-                      type="text"
-                      maxLength={8}
-                      value={joinCodeInput}
-                      onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
-                      placeholder="رمز الغرفة (مثال: A7K9P2)"
-                      className="min-w-0 flex-1 rounded-xl border border-white/25 bg-[#0e0508] px-3 py-2.5 text-sm font-black tracking-wider text-white text-center uppercase outline-none focus:border-[#ff9ba3]"
-                    />
-                    <button
-                      type="button"
-                      disabled={!wsConnected}
-                      onClick={handleJoinOnlineRoom}
-                      className="nawaf-choice px-4 py-2.5 text-sm font-black shrink-0 disabled:opacity-50"
-                    >
-                      دخول الغرفة
-                    </button>
+                  <div className="text-center text-[11px] font-bold text-white/55">
+                    أنشئ غرفة ثم أرسل رابط الدعوة، وسينضم اللاعب مباشرة عند فتحه في تيليجرام
                   </div>
                 </>
               ) : (
@@ -968,10 +953,7 @@ export default function App() {
                         غرفة الكيرم 🎯
                       </div>
                       <div className="text-[11px] font-bold text-white/60">
-                        رمز الغرفة:{' '}
-                        <span className="text-[#facc15] tracking-widest font-black">
-                          {onlineRoom.id}
-                        </span>
+                        أرسل رابط الدعوة للاعبين للانضمام مباشرة
                       </div>
                     </div>
                     <div className="text-xs font-black tabular-nums text-white/80">
