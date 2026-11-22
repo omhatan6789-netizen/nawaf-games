@@ -135,37 +135,23 @@ export async function handleInlineGamesQuery(ctx) {
         [gameType]
       ).catch(() => ({ rows: [] }));
       const fileId = image.rows[0]?.photo_file_id;
-      const imageUrl = fileId
-        ? `https://nawaf-bot-node-xsna.onrender.com/tg-file/${encodeURIComponent(fileId)}`
-        : null;
+      const baseUrl = (process.env.PUBLIC_BASE_URL || "https://nawaf-bot-node-xsna.onrender.com").replace(/\\/$/, "");
       const replyMarkup = {
         inline_keyboard: [[{ text: "ابدأ اللعب", url: roomUrl }]]
       };
-      // Use a photo inline result when the game has an image. Telegram then
-      // shows the thumbnail in inline search and sends one photo message with
-      // the exact same invitation text as its caption and the same play button.
-      // A text-only article cannot be converted into a photo message afterwards.
-      const result = imageUrl
-        ? {
-            type: "photo",
-            id: room.id,
-            photo_url: imageUrl,
-            thumbnail_url: imageUrl,
-            photo_width: 800,
-            photo_height: 800,
-            title,
-            description,
-            caption: messageText,
-            reply_markup: replyMarkup,
-          }
-        : {
-            type: "article",
-            id: room.id,
-            title,
-            description,
-            input_message_content: { message_text: messageText },
-            reply_markup: replyMarkup,
-          };
+
+      // Match the working Python Frankfurt flow:
+      // send an article with a thumbnail, then replace that same inline
+      // message with the stored Telegram photo after chosen_inline_result.
+      const result = {
+        type: "article",
+        id: `${gameType}:${room.id}`,
+        title,
+        description,
+        input_message_content: { message_text: messageText },
+        reply_markup: replyMarkup,
+        ...(fileId ? { thumbnail_url: `${baseUrl}/tg-file/${encodeURIComponent(fileId)}` } : {}),
+      };
       results.push(result);
       } catch (gameError) {
         console.error(`Inline game result failed for ${gameType}:`, gameError?.message || gameError);
@@ -178,5 +164,50 @@ export async function handleInlineGamesQuery(ctx) {
     try {
       await ctx.answerInlineQuery([], { cache_time: 0, is_personal: true });
     } catch {}
+  }
+}
+
+
+export async function handleInlineGameChosen(ctx) {
+  const chosen = ctx.chosenInlineResult;
+  if (!chosen?.inline_message_id || !chosen.result_id) return;
+
+  const separator = chosen.result_id.indexOf(":");
+  if (separator < 1) return;
+  const gameType = chosen.result_id.slice(0, separator);
+  const roomId = chosen.result_id.slice(separator + 1);
+  if (!GAME_INFO[gameType] || !roomId) return;
+
+  try {
+    const photo = await pool.query(
+      "SELECT photo_file_id FROM online_game_images WHERE game_type=$1",
+      [gameType]
+    );
+    const photoFileId = photo.rows[0]?.photo_file_id;
+    if (!photoFileId) return;
+
+    const botInfo = await ctx.api.getMe();
+    const username = botInfo.username;
+    if (!username) return;
+
+    const [title] = GAME_INFO[gameType];
+    const messageText = gameType === "word"
+      ? `🔤 تحدي جماعي — ${title}\\n\\nبدأ ${playerName(chosen.from)} تحديًا في خمن الكلمة. افتحوا اللعبة من الزر بالأسفل وابدؤوا التحدي!`
+      : `🎮 @${username} — ${title}\\n\\nاضغطوا الزر بالأسفل لفتح اللعبة والانضمام إلى التحدي داخل الميني آب.`;
+
+    const prefix = gameType === "word" ? "word_"
+      : gameType === "carrom" ? "carrom_"
+      : gameType === "gravity" ? "gravity_"
+      : gameType === "snowball" ? "snowball_"
+      : "online_lobby_";
+    const roomUrl = `https://t.me/${username}?startapp=${prefix}${roomId}`;
+
+    await ctx.api.editMessageMediaInline(
+      chosen.inline_message_id,
+      { type: "photo", media: photoFileId, caption: messageText },
+      { reply_markup: { inline_keyboard: [[{ text: "ابدأ اللعب", url: roomUrl }]] } }
+    );
+  } catch (error) {
+    console.error("Inline game image replacement failed:", error?.description || error?.message || error);
   }
 }
