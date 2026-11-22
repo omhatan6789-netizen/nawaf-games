@@ -128,7 +128,7 @@ export async function handleInlineGamesQuery(ctx) {
       const roomUrl = `https://t.me/${username}?startapp=${room.startapp}`;
       const messageText = gameType === "word"
         ? `🔤 تحدي جماعي — ${title}\n\nبدأ ${playerName(ctx.from)} تحديًا في خمن الكلمة. افتحوا اللعبة من الزر بالأسفل وابدؤوا التحدي!`
-      : \`🎮 @\${username} — \${title}\n\nاضغطوا الزر بالأسفل لفتح اللعبة والانضمام إلى التحدي داخل الميني آب.\`;
+      : `🎮 @${username} — ${title}\n\nاضغطوا الزر بالأسفل لفتح اللعبة والانضمام إلى التحدي داخل الميني آب.`;
 
       const image = await pool.query(
         "SELECT photo_file_id FROM online_game_images WHERE game_type=$1",
