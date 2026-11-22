@@ -113,8 +113,7 @@ export default function App() {
   const initialRoomCode = useMemo(() => getInitialRoomCodeFromUrl(), []);
   const clientId = useMemo(() => getStableClientId(), []);
 
-  const [screen, setScreen] = useState<'home' | 'setup' | 'playing'>('home');
-  const [gameCover, setGameCover] = useState('');
+  const [screen, setScreen] = useState<'setup' | 'playing'>('setup');
   const [mode, setMode] = useState<GameMode>(() =>
     initialRoomCode ? 'online' : 'bot'
   );
@@ -127,8 +126,6 @@ export default function App() {
   const [localP2Name, setLocalP2Name] = useState<string>('اللاعب الثاني');
   const [muted, setMuted] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
-
-  useEffect(() => { fetch('/api/mini-app').then(r=>r.json()).then(data=>{if(data.online_game_images?.carrom)setGameCover(data.online_game_images.carrom);}).catch(()=>{}); }, []);
 
   // Online multiplayer state
   const [wsConnected, setWsConnected] = useState(false);
@@ -239,11 +236,10 @@ export default function App() {
         setAmISpectator(false);
         latestSnapshotRef.current = null;
         setMatchResult(null);
-        setScreen('home');
+        setScreen('setup');
       } else if (type === 'room_state') {
         const room = data.room as OnlineRoomState;
         setOnlineRoom(room);
-        if (room.status === 'waiting') setScreen('lobby');
         if (room.status === 'playing') {
           setMatchResult(null);
           setScreen('playing');
@@ -409,10 +405,10 @@ export default function App() {
       sendWs({ type: 'leave_room' });
       setOnlineRoom(null);
       latestSnapshotRef.current = null;
-      setScreen('home');
+      setScreen('setup');
       return;
     }
-    setScreen('home');
+    setScreen('setup');
   };
 
   const toggleMute = () => {
@@ -497,28 +493,6 @@ export default function App() {
   };
 
   const isHost = onlineRoom ? onlineRoom.hostId === myOnlineId : false;
-
-  // Shared Mini App entry screen: choose the play mode before any settings.
-  if (screen === 'home') {
-    return (
-      <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center px-4 py-8 text-white" style={{background:'radial-gradient(ellipse at 50% 0%,#a20e18 0%,#650a10 48%,#16090b 100%)'}}>
-        <main className="w-full max-w-[560px] flex flex-col gap-6">
-          <div className="h-[min(43vh,350px)] overflow-hidden rounded-[34px] border border-white/20 bg-black/30 shadow-2xl">
-            {gameCover ? <img src={gameCover} alt="الكيرم" className="w-full h-full object-cover" onError={(e)=>{(e.currentTarget as HTMLImageElement).style.display='none';}} /> : <div className="w-full h-full flex items-center justify-center text-8xl">🎯</div>}
-          </div>
-          <div className="text-center">
-            <h1 className="text-4xl font-black">الكيرم 🎯</h1>
-            <p className="mt-2 text-lg font-bold text-white/70">صوّب واضرب الأقراص نحو الجيوب</p>
-          </div>
-          <section className="rounded-[30px] border border-white/20 bg-white/[0.04] p-4 flex flex-col gap-3">
-            <button type="button" onClick={()=>{setMode('bot');setOnlineRoom(null);setScreen('setup');}} className="rounded-2xl border border-white/50 bg-gradient-to-r from-[#ef4057] to-[#a20e2a] py-5 text-2xl font-black shadow-lg">🤖 لعب ضد البوت</button>
-            <button type="button" onClick={()=>{const picker=window.Telegram?.WebApp?.switchInlineQuery;if(typeof picker==='function')picker('الكيرم',['users','groups','channels']);else showToast('افتح اللعبة من تيليجرام لاختيار محادثة');}} className="rounded-2xl border border-white/25 bg-white/10 py-5 text-2xl font-black">👥 لعب ضد شخص بالتيليجرام</button>
-          </section>
-          <button type="button" onClick={()=>{window.location.href='/miniapp/';}} className="rounded-2xl border border-white/20 bg-black/20 py-4 text-lg font-extrabold">↩ الرجوع للقائمة الرئيسية</button>
-        </main>
-      </div>
-    );
-  }
 
   // =========================================================================
   // GAMEPLAY SCREEN (Fits cleanly inside 100dvh without scrolling)
@@ -711,7 +685,7 @@ export default function App() {
         <header className="flex items-center justify-between gap-3 py-1">
           <button
             type="button"
-            onClick={() => setScreen('home')}
+            onClick={() => window.Telegram?.WebApp?.close?.()}
             className="nawaf-pill whitespace-nowrap shrink-0"
           >
             القائمة
@@ -798,6 +772,46 @@ export default function App() {
                 />
               </div>
             )}
+          </div>
+
+          {/* Game Mode Selection */}
+          <div>
+            <div className="text-xs font-bold text-white/75 mb-2">طريقة اللعب</div>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('bot');
+                  setOnlineRoom(null);
+                }}
+                className={`nawaf-choice py-3 px-2 text-xs sm:text-sm ${
+                  mode === 'bot' ? 'active' : ''
+                }`}
+              >
+                🤖 ضد بوت نواف
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('local');
+                  setOnlineRoom(null);
+                }}
+                className={`nawaf-choice py-3 px-2 text-xs sm:text-sm ${
+                  mode === 'local' ? 'active' : ''
+                }`}
+              >
+                👥 نفس الجهاز
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('online')}
+                className={`nawaf-choice py-3 px-2 text-xs sm:text-sm ${
+                  mode === 'online' ? 'active' : ''
+                }`}
+              >
+                🌐 أونلاين
+              </button>
+            </div>
           </div>
 
           {/* Bot Difficulty */}

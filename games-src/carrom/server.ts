@@ -6,13 +6,13 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { WebSocketServer, WebSocket } from 'ws';
 import {
-  type CarromDisc,
-  type CarromPlayerState,
-  type FourPlayerMode,
+  CarromDisc,
+  CarromPlayerState,
+  FourPlayerMode,
   MAX_SHOT_SPEED,
-  type PieceKind,
-  type PlayerCount,
-  type QueenStatus,
+  PieceKind,
+  PlayerCount,
+  QueenStatus,
   createInitialCoins,
   createStriker,
   findNearestClearSlider,
