@@ -135,7 +135,7 @@ export async function handleInlineGamesQuery(ctx) {
         [gameType]
       ).catch(() => ({ rows: [] }));
       const fileId = image.rows[0]?.photo_file_id;
-      const baseUrl = (process.env.PUBLIC_BASE_URL || "https://nawaf-bot-node-xsna.onrender.com").replace(/\\/$/, "");
+      const baseUrl = (process.env.PUBLIC_BASE_URL || "https://nawaf-bot-node-xsna.onrender.com").replace(/\/$/, "");
       const replyMarkup = {
         inline_keyboard: [[{ text: "ابدأ اللعب", url: roomUrl }]]
       };
@@ -192,7 +192,7 @@ export async function handleInlineGameChosen(ctx) {
 
     const [title] = GAME_INFO[gameType];
     const messageText = gameType === "word"
-      ? `🔤 تحدي جماعي — ${title}\\n\\nبدأ ${playerName(chosen.from)} تحديًا في خمن الكلمة. افتحوا اللعبة من الزر بالأسفل وابدؤوا التحدي!`
+      ? `🔤 تحدي جماعي — ${title}\n\nبدأ ${playerName(chosen.from)} تحديًا في خمن الكلمة. افتحوا اللعبة من الزر بالأسفل وابدؤوا التحدي!`
       : `🎮 @${username} — ${title}\\n\\nاضغطوا الزر بالأسفل لفتح اللعبة والانضمام إلى التحدي داخل الميني آب.`;
 
     const prefix = gameType === "word" ? "word_"
