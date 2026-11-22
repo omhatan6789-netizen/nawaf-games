@@ -21,7 +21,7 @@ interface EndMatchOverlayProps {
 
 export const EndMatchOverlay: React.FC<EndMatchOverlayProps> = ({
   open, mode, mySide, winnerSide, winnerName, redName, blueName,
-  redScore, blueScore, startingScore, reason, rematchPending, onRematch, onExitHome,
+  redScore, blueScore, startingScore, reason, rematchPending, onRematch,
 }) => {
   if (!open || !winnerSide) return null;
   const iWon = winnerSide === mySide;
