@@ -37,13 +37,32 @@ fs.rmSync(snowballDest, { recursive: true, force: true });
 fs.mkdirSync(gravityDest, { recursive: true });
 fs.mkdirSync(snowballDest, { recursive: true });
 
+
+const dartsZip = path.join(root, 'imports', 'nawaf-darts-project.zip');
+const dartsSource = path.join(temp, 'darts');
+const dartsDest = path.join(root, 'games-src', 'darts');
+execFileSync('unzip', ['-q', '-o', dartsZip, '-d', dartsSource]);
+fs.rmSync(dartsDest, { recursive: true, force: true });
+fs.mkdirSync(dartsDest, { recursive: true });
+copyFiles(dartsSource, dartsDest, [
+  'index.html', 'package.json', 'tsconfig.json', 'vite.config.ts',
+  'src/index.css', 'src/main.tsx', 'src/assets/images/darts_cover_1795304337579.jpg',
+  'src/game/dartsEngine.ts', 'src/game/dartsRenderer.ts', 'src/game/dartsScoring.ts',
+  'src/game/dartsSound.ts', 'src/game/dartsTypes.ts'
+]);
+fs.mkdirSync(path.join(dartsDest, 'src/components'), { recursive: true });
+fs.copyFileSync(path.join(root, 'games-src/darts-integration/App.tsx'), path.join(dartsDest, 'src/App.tsx'));
+fs.copyFileSync(path.join(root, 'games-src/darts-integration/EndMatchOverlay.tsx'), path.join(dartsDest, 'src/components/EndMatchOverlay.tsx'));
+fs.rmSync(path.join(dartsDest, 'server.ts'), { force: true });
+fs.rmSync(path.join(dartsDest, 'src/components/SettingsModal.tsx'), { force: true });
+
 const common = ['index.html', 'package.json', 'tsconfig.json', 'vite.config.ts', 'server.ts',
   'src/index.css', 'src/main.tsx', 'src/game/onlineClient.ts', 'src/game/telegram.ts', 'src/game/types.ts'];
 copyFiles(gravitySource, gravityDest, [...common, 'src/components/GravityRunArena.tsx',
   'src/game/gravityLevel.ts', 'src/game/gravityPhysics.ts', 'src/game/sound.ts', 'src/game/ballistics.ts', 'public/assets/aistudio/IMG_7493_3386b8c5.jpeg']);
 copyFiles(snowballSource, snowballDest, [...common, 'src/components/SnowballArena.tsx', 'src/game/ballistics.ts', 'src/game/sound.ts']);
 
-for (const dir of [gravityDest, snowballDest]) {
+for (const dir of [gravityDest, snowballDest, dartsDest]) {
   const viteFile = path.join(dir, 'vite.config.ts');
   let vite = fs.readFileSync(viteFile, 'utf8');
   if (!vite.includes("base: './'")) {
@@ -453,4 +472,4 @@ for (const [dir, wsPath, gameType] of [[gravityDest, '/ws/gravity', 'gravity'], 
 }
 
 fs.rmSync(temp, { recursive: true, force: true });
-console.log('Imported Gravity Run and Snowball sources prepared.');
+console.log('Imported Gravity Run, Snowball, and original Darts sources prepared.');

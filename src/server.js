@@ -73,6 +73,7 @@ if (pool) {
   registerDartsRoutes(app, pool, process.env.BOT_TOKEN);
 }
 app.use("/miniapp", express.static("public"));
+app.use("/darts", express.static(path.resolve("games-src/darts/dist")));
 app.use("/mini_app", express.static("public/mini_app"));
 
 for (const game of gameDefinitions) {

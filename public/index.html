@@ -153,7 +153,7 @@ body.c4-active #page{padding-left:10px;padding-right:10px}
 <script src="/mini_app/ambient.js?v=20261106-7"></script>
 <script src="/mini_app/casual-games.js?v=1"></script>
 <script src="/mini_app/number-sort.js?v=1"></script>
-<script src="/mini_app/darts.js?v=1"></script>
+
 <script>
 const tg=window.Telegram?.WebApp;tg?.ready();tg?.expand();
 (function showWelcomeToast(){
@@ -231,7 +231,7 @@ function showGameEntry(type,emoji,name,hint){
   else if(type==='match'||type==='find'||type==='number')window.startCasualSetup(type);
   else if(type==='sort')window.startNumberSortSetup();
   else if(type==='dots'||type==='memory')showMiniGameDifficulty(type);
-  else if(type==='darts')window.startDartsSetup?.();
+  else if(type==='darts')location.href='/darts/?mode=bot';
  };
 }
 function showGames(){
@@ -1110,7 +1110,7 @@ document.getElementById('back-home').onclick=showHome;
   else if(onlineLobbyId){startOnlineLobby();}
   else if(miniGameChallengeIdFromStart){home.hidden=true;page.hidden=false;pageTitle.textContent='الألعاب';startMiniGameChallenge();}
   else if(c4GameIdFromUrl){home.hidden=true;page.hidden=false;pageTitle.textContent='كونكت 4';startConnect4();}
-  else if(onlineDartsId){home.hidden=true;page.hidden=false;pageTitle.textContent='السهام';window.startDartsGame?.('online',onlineDartsId);}
+  else if(onlineDartsId){location.replace('/darts/?game_id='+encodeURIComponent(onlineDartsId));}
  }catch(e){console.error('Mini App extensions load failed:',e);const box=document.createElement('div');box.className='empty';box.textContent='تعذر تحميل الإضافات: '+(e?.message||'خطأ غير معروف');document.getElementById('custom').replaceChildren(box);}
 
 })();
