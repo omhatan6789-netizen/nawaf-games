@@ -147,6 +147,7 @@ export function registerOnlineLobbyRoutes(app, pool, token) {
       res.json({ok:true,result:publicLobby(lobby,uid,photo?"/tg-file/"+encodeURIComponent(photo):null)});
     } catch(error) {
       try { await client.query("ROLLBACK"); } catch {}
+      console.error("[ONLINE LOBBY] request failed:", { action: req.body?.action || "state", lobby_id: req.body?.lobby_id || req.body?.game_id, error: error?.stack || error?.message || String(error) });
       res.status(error.status||500).json({ok:false,error:error.message||"تعذر تنفيذ طلب الغرفة"});
     } finally { client.release(); }
   });
