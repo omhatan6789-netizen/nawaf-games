@@ -153,6 +153,7 @@ body.c4-active #page{padding-left:10px;padding-right:10px}
 <script src="/mini_app/ambient.js?v=20261106-7"></script>
 <script src="/mini_app/casual-games.js?v=1"></script>
 <script src="/mini_app/number-sort.js?v=1"></script>
+<script src="/mini_app/darts.js?v=1"></script>
 <script>
 const tg=window.Telegram?.WebApp;tg?.ready();tg?.expand();
 (function showWelcomeToast(){
@@ -190,7 +191,7 @@ function applyMiniAppButtonColors(map){
 }
 const miniButtonColorObserver=new MutationObserver(()=>applyMiniAppButtonColors());
 miniButtonColorObserver.observe(document.body,{childList:true,subtree:true,characterData:true});
-function showHome(){stopC4Timer();stopMiniGameTimers();stopExtraGame();window.stopCasualGame?.();window.stopNumberSort?.();document.body.classList.remove('c4-active');page.hidden=true;home.hidden=false;}
+function showHome(){stopC4Timer();stopMiniGameTimers();stopExtraGame();window.stopCasualGame?.();window.stopNumberSort?.();window.stopDartsGame?.();document.body.classList.remove('c4-active');page.hidden=true;home.hidden=false;}
 function telegramDisplayName(){const u=tg?.initDataUnsafe?.user||{};return [u.first_name,u.last_name].filter(Boolean).join(' ').trim()||u.username||'أنت';}
 function winnerDisplayName(game){const status=String(game?.status||'');const botName=String(game?.bot_name||'').trim();if(game?.game_mode!=='human'&&botName&&(status==='won'||status==='lost'))return status==='lost'?botName:telegramDisplayName();const name=String(game?.winner_name||'').trim();return (!name||name==='أحد اللاعبين'||name==='أنت'||(name.startsWith('اللاعب ')||name.startsWith('لاعب ')))?'الفائز':name;}
 function openBot(startParam=''){if(!botUsername)return;const link='https://t.me/'+botUsername+(startParam?'?start='+encodeURIComponent(startParam):'');if(tg?.openTelegramLink)tg.openTelegramLink(link);else location.href=link;}
@@ -214,7 +215,7 @@ function showTop(kind,title){
 }
 
 function showGameEntry(type,emoji,name,hint){
- stopC4Timer();stopMiniGameTimers();stopExtraGame();window.stopCasualGame?.();window.stopNumberSort?.();
+ stopC4Timer();stopMiniGameTimers();stopExtraGame();window.stopCasualGame?.();window.stopNumberSort?.();window.stopDartsGame?.();
  const shell=c4Shell(),image=onlineGameImages[type]||'';
  shell.innerHTML='<div style="min-height:calc(100dvh - 30px);display:flex;flex-direction:column;justify-content:center;gap:22px;padding:10px 0">'+
   '<div style="height:min(42vh,350px);overflow:hidden;border-radius:34px;border:1px solid #ffffff40;background:#fff2;box-shadow:0 14px 35px #0006">'+(image?'<img src="'+image+'" alt="'+name+'" style="width:100%;height:100%;object-fit:cover">':'<div style="height:100%;display:grid;place-items:center;font-size:100px">'+emoji+'</div>')+'</div>'+
@@ -230,10 +231,11 @@ function showGameEntry(type,emoji,name,hint){
   else if(type==='match'||type==='find'||type==='number')window.startCasualSetup(type);
   else if(type==='sort')window.startNumberSortSetup();
   else if(type==='dots'||type==='memory')showMiniGameDifficulty(type);
+  else if(type==='darts')window.startDartsSetup?.();
  };
 }
 function showGames(){
- stopC4Timer();stopMiniGameTimers();stopExtraGame();window.stopCasualGame?.();window.stopNumberSort?.();document.body.classList.remove('c4-active');home.hidden=true;page.hidden=false;pageTitle.textContent='الألعاب 🎮';pageContent.replaceChildren();
+ stopC4Timer();stopMiniGameTimers();stopExtraGame();window.stopCasualGame?.();window.stopNumberSort?.();window.stopDartsGame?.();document.body.classList.remove('c4-active');home.hidden=true;page.hidden=false;pageTitle.textContent='الألعاب 🎮';pageContent.replaceChildren();
  const games=[
   ['🔴','كونكت 4','العب ضد البوت أو تحدَّ لاعبًا','connect'],
   ['🟦','المربعات','ارسم الخطوط واجمع المربعات','dots'],
@@ -246,6 +248,7 @@ function showGames(){
   ['🎯','الكيرم','صوّب واضرب الأقراص نحو الجيوب','carrom'],
   ['🏃‍♂️','جري الجاذبية','اقفز وبدّل الجاذبية وتجاوز العقبات','gravity'],
   ['❄️','كرة الثلج','صوّب وارمِ كرات الثلج على خصمك','snowball'],
+  ['🎯','السهام','صوّب على التربل والدبل لتصل إلى الصفر','darts'],
  ];
  games.forEach(([emoji,name,hint,type])=>{
   const card=document.createElement('button');card.className='custom-card game-card';card.type='button';card.style.width='100%';card.style.cursor='pointer';
@@ -285,6 +288,7 @@ const numberSortStartParam=c4StartParam.startsWith('sort_')?c4StartParam:'';
 const onlineConnectId=c4StartParam.startsWith('online_c4_')?c4StartParam.slice(10):'';
 const onlineMiniGameId=c4StartParam.startsWith('online_mg_')?c4StartParam.slice(10):'';
 const onlineLobbyId=c4StartParam.startsWith('online_lobby_')?c4StartParam.slice(13):'';
+const onlineDartsId=c4StartParam.startsWith('online_darts_')?c4StartParam.slice(13):'';
 const onlineMode=!!(onlineConnectId||onlineMiniGameId);
 let c4GameIdFromUrl=onlineConnectId||new URLSearchParams(window.location.search).get('game_id');
 const miniGameChallengeIdFromStart=onlineMiniGameId||(c4StartParam.startsWith('mg_')?c4StartParam.slice(3):new URLSearchParams(window.location.search).get('mini_game_id'));
@@ -295,7 +299,7 @@ const c4Levels=[['سهل','مناسب للتجربة'],['متوسط','تحدي �
 function stopC4Timer(){if(c4Timer)clearTimeout(c4Timer);if(c4Tick)clearInterval(c4Tick);if(c4BotTimer)clearTimeout(c4BotTimer);if(c4PollTimer)clearTimeout(c4PollTimer);if(c4ChallengePollTimer)clearTimeout(c4ChallengePollTimer);c4Timer=null;c4Tick=null;c4BotTimer=null;c4PollTimer=null;c4ChallengePollTimer=null;}
 function c4Shell(){document.body.classList.add('c4-active');pageContent.innerHTML='<div class="c4-shell" id="c4-shell"></div>';return document.getElementById('c4-shell');}
 function openInlineGamePicker(type){
- const queries={connect:'كونكت 4',dots:'المربعات',memory:'الذاكرة',word:'خمن الكلمة',match:'تطابق البطاقات',find:'Find Match',number:'خمن الرقم',sort:'ترتيب الأرقام',carrom:'الكيرم',gravity:'جري الجاذبية',snowball:'كرة الثلج'};
+ const queries={connect:'كونكت 4',dots:'المربعات',memory:'الذاكرة',word:'خمن الكلمة',match:'تطابق البطاقات',find:'Find Match',number:'خمن الرقم',sort:'ترتيب الأرقام',carrom:'الكيرم',gravity:'جري الجاذبية',snowball:'كرة الثلج',darts:'السهام'};
  const query=queries[type];if(!query)return;
  if(typeof tg?.switchInlineQuery!=='function'){alert('افتح الميني آب من داخل تطبيق تيليجرام لاختيار المحادثة.');return;}
  try{tg.switchInlineQuery(query,['users','groups','channels']);}catch(e){alert('تعذر فتح اختيار المحادثة. حدّث تيليجرام وحاول مرة ثانية.');}
@@ -359,7 +363,7 @@ async function onlineLobbyRequest(action,settings={}){
 }
 function renderOnlineLobby(state){
  onlineLobbyState=state;
- const shell=c4Shell(),names={connect:'Connect Four 🔴',dots:'Dots and Boxes 🟦',memory:'Memory Match 🧠'};
+ const shell=c4Shell(),names={connect:'Connect Four 🔴',dots:'Dots and Boxes 🟦',memory:'Memory Match 🧠',darts:'السهام 🎯'};
  const me=Number(tg?.initDataUnsafe?.user?.id||0),isCreator=state.is_creator;
  const joined=state.players||[];
  const slots=Array.from({length:state.player_count},(_,i)=>joined[i]?'<div class="c4-player"><strong>'+escapeLobbyText(joined[i].name)+'</strong><small>منضم ✓</small></div>':'<div class="c4-player"><strong>بانتظار لاعب</strong><small>المقعد '+(i+1)+'</small></div>').join('');
@@ -385,7 +389,7 @@ function renderOnlineLobby(state){
  if(state.status==='playing'){
   status.textContent='بدأت المباراة! افتحوا اللعبة من الزر أدناه.';
   const launch=document.createElement('button');launch.className='c4-start';launch.textContent='فتح اللعبة الآن 🎮';
-  launch.onclick=()=>{const param=state.game_type==='connect'?'online_c4_'+state.game_id:'online_mg_'+state.game_id;const url='https://t.me/'+botUsername+'?startapp='+param;if(tg?.openTelegramLink)tg.openTelegramLink(url);else location.href=url;};
+  launch.onclick=()=>{const param=state.game_type==='connect'?'online_c4_'+state.game_id:state.game_type==='darts'?'online_darts_'+state.game_id:'online_mg_'+state.game_id;const url='https://t.me/'+botUsername+'?startapp='+param;if(tg?.openTelegramLink)tg.openTelegramLink(url);else location.href=url;};
   shell.querySelector('.c4-panel').appendChild(launch);
   start.hidden=true;join.hidden=true;leave.hidden=true;
  }else if(state.status==='cancelled'){status.textContent='تم إلغاء الغرفة.';join.hidden=true;start.hidden=true;leave.hidden=true;}
@@ -1106,6 +1110,7 @@ document.getElementById('back-home').onclick=showHome;
   else if(onlineLobbyId){startOnlineLobby();}
   else if(miniGameChallengeIdFromStart){home.hidden=true;page.hidden=false;pageTitle.textContent='الألعاب';startMiniGameChallenge();}
   else if(c4GameIdFromUrl){home.hidden=true;page.hidden=false;pageTitle.textContent='كونكت 4';startConnect4();}
+  else if(onlineDartsId){home.hidden=true;page.hidden=false;pageTitle.textContent='السهام';window.startDartsGame?.('online',onlineDartsId);}
  }catch(e){console.error('Mini App extensions load failed:',e);const box=document.createElement('div');box.className='empty';box.textContent='تعذر تحميل الإضافات: '+(e?.message||'خطأ غير معروف');document.getElementById('custom').replaceChildren(box);}
 
 })();

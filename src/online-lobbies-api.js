@@ -1,3 +1,4 @@
+import { ensureDartsSchema } from "./darts-schema.js";
 import crypto from "node:crypto";
 
 const fail = (message) => Object.assign(new Error(message), { status: 400 });
@@ -82,6 +83,7 @@ export function registerOnlineLobbyRoutes(app, pool, token) {
         if (ids.some(id=>id==null)) throw fail("لا يمكن البدء قبل اكتمال عدد اللاعبين");
         const names=[safeName(lobby.creator_name),...ids.slice(1).map((_,i)=>safeName(lobby[`player${i+2}_name`]))];
         const gameId=crypto.randomUUID();
+        if (lobby.game_type === "darts") await ensureDartsSchema(pool);
         if (lobby.game_type === "connect") {
           const board=Array.from({length:6},()=>Array(7).fill(0));
           await client.query(`INSERT INTO connect4_games(id,user_id,player2_id,difficulty,board,game_mode,chat_id,player1_name,player2_name,turn_player_id,wager,wager_settled)
@@ -98,6 +100,23 @@ export function registerOnlineLobbyRoutes(app, pool, token) {
           await client.query(`INSERT INTO mini_game_challenges(id,game_type,chat_id,player1_id,player1_name,player2_id,player2_name,player3_id,player3_name,player4_id,player4_name,wager,status,turn_player_id,game_state,wager_settled)
             VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,1,'playing',$4,$12::jsonb,TRUE)`,
             [gameId,lobby.game_type,Number(lobby.chat_id||0),Number(ids[0]),names[0],Number(ids[1]),names[1],count>=3?Number(ids[2]):null,count>=3?names[2]:null,count>=4?Number(ids[3]):null,count>=4?names[3]:null,JSON.stringify(state)]);
+        } else if (lobby.game_type === "darts") {
+          const startingScore = 300;
+          await client.query(
+            `INSERT INTO darts_games
+              (id,lobby_id,red_player_id,red_player_name,blue_player_id,blue_player_name,
+               starting_score,red_score,blue_score,phase,active_side,round,status)
+             VALUES($1,$2,$3,$4,$5,$6,$7,$7,$7,'turn_intro','red',1,'playing')`,
+            [gameId, rawId, Number(ids[0]), names[0], Number(ids[1]), names[1], startingScore]
+          );
+          await client.query(
+            "INSERT INTO darts_game_events(game_id,payload) VALUES($1,$2::jsonb)",
+            [gameId, JSON.stringify({
+              type: "state_sync", phase: "turn_intro", activeSide: "red",
+              redScore: startingScore, blueScore: startingScore,
+              redName: names[0], blueName: names[1], round: 1, lockedX: 0
+            })]
+          );
         } else throw fail("نوع اللعبة غير معروف");
         await client.query("UPDATE online_game_lobbies SET status='playing',game_id=$2,updated_at=NOW() WHERE id=$1",[rawId,gameId]);
       } else if (action !== "state") throw fail("طلب غير معروف");

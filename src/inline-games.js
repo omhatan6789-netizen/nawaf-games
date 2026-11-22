@@ -19,7 +19,7 @@ async function ensureInlineLobbyGameTypes() {
       await pool.query(`
         ALTER TABLE online_game_lobbies
         ADD CONSTRAINT online_game_lobbies_game_type_check
-        CHECK (game_type IN ('connect','dots','memory','word','match','find','number','sort','carrom','gravity','snowball'))
+        CHECK (game_type IN ('connect','dots','memory','word','match','find','number','sort','carrom','gravity','snowball','darts'))
         NOT VALID
       `);
     })().catch(error => {
@@ -42,6 +42,7 @@ const GAME_INFO = {
   carrom: ["الكيرم 🎯", "صوّب الأقراص نحو الجيوب وتحدَّ لاعبًا آخر"],
   gravity: ["جري الجاذبية 🏃", "بدّل الجاذبية وتجاوز العقبات مع لاعب آخر"],
   snowball: ["كرة الثلج ❄️", "صوّب كرات الثلج وتحدَّ لاعبًا آخر"],
+  darts: ["السهام 🎯", "صوّب بدقة لتصل إلى الصفر قبل خصمك"],
 };
 
 const WORDS = ["سيارة", "مدرسة", "مكتبة", "طائرة", "حاسوب", "نافذة", "حديقة", "مفتاح", "مصباح", "وسادة", "حقيبة", "ثلاجة", "غسالة", "مروحة", "تلفاز", "سفينة", "دراجة", "طاولة", "ملعقة", "تفاحة"];
@@ -60,6 +61,7 @@ function selectGames(query = "") {
   if (/(كيرم|carrom)/i.test(value)) return ["carrom"];
   if (/(كرة الثلج|ثلج|snowball)/i.test(value)) return ["snowball"];
   if (/(جري الجاذبية|الجاذبية|gravity)/i.test(value)) return ["gravity"];
+  if (/(السهام|سهام|darts?|dart)/i.test(value)) return ["darts"];
   return Object.keys(GAME_INFO);
 }
 

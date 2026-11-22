@@ -31,6 +31,8 @@ import { registerWordGameRoutes } from "./word-game-api.js";
 import { registerOnlineLobbyRoutes } from "./online-lobbies-api.js";
 import { ensureCasualGamesSchema, registerCasualGameRoutes } from "./casual-games-api.js";
 import { ensureNumberSortSchema, registerNumberSortRoutes } from "./number-sort-api.js";
+import { ensureDartsSchema } from "./darts-schema.js";
+import { registerDartsRoutes } from "./darts-api.js";
 
 ensureButtonColorsSchema().catch(error => console.error("Button colors schema initialization failed:", error));
 ensureModerationSchema().catch(error => console.error("Moderation schema initialization failed:", error));
@@ -47,7 +49,7 @@ ensureImageQuizSchema().catch(error => console.error("Image quiz schema initiali
 ensureDemonNawafSchema().catch(error => console.error("Demon Nawaf schema initialization failed:", error));
 ensureConnect4Schema().catch(error => console.error("Connect Four schema initialization failed:", error));
 if (pool) {
-  await Promise.all([ensureCasualGamesSchema(pool), ensureNumberSortSchema(pool)]).catch(error => console.error("Mini-game schema initialization failed:", error));
+  await Promise.all([ensureCasualGamesSchema(pool), ensureNumberSortSchema(pool), ensureDartsSchema(pool)]).catch(error => console.error("Mini-game schema initialization failed:", error));
 }
 
 const app = express();
@@ -68,6 +70,7 @@ if (pool) {
   registerOnlineLobbyRoutes(app, pool, process.env.BOT_TOKEN);
   registerCasualGameRoutes(app, pool, process.env.BOT_TOKEN);
   registerNumberSortRoutes(app, pool, process.env.BOT_TOKEN);
+  registerDartsRoutes(app, pool, process.env.BOT_TOKEN);
 }
 app.use("/miniapp", express.static("public"));
 app.use("/mini_app", express.static("public/mini_app"));
