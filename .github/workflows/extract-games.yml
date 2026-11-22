@@ -23,9 +23,10 @@ jobs:
       - name: Extract game archives
         run: |
           set -euo pipefail
-          mkdir -p games-src/carrom games-src/gravity
+          mkdir -p games-src/carrom games-src/gravity games-src/darts-source
           unzip -oq "imports/carrom-game-project(1).zip" -d games-src/carrom
           unzip -oq "imports/gravity-game-project(1).zip" -d games-src/gravity
+          unzip -oq "imports/nawaf-darts-project.zip" -d games-src/darts-source
 
       - name: Commit extracted source
         run: |
@@ -37,5 +38,5 @@ jobs:
             echo "No extracted source changes."
             exit 0
           fi
-          git commit -m "Extract carrom and gravity game source"
+          git commit -m "Extract game project sources"
           git push
