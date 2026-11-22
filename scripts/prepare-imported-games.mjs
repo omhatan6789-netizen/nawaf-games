@@ -50,6 +50,20 @@ copyFiles(dartsSource, dartsDest, [
   'src/game/dartsEngine.ts', 'src/game/dartsRenderer.ts', 'src/game/dartsScoring.ts',
   'src/game/dartsSound.ts', 'src/game/dartsTypes.ts'
 ]);
+const dartsEngineFile = path.join(dartsDest, 'src/game/dartsEngine.ts');
+replaceOnce(
+  dartsEngineFile,
+  `    if (payload.type === 'opponent_lock_x') {
+      const val = Number(payload.value ?? 0);`,
+  `    if (payload.type === 'opponent_lock_x') {
+      // The server event is also delivered to the player who locked X.
+      // That player already switched to aim_y locally; ignore the echo so
+      // the vertical sweep is not restarted a second time.
+      if (this.activeSide === this.mySide) return;
+      const val = Number(payload.value ?? 0);`,
+  'ignore own online X-lock echo'
+);
+
 fs.mkdirSync(path.join(dartsDest, 'src/components'), { recursive: true });
 fs.copyFileSync(path.join(root, 'games-src/darts-integration/App.tsx'), path.join(dartsDest, 'src/App.tsx'));
 fs.copyFileSync(path.join(root, 'games-src/darts-integration/EndMatchOverlay.tsx'), path.join(dartsDest, 'src/components/EndMatchOverlay.tsx'));
