@@ -23,7 +23,7 @@ import { handleEmojiReactionsMessage } from "./emoji-reactions.js";
 import { handleStartCommand, handleStartEditorCommand, handleStartEditorCallback, handleStartEditorMessage } from "./start-editor.js";
 import { handleDeveloperPanelCommand, handleDeveloperPanelCallback, handleDeveloperPanelMessage, trackDeveloperBotChat } from "./developer-panel.js";
 import { handleGamesManagerMessage } from "./handlers/games-manager.js";
-import { handleInlineGamesQuery } from "./inline-games.js";
+import { handleInlineGamesQuery, handleInlineGameChosen } from "./inline-games.js";
 import { handleCustomCommandManagement, resolveCustomAlias, hasCustomCommandSession } from "./custom-commands.js";
 import { handleTemporaryMessages, handleTemporaryMessageCallback, startTemporaryMessageScheduler } from "./temporary-messages.js";
 import { handleWhisperMessage, handleWhisperStart, handleWhisperCallback } from "./whispers.js";
@@ -113,6 +113,7 @@ export function createBot() {
 
   bot.on("message:photo", handlePhotoId);
   bot.on("inline_query", handleInlineGamesQuery);
+  bot.on("chosen_inline_result", handleInlineGameChosen);
   bot.callbackQuery(/^tmp:/, handleTemporaryMessageCallback);
   bot.callbackQuery(/^wh_(temp|open):/, handleWhisperCallback);
   bot.callbackQuery(/^ytpick:/, handleYouTubeAudioCallback);
