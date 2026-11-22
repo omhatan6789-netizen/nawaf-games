@@ -265,6 +265,10 @@ export class DartsEngine {
     }
 
     if (payload.type === 'opponent_lock_x') {
+      // The server event is also delivered to the player who locked X.
+      // That player already switched to aim_y locally; ignore the echo so
+      // the vertical sweep is not restarted a second time.
+      if (this.activeSide === this.mySide) return;
       const val = Number(payload.value ?? 0);
       this.aimX = val;
       this.xLocked = true;
