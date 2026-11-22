@@ -174,7 +174,7 @@ export default function App() {
     setResult(null); setScreen('home');
   };
   const home = () => { if (mode === 'online') leaveOnline(); else { setResult(null); setScreen('home'); } };
-  const closePage = () => { if (!closeTelegramWebApp()) home(); };
+  const closePage = () => { if (!closeTelegramWebApp()) { try { window.close(); } catch {} } };
   const gameOver = (next: GameResult) => { setResult(next); setScreen('over'); };
   const players = snapshot?.players;
   const pCount = Number(Boolean(players?.p1)) + Number(Boolean(players?.p2)) + Number(Boolean(players?.p3));
@@ -228,9 +228,8 @@ export default function App() {
         <div className="online-end-winner">{result.winnerName}</div>
         <p>{result.winReason==='finish'?'وصلت إلى خط النهاية!':result.didLocalWin?'أحسنت، فزت بالتحدي!':'حاول مرة ثانية وتجاوز العقبات 💪'}</p>
         <div className="online-end-actions">
-          <button onClick={()=>{if(mode==='online')clientRef.current?.requestRematch();else startBot();}}>لعب مرة ثانية</button>
-          <button onClick={home}>الصفحة الرئيسية</button>
-          <button onClick={closePage}>قفل الصفحة</button>
+          <button onClick={()=>{if(mode==='online')clientRef.current?.requestRematch();else startBot();}}>إعادة اللعبة</button>
+          <button className="secondary-end" onClick={closePage}>قفل الصفحة</button>
         </div>
       </div>
     </div>}
@@ -345,7 +344,7 @@ export default function App() {
   };
   const leaveOnline = () => { clientRef.current?.leaveRoom(); setSnapshot(null); setShot(null); setAim(null); setResult(null); setScreen('home'); };
   const home = () => { if (mode === 'online') leaveOnline(); else { setResult(null); setScreen('home'); } };
-  const closePage = () => { if (!closeTelegramWebApp()) home(); };
+  const closePage = () => { if (!closeTelegramWebApp()) { try { window.close(); } catch {} } };
   const gameOver = (next: GameResult) => { setResult(next); setScreen('over'); };
 
   return <div className="min-h-dvh w-full flex flex-col items-center justify-center px-4 py-5 text-white">
@@ -397,9 +396,8 @@ export default function App() {
         <div className="online-end-winner">{result.winnerName}</div>
         <p>{result.didLocalWin?'مبروك، تستاهل الفوز!':'هارد لك! حاول مرة ثانية وهزم البوت 💪'}</p>
         <div className="online-end-actions">
-          <button onClick={()=>{if(mode==='online')clientRef.current?.requestRematch();else startBot();}}>لعب مرة ثانية</button>
-          <button onClick={home}>الصفحة الرئيسية</button>
-          <button onClick={closePage}>قفل الصفحة</button>
+          <button onClick={()=>{if(mode==='online')clientRef.current?.requestRematch();else startBot();}}>إعادة اللعبة</button>
+          <button className="secondary-end" onClick={closePage}>قفل الصفحة</button>
         </div>
       </div>
     </div>}
