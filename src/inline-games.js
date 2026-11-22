@@ -141,15 +141,31 @@ export async function handleInlineGamesQuery(ctx) {
       const replyMarkup = {
         inline_keyboard: [[{ text: "ابدأ اللعب", url: roomUrl }]]
       };
-      const result = {
-        type: "article",
-        id: room.id,
-        title,
-        description,
-        input_message_content: { message_text: messageText },
-        reply_markup: replyMarkup,
-        ...(imageUrl ? { thumbnail_url: imageUrl, thumbnail_width: 320, thumbnail_height: 320 } : {}),
-      };
+      // Use a photo inline result when the game has an image. Telegram then
+      // shows the thumbnail in inline search and sends one photo message with
+      // the exact same invitation text as its caption and the same play button.
+      // A text-only article cannot be converted into a photo message afterwards.
+      const result = imageUrl
+        ? {
+            type: "photo",
+            id: room.id,
+            photo_url: imageUrl,
+            thumbnail_url: imageUrl,
+            photo_width: 800,
+            photo_height: 800,
+            title,
+            description,
+            caption: messageText,
+            reply_markup: replyMarkup,
+          }
+        : {
+            type: "article",
+            id: room.id,
+            title,
+            description,
+            input_message_content: { message_text: messageText },
+            reply_markup: replyMarkup,
+          };
       results.push(result);
       } catch (gameError) {
         console.error(`Inline game result failed for ${gameType}:`, gameError?.message || gameError);
