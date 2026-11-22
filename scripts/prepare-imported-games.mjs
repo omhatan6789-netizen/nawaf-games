@@ -63,6 +63,25 @@ replaceOnce(
       const val = Number(payload.value ?? 0);`,
   'ignore own online X-lock echo'
 );
+replaceOnce(
+  dartsEngineFile,
+  `      this.aimClock = Math.PI * 0.5;
+      dartsSound.playAimLock('x');
+      this.emitHud();
+      return;
+    }
+
+    if (payload.type === 'throw_resolved')`,
+  `      this.aimClock = Math.PI * 0.5;
+      // The aim_y state_sync already plays the opponent's X-lock sound.
+      // Do not play it again for the matching event notification.
+      this.emitHud();
+      return;
+    }
+
+    if (payload.type === 'throw_resolved')`,
+  'avoid duplicate opponent X-lock sound'
+);
 
 fs.mkdirSync(path.join(dartsDest, 'src/components'), { recursive: true });
 fs.copyFileSync(path.join(root, 'games-src/darts-integration/App.tsx'), path.join(dartsDest, 'src/App.tsx'));
