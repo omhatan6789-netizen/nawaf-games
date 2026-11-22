@@ -57,7 +57,7 @@
     const style=document.createElement('style');style.id='darts-style';
     style.textContent=`
       .darts-wrap{width:100%;max-width:560px;margin:0 auto;padding:8px 0 22px;color:#fff}
-      .darts-heading{text-align:center;margin:3px 0 14px}.darts-heading h2{font-size:clamp(25px,7vw,34px);font-weight:950;margin:0 0 4px}.darts-heading p{margin:0;color:#ffffff9c;font-size:12px}
+      .darts-heading{text-align:right;margin:3px 0 14px}.darts-heading h2{font-size:clamp(25px,7vw,34px);font-weight:950;margin:0 0 4px}.darts-heading p{margin:0;color:#ffffff9c;font-size:12px}
       .darts-panel{background:linear-gradient(145deg,#281014,#12090c);border:1px solid #ffffff24;border-radius:22px;padding:14px;box-shadow:0 12px 30px #0006}
       .darts-label{font-size:12px;font-weight:850;color:#ffffffc7;margin:4px 0 9px}
       .darts-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px}
@@ -95,7 +95,7 @@
     injectStyles();stop();
     document.body.classList.add('c4-active');
     shell=window.c4Shell?window.c4Shell():document.getElementById('page-content');
-    shell.innerHTML=`<div class="darts-wrap"><div class="darts-heading"><h2>السهام 🎯</h2><p>اختر نقاط البداية ومستوى البوت</p></div><div class="darts-panel">
+    shell.innerHTML=`<div class="darts-wrap"><div class="darts-heading"><h2>السهام 🎯</h2><p>&nbsp;</p></div><div class="darts-panel">
       <div class="darts-label">نقاط البداية — من يصل إلى الصفر أولًا يفوز</div><div class="darts-options" id="darts-scores"></div>
       <div class="darts-label">مستوى صعوبة البوت</div><div class="darts-levels" id="darts-levels"></div>
       <button class="darts-primary" id="darts-start">ابدأ اللعب الآن</button></div></div>`;
