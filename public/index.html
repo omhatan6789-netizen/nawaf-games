@@ -437,7 +437,7 @@ async function withdrawOnlineGame(gameType,gameId,button){
    else{miniGame=data.result.game;renderMiniGame();}
   }catch(e){if(button){button.disabled=false;button.textContent='انسحاب';}const status=document.getElementById('c4-status');if(status)status.textContent=e.message;}
 }
-function showGameEndOverlay({winnerName='',isDraw=false,title='',subtitle=''}={}){
+function showGameEndOverlay({winnerName='',isDraw=false,title='',subtitle='',onReplay=null}={}){
  const safeWinner=String(winnerName||'').trim();
  const key=(isDraw?'draw':safeWinner||'winner')+'|'+String(title||'');
  const existing=document.querySelector('.online-end-overlay');
@@ -449,8 +449,9 @@ function showGameEndOverlay({winnerName='',isDraw=false,title='',subtitle=''}={}
  const winner=document.createElement('div');winner.className='online-end-winner';winner.textContent=isDraw?'تعادل بين اللاعبين':(safeWinner||'الفائز');
  const message=document.createElement('p');message.textContent=subtitle||(isDraw?'كانت مباراة حماسية! يعطيكم العافية على اللعب 👏':('أبدعت يا '+(safeWinner||'بطل')+'! تستاهل الفوز 🏆'));
  const actions=document.createElement('div');actions.className='online-end-actions';
- const close=document.createElement('button');close.textContent='قفل الصفحة';close.onclick=()=>{if(tg&&typeof tg.close==='function')tg.close();else{try{window.close();}catch(e){}showHome();}};
- actions.append(close);card.append(heading,winner,message,actions);overlay.appendChild(card);document.body.appendChild(overlay);
+ const replay=document.createElement('button');replay.textContent='إعادة اللعبة';replay.disabled=typeof onReplay!=='function';replay.onclick=()=>{if(typeof onReplay==='function'){clearOnlineEndOverlay();onReplay();}};
+ const close=document.createElement('button');close.textContent='قفل الصفحة';close.className='secondary-end';close.onclick=()=>{if(tg&&typeof tg.close==='function')tg.close();else{try{window.close();}catch(e){}}};
+ actions.append(replay,close);card.append(heading,winner,message,actions);overlay.appendChild(card);document.body.appendChild(overlay);
 }
 function showOnlineEndOverlay(gameType,gameId,resultText){
  const draw=String(resultText||'').includes('تعادل');
@@ -488,7 +489,7 @@ function renderMiniGameSolo(){
   shell.querySelector('#mg-status').textContent='انتهت اللعبة';shell.querySelector('#mg-clock').textContent='—';
   const draw=game.status==='draw';
   const winnerName=draw?'':game.status==='won'?telegramDisplayName():game.status==='lost'?(game.bot_name||'البوت'):winnerDisplayName(game);
-  showGameEndOverlay({winnerName,isDraw:draw,subtitle:draw?'كانت مباراة حماسية! يعطيكم العافية 👏':('مبروك '+winnerName+'! تستاهل الفوز 🏆')});
+  showGameEndOverlay({winnerName,isDraw:draw,subtitle:draw?'كانت مباراة حماسية! يعطيكم العافية 👏':('مبروك '+winnerName+'! تستاهل الفوز 🏆'),onReplay:()=>startMiniGameSolo(game.game_type,game.difficulty)});
   return;
  }
  if(isDots){
@@ -736,7 +737,7 @@ function renderConnect4(previousBoard=null){
  if(c4Game.status!=='playing'){
   shell.querySelector('#c4-status').textContent='';shell.querySelector('#c4-clock').textContent='—';shell.querySelector('#c4-progress').style.width='0%';
   const draw=c4Game.status==='draw',winnerName=draw?'':winnerDisplayName(c4Game);
-  showGameEndOverlay({winnerName,isDraw:draw,subtitle:draw?'كانت مباراة حماسية! يعطيكم العافية 👏':('مبروك '+winnerName+'! تستاهل الفوز 🏆')});
+  showGameEndOverlay({winnerName,isDraw:draw,subtitle:draw?'كانت مباراة حماسية! يعطيكم العافية 👏':('مبروك '+winnerName+'! تستاهل الفوز 🏆'),onReplay:()=>human?showConnect4ModeChoice():showConnect4Setup()});
  }else if(!myTurn){
   if(c4Game.spectator){shell.querySelector('#c4-status').textContent='👁 وضع المشاهدة — تابع اللعب مباشرة';shell.querySelector('#c4-clock').textContent='مباشر';pollConnect4State();}
   else {
@@ -918,7 +919,7 @@ function renderWordGame(){
   const subtitle=training
    ?(g.my_score>=g.win_target?'أحسنت! حققت '+g.my_score+' كلمات صحيحة وفزت على البوت 🎉':'انتهت اللعبة، حققت '+g.my_score+' من '+g.win_target+' كلمات. حاول مرة ثانية 💪')
    :(draw?'نتيجة متقاربة! يعطيكم العافية على اللعب 👏':('مبروك '+(winnerName||'الفائز')+'! حصل على أعلى نتيجة 🏆'));
-  showGameEndOverlay({winnerName,isDraw:draw,subtitle});
+  showGameEndOverlay({winnerName,isDraw:draw,subtitle,onReplay:()=>training?showWordTrainingSetup():showWordSetup()});
   return;
  }
  const myOut=g.attempts_left<=0;
