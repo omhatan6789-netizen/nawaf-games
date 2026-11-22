@@ -124,7 +124,7 @@ export async function handleInlineGamesQuery(ctx) {
     for (const gameType of selectGames(ctx.inlineQuery.query)) {
       try {
       const [title, description] = GAME_INFO[gameType];
-      const inviteTitle = title.replace(/\\s*🃏\\s*$/, "");
+      const inviteTitle = title.replace(/\s*🃏\s*$/, "");
       const room = await createLobby(gameType, ctx.from);
       const roomUrl = `https://t.me/${username}?startapp=${room.startapp}`;
       const messageText = gameType === "word"
@@ -197,7 +197,7 @@ export async function handleInlineGameChosen(ctx) {
     if (!username) return;
 
     const [title] = GAME_INFO[gameType];
-    const inviteTitle = title.replace(/\\s*🃏\\s*$/, "");
+    const inviteTitle = title.replace(/\s*🃏\s*$/, "");
     const messageText = gameType === "word"
       ? `🔤 تحدي جماعي — ${title}\n\nبدأ ${playerName(chosen.from)} تحديًا في خمن الكلمة. افتحوا اللعبة من الزر بالأسفل وابدؤوا التحدي!`
       : `🎮 @${username} — ${inviteTitle}\n\nاضغطوا الزر بالأسفل لفتح اللعبة والانضمام إلى التحدي داخل الميني آب.`;
