@@ -168,6 +168,25 @@ app.get("/tg-file/:fileId", async (req, res) => {
   }
 });
 
+// Stable public thumbnail URL for Telegram inline-query results. Resolve the
+// current image by game type rather than embedding Telegram file_id in the URL.
+app.get("/tg-thumb/:gameType", async (req, res) => {
+  try {
+    if (!pool) return res.sendStatus(503);
+    const result = await pool.query(
+      "SELECT photo_file_id FROM online_game_images WHERE game_type=$1 LIMIT 1",
+      [req.params.gameType]
+    );
+    const fileId = result.rows[0]?.photo_file_id;
+    if (!fileId) return res.sendStatus(404);
+    const { buffer, contentType } = await telegramFile(fileId);
+    res.set("Cache-Control", "public, max-age=300").type(contentType).send(buffer);
+  } catch (error) {
+    console.error("Inline game thumbnail failed:", req.params.gameType, error.message);
+    res.sendStatus(404);
+  }
+});
+
 app.get("/number-sort/background", async (_req, res) => {
   try {
     const result = await pool.query("SELECT background_file_id FROM number_sort_settings WHERE id=1");
