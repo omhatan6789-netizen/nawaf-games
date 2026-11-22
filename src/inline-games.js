@@ -124,18 +124,20 @@ export async function handleInlineGamesQuery(ctx) {
     for (const gameType of selectGames(ctx.inlineQuery.query)) {
       try {
       const [title, description] = GAME_INFO[gameType];
+      const inviteTitle = title.replace(/\\s*🃏\\s*$/, "");
       const room = await createLobby(gameType, ctx.from);
       const roomUrl = `https://t.me/${username}?startapp=${room.startapp}`;
       const messageText = gameType === "word"
         ? `🔤 تحدي جماعي — ${title}\n\nبدأ ${playerName(ctx.from)} تحديًا في خمن الكلمة. افتحوا اللعبة من الزر بالأسفل وابدؤوا التحدي!`
-      : `🎮 @${username} — ${title}\n\nاضغطوا الزر بالأسفل لفتح اللعبة والانضمام إلى التحدي داخل الميني آب.`;
+      : `🎮 @${username} — ${inviteTitle}\n\nاضغطوا الزر بالأسفل لفتح اللعبة والانضمام إلى التحدي داخل الميني آب.`;
 
       const image = await pool.query(
         "SELECT photo_file_id FROM online_game_images WHERE game_type=$1",
         [gameType]
       ).catch(() => ({ rows: [] }));
       const fileId = image.rows[0]?.photo_file_id;
-      const baseUrl = (process.env.PUBLIC_BASE_URL || "https://nawaf-bot-node-xsna.onrender.com").replace(/\/$/, "");
+      // Use this service's public URL, not a possibly stale URL copied from the old Python service.
+      const baseUrl = "https://nawaf-bot-node-xsna.onrender.com";
       const replyMarkup = {
         inline_keyboard: [[{ text: "ابدأ اللعب", url: roomUrl }]]
       };
@@ -150,7 +152,11 @@ export async function handleInlineGamesQuery(ctx) {
         description,
         input_message_content: { message_text: messageText },
         reply_markup: replyMarkup,
-        ...(fileId ? { thumbnail_url: `${baseUrl}/tg-file/${encodeURIComponent(fileId)}` } : {}),
+        ...(fileId ? {
+          thumbnail_url: `${baseUrl}/tg-file/${fileId}`,
+          thumbnail_width: 320,
+          thumbnail_height: 320,
+        } : {}),
       };
       results.push(result);
       } catch (gameError) {
@@ -191,9 +197,10 @@ export async function handleInlineGameChosen(ctx) {
     if (!username) return;
 
     const [title] = GAME_INFO[gameType];
+    const inviteTitle = title.replace(/\\s*🃏\\s*$/, "");
     const messageText = gameType === "word"
       ? `🔤 تحدي جماعي — ${title}\n\nبدأ ${playerName(chosen.from)} تحديًا في خمن الكلمة. افتحوا اللعبة من الزر بالأسفل وابدؤوا التحدي!`
-      : `🎮 @${username} — ${title}\\n\\nاضغطوا الزر بالأسفل لفتح اللعبة والانضمام إلى التحدي داخل الميني آب.`;
+      : `🎮 @${username} — ${inviteTitle}\n\nاضغطوا الزر بالأسفل لفتح اللعبة والانضمام إلى التحدي داخل الميني آب.`;
 
     const prefix = gameType === "word" ? "word_"
       : gameType === "carrom" ? "carrom_"
