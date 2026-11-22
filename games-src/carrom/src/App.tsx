@@ -746,16 +746,6 @@ export default function App() {
             >
               {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
-            {mode !== 'online' && (
-              <button
-                type="button"
-                onClick={handleStartLocalOrBot}
-                className="nawaf-pill flex items-center gap-1.5 whitespace-nowrap shrink-0"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>ابدأ</span>
-              </button>
-            )}
           </div>
         </header>
 
@@ -870,6 +860,16 @@ export default function App() {
                 ))}
               </div>
             </div>
+          )}
+
+          {mode !== 'online' && (
+            <button
+              type="button"
+              onClick={handleStartLocalOrBot}
+              className="nawaf-primary w-full py-4 text-base font-black shadow-lg"
+            >
+              🎯 ابدأ اللعبة
+            </button>
           )}
 
           {/* Player Count & 4-Player Mode */}
