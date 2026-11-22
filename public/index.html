@@ -155,7 +155,7 @@ body.c4-active #page{padding-left:10px;padding-right:10px}
 <script src="/mini_app/number-sort.js?v=1"></script>
 
 <script>
-const tg=window.Telegram?.WebApp;tg?.ready();tg?.expand();
+const tg=window.Telegram?.WebApp;tg?.ready();tg?.expand();tg?.disableVerticalSwipes?.();
 (function showWelcomeToast(){
  const toast=document.getElementById('welcome-toast');
  const user=tg?.initDataUnsafe?.user||{};
