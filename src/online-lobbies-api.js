@@ -61,7 +61,7 @@ export function registerOnlineLobbyRoutes(app, pool, token) {
       if (!typeResult.rows[0]) throw fail("الغرفة غير موجودة");
       if (typeResult.rows[0].game_type === "darts") await ensureDartsLobbySettings(pool);
       await client.query("BEGIN");
-      const q = await client.query("SELECT * FROM online_game_lobbies WHERE id=$1 FOR UPDATE", [rawId]);
+      let q = await client.query("SELECT * FROM online_game_lobbies WHERE id=$1 FOR UPDATE", [rawId]);
       const lobby = q.rows[0];
       if (!lobby) throw fail("الغرفة غير موجودة");
 
