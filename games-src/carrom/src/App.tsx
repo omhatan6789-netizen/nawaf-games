@@ -652,21 +652,19 @@ export default function App() {
               )}
 
               <div className="online-end-actions">
-                {mode !== 'online' || isHost ? (
-                  <button type="button" onClick={handleRestart}>
-                    ↻ العب مرة ثانية
-                  </button>
-                ) : (
-                  <button type="button" disabled>
-                    بانتظار صاحب الغرفة لإعادة اللعب...
-                  </button>
-                )}
+                <button type="button" onClick={handleRestart} disabled={mode === 'online' && !isHost}>
+                  ↻ إعادة اللعبة
+                </button>
                 <button
                   type="button"
                   className="secondary-end"
-                  onClick={handleExitGameplay}
+                  onClick={() => {
+                    const telegram = (window as unknown as { Telegram?: { WebApp?: { close?: () => void } } }).Telegram?.WebApp;
+                    if (telegram?.close) telegram.close();
+                    else { try { window.close(); } catch {} }
+                  }}
                 >
-                  خروج للقائمة الرئيسية
+                  قفل الصفحة
                 </button>
               </div>
             </div>
