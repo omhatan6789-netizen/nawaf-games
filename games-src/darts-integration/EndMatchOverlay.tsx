@@ -1,5 +1,5 @@
 import React from 'react';
-import { Crown, RotateCcw, Home } from 'lucide-react';
+import { Crown, RotateCcw } from 'lucide-react';
 import type { GameMode, PlayerSide, StartingScore } from '../game/dartsTypes';
 
 interface EndMatchOverlayProps {
@@ -50,27 +50,14 @@ export const EndMatchOverlay: React.FC<EndMatchOverlayProps> = ({
           </div>
         </div>
         <div className="online-end-actions">
-          {mode === 'online' ? (
-            <>
-              <button type="button" onClick={() => {
-                const telegram = (window as unknown as { Telegram?: { WebApp?: { close?: () => void } } }).Telegram?.WebApp;
-                if (telegram?.close) telegram.close();
-                else onExitHome();
-              }}>قفل الصفحة</button>
-              <button type="button" onClick={onExitHome} className="secondary-end flex items-center justify-center gap-2">
-                <Home className="h-4 w-4" /><span>الرئيسية</span>
-              </button>
-            </>
-          ) : (
-            <>
-              <button type="button" onClick={onRematch} disabled={rematchPending} className="flex items-center justify-center gap-2">
-                <RotateCcw className="h-4 w-4" /><span>لعب مرة أخرى</span>
-              </button>
-              <button type="button" onClick={onExitHome} className="secondary-end flex items-center justify-center gap-2">
-                <Home className="h-4 w-4" /><span>العودة للألعاب</span>
-              </button>
-            </>
-          )}
+          <button type="button" onClick={onRematch} disabled={rematchPending} className="flex items-center justify-center gap-2">
+            <RotateCcw className="h-4 w-4" /><span>إعادة اللعبة</span>
+          </button>
+          <button type="button" onClick={() => {
+            const telegram = (window as unknown as { Telegram?: { WebApp?: { close?: () => void } } }).Telegram?.WebApp;
+            if (telegram?.close) telegram.close();
+            else { try { window.close(); } catch {} }
+          }} className="secondary-end">قفل الصفحة</button>
         </div>
       </div>
     </div>
