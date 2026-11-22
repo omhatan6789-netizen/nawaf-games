@@ -78,6 +78,7 @@ export default function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<DartsEngine | null>(null);
   const cursorRef = useRef('0');
+  const initialOnlineStateRef = useRef<Record<string, unknown> | null>(null);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -99,6 +100,12 @@ export default function App() {
       .then(data => {
         if (cancelled) return;
         const game = data.game || {};
+        cursorRef.current = String(data.latestEventId || '0');
+        initialOnlineStateRef.current = {
+          type: 'state_sync', phase: game.phase, activeSide: game.active_side,
+          redScore: game.red_score, blueScore: game.blue_score, round: game.round,
+          redName: game.red_player_name, blueName: game.blue_player_name, lockedX: game.locked_x,
+        };
         const score = Number(game.starting_score || 300);
         setMode('online');
         setOnlineSide(game.side === 'blue' ? 'blue' : 'red');
@@ -137,6 +144,10 @@ export default function App() {
       },
     });
     engineRef.current = engine;
+    if (mode === 'online' && initialOnlineStateRef.current) {
+      engine.applyOnlineState(initialOnlineStateRef.current as { type: string; [key: string]: unknown });
+      initialOnlineStateRef.current = null;
+    }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.code === 'Space' || event.code === 'Enter') {
         event.preventDefault();
@@ -155,7 +166,6 @@ export default function App() {
     if (screen !== 'playing' || mode !== 'online' || !gameIdRef.current) return;
     let active = true;
     let timer = 0;
-    cursorRef.current = '0';
     const poll = async () => {
       try {
         const data = await apiRequest('/api/darts/state', { game_id: gameIdRef.current, after: cursorRef.current });
