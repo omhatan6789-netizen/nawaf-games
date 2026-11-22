@@ -4,6 +4,14 @@ import crypto from "node:crypto";
 const fail = (message) => Object.assign(new Error(message), { status: 400 });
 const safeName = (value, fallback = "مستخدم") => String(value || fallback).trim().replace(/\\s+/g, " ").slice(0, 80) || fallback;
 const json = (value) => typeof value === "string" ? JSON.parse(value) : value || {};
+let dartsLobbySettingsReady = null;
+async function ensureDartsLobbySettings(pool) {
+  if (!dartsLobbySettingsReady) {
+    dartsLobbySettingsReady = pool.query("ALTER TABLE online_game_lobbies ADD COLUMN IF NOT EXISTS darts_starting_score INTEGER NOT NULL DEFAULT 300")
+      .catch(error => { dartsLobbySettingsReady = null; throw error; });
+  }
+  return dartsLobbySettingsReady;
+}
 
 function verify(initData, token) {
   if (!initData || !token) throw fail("افتح اللعبة من داخل تيليجرام أولاً");
@@ -36,6 +44,7 @@ function publicLobby(row, uid, imageUrl) {
     players, is_creator: Number(uid) === Number(row.creator_id),
     is_joined: players.some(p => p.id === Number(uid)),
     game_id: row.game_id ? String(row.game_id).replace(/-/g, "") : null,
+    starting_score: Number(row.darts_starting_score || 300),
     image_url: imageUrl || null,
   };
 }
@@ -45,6 +54,7 @@ export function registerOnlineLobbyRoutes(app, pool, token) {
     const client = await pool.connect();
     try {
       const user = verify(req.body?.initData, token);
+      await ensureDartsLobbySettings(pool);
       const uid = Number(user.id), action = String(req.body?.action || "state"), settings = req.body?.settings || {};
       const rawId = String(req.body?.lobby_id || req.body?.game_id || "").replace(/-/g, "");
       if (!/^[0-9a-f]{32}$/i.test(rawId)) throw fail("رابط الغرفة غير صالح");
@@ -64,12 +74,18 @@ export function registerOnlineLobbyRoutes(app, pool, token) {
       } else if (action === "configure") {
         if (uid !== Number(lobby.creator_id)) throw fail("الإعدادات لصاحب الغرفة فقط");
         if (lobby.status !== "pending") throw fail("لا يمكن تغيير الإعدادات بعد بدء اللعبة");
+        if (lobby.game_type === "darts") {
+          const score = Number(settings.starting_score);
+          if (![200,300,350,501].includes(score)) throw fail("اختر نقاط البداية المتاحة");
+          await client.query("UPDATE online_game_lobbies SET darts_starting_score=$2,updated_at=NOW() WHERE id=$1", [rawId, score]);
+        } else {
         const count = Number(settings.player_count || 2), mode = String(settings.team_mode || "individual");
         if (lobby.game_type === "dots") {
           if (![2,3,4].includes(count)) throw fail("اختر لاعبين أو ثلاثة أو أربعة");
           if (!["individual","teams"].includes(mode) || (count !== 4 && mode !== "individual")) throw fail("نظام الفرق متاح لأربعة لاعبين فقط");
         } else if (count !== 2 || mode !== "individual") throw fail("هذه اللعبة تدعم لاعبين فقط");
         await client.query(`UPDATE online_game_lobbies SET player_count=$2,team_mode=$3,player2_id=NULL,player2_name=NULL,player3_id=NULL,player3_name=NULL,player4_id=NULL,player4_name=NULL,creator_joined=FALSE,updated_at=NOW() WHERE id=$1`, [rawId,count,mode]);
+        }
       } else if (action === "leave") {
         if (lobby.status !== "pending") throw fail("لا يمكن مغادرة الغرفة بعد بدء اللعبة");
         if (uid === Number(lobby.creator_id)) await client.query("UPDATE online_game_lobbies SET status='cancelled',updated_at=NOW() WHERE id=$1",[rawId]);
@@ -101,7 +117,7 @@ export function registerOnlineLobbyRoutes(app, pool, token) {
             VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,1,'playing',$4,$12::jsonb,TRUE)`,
             [gameId,lobby.game_type,Number(lobby.chat_id||0),Number(ids[0]),names[0],Number(ids[1]),names[1],count>=3?Number(ids[2]):null,count>=3?names[2]:null,count>=4?Number(ids[3]):null,count>=4?names[3]:null,JSON.stringify(state)]);
         } else if (lobby.game_type === "darts") {
-          const startingScore = 300;
+          const startingScore = Number(lobby.darts_starting_score || 300);
           await client.query(
             `INSERT INTO darts_games
               (id,lobby_id,red_player_id,red_player_name,blue_player_id,blue_player_name,
