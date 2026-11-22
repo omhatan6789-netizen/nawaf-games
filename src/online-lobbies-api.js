@@ -57,15 +57,13 @@ export function registerOnlineLobbyRoutes(app, pool, token) {
       const uid = Number(user.id), action = String(req.body?.action || "state"), settings = req.body?.settings || {};
       const rawId = String(req.body?.lobby_id || req.body?.game_id || "").replace(/-/g, "");
       if (!/^[0-9a-f]{32}$/i.test(rawId)) throw fail("رابط الغرفة غير صالح");
+      const typeResult = await pool.query("SELECT game_type FROM online_game_lobbies WHERE id=$1", [rawId]);
+      if (!typeResult.rows[0]) throw fail("الغرفة غير موجودة");
+      if (typeResult.rows[0].game_type === "darts") await ensureDartsLobbySettings(pool);
       await client.query("BEGIN");
-      let q = await client.query("SELECT * FROM online_game_lobbies WHERE id=$1 FOR UPDATE", [rawId]);
-      let lobby = q.rows[0];
+      const q = await client.query("SELECT * FROM online_game_lobbies WHERE id=$1 FOR UPDATE", [rawId]);
+      const lobby = q.rows[0];
       if (!lobby) throw fail("الغرفة غير موجودة");
-      if (lobby.game_type === "darts") {
-        await ensureDartsLobbySettings(pool);
-        q = await client.query("SELECT * FROM online_game_lobbies WHERE id=$1 FOR UPDATE", [rawId]);
-        lobby = q.rows[0];
-      }
 
       if (action === "join") {
         if (lobby.status !== "pending") throw fail("الغرفة لم تعد تستقبل لاعبين");
