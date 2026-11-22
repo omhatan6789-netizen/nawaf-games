@@ -153,9 +153,10 @@ export async function handleInlineGamesQuery(ctx) {
         input_message_content: { message_text: messageText },
         reply_markup: replyMarkup,
         ...(fileId ? {
-          thumbnail_url: `${baseUrl}/tg-file/${fileId}`,
+          thumbnail_url: `${baseUrl}/tg-thumb/${gameType}`,
           thumbnail_width: 320,
           thumbnail_height: 320,
+          thumbnail_mime_type: "image/jpeg",
         } : {}),
       };
       results.push(result);
