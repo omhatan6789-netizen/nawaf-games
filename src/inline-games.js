@@ -142,23 +142,27 @@ export async function handleInlineGamesQuery(ctx) {
         inline_keyboard: [[{ text: "ابدأ اللعب", url: roomUrl }]]
       };
 
-      // Match the working Python Frankfurt flow:
-      // send an article with a thumbnail, then replace that same inline
-      // message with the stored Telegram photo after chosen_inline_result.
-      const result = {
-        type: "article",
-        id: `${gameType}:${room.id}`,
-        title,
-        description,
-        input_message_content: { message_text: messageText },
-        reply_markup: replyMarkup,
-        ...(fileId ? {
-          thumbnail_url: `${baseUrl}/tg-thumb/${gameType}`,
-          thumbnail_width: 320,
-          thumbnail_height: 320,
-          thumbnail_mime_type: "image/jpeg",
-        } : {}),
-      };
+      // Use Telegram's cached-photo result directly. This displays the
+      // uploaded game image in inline search and sends that same photo with
+      // the invitation caption in one action (no thumbnail URL fetch/edit).
+      const result = fileId
+        ? {
+            type: "photo",
+            id: `${gameType}:${room.id}`,
+            photo_file_id: fileId,
+            title,
+            description,
+            caption: messageText,
+            reply_markup: replyMarkup,
+          }
+        : {
+            type: "article",
+            id: `${gameType}:${room.id}`,
+            title,
+            description,
+            input_message_content: { message_text: messageText },
+            reply_markup: replyMarkup,
+          };
       results.push(result);
       } catch (gameError) {
         console.error(`Inline game result failed for ${gameType}:`, gameError?.message || gameError);
