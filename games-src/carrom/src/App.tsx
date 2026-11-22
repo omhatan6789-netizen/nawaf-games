@@ -123,6 +123,7 @@ export default function App() {
   const [playerName, setPlayerName] = useState<string>(
     () => getTelegramPlayerName() || 'أنت'
   );
+  const [botUsername, setBotUsername] = useState<string>('');
   const [localP2Name, setLocalP2Name] = useState<string>('اللاعب الثاني');
   const [muted, setMuted] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -165,6 +166,19 @@ export default function App() {
   useEffect(() => {
     window.Telegram?.WebApp?.ready?.();
     window.Telegram?.WebApp?.expand?.();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/mini-app')
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (active && data?.bot_username) {
+          setBotUsername(String(data.bot_username).replace(/^@/, ''));
+        }
+      })
+      .catch(() => {});
+    return () => { active = false; };
   }, []);
 
   const showToast = useCallback((msg: string) => {
@@ -447,7 +461,9 @@ export default function App() {
 
   const buildInviteDetails = (room: OnlineRoomState) => {
     const baseUrl = `${window.location.origin}${window.location.pathname}`;
-    const roomUrl = `${baseUrl}?room=${encodeURIComponent(room.id)}`;
+    const roomUrl = botUsername
+      ? `https://t.me/${botUsername}?startapp=${encodeURIComponent(`carrom_${room.id}`)}`
+      : `${baseUrl}?room=${encodeURIComponent(room.id)}`;
     const hostName = room.players[0]?.name || playerName || 'لاعب';
     const inviteText =
       `🎯 غرفة أونلاين — لعبة الكيرم\n\n` +
