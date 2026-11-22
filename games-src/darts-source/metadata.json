@@ -1,0 +1,8 @@
+{
+  "name": "السهام — بوت نواف",
+  "description": "لعبة السهام لبوت نواف داخل التيليجرام — تصويب ثنائي المحور، دبل وتربل ومنتصف، لعب ضد البوت أو أونلاين أو على نفس الجهاز مع لوحة فوز ونتائج كل جولة.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

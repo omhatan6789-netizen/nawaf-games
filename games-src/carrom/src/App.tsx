@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Code2,
+  Copy,
+  Download,
+  FolderArchive,
   LogOut,
   RotateCcw,
   Share2,
@@ -8,6 +12,10 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { CarromPreviewSvg } from './components/CarromPreviewSvg';
+import {
+  downloadZipFromEndpoint,
+  GitHubExportModal,
+} from './components/GitHubExportModal';
 import { PlayerBar } from './components/PlayerBar';
 import { StrikerSlider } from './components/StrikerSlider';
 import {
@@ -117,6 +125,7 @@ export default function App() {
   );
   const [localP2Name, setLocalP2Name] = useState<string>('اللاعب الثاني');
   const [muted, setMuted] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   // Online multiplayer state
   const [wsConnected, setWsConnected] = useState(false);
@@ -1095,10 +1104,48 @@ export default function App() {
               </button>
             )}
 
+            <button
+              type="button"
+              onClick={() => setExportOpen(true)}
+              className="nawaf-secondary flex items-center justify-center gap-2"
+            >
+              <Code2 className="w-4 h-4 text-[#ff9ba3]" />
+              <span>كود الإضافة لمشروعك في GitHub (nawaf-bot-v2)</span>
+            </button>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  downloadZipFromEndpoint(
+                    '/api/export/project.zip',
+                    'carrom-game-project.zip'
+                  ).catch((err) => showToast(err.message));
+                }}
+                className="nawaf-choice py-2.5 px-3 text-xs flex items-center justify-center gap-2"
+              >
+                <FolderArchive className="w-4 h-4 text-[#facc15]" />
+                <span>تحميل المشروع كامل (ZIP)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  downloadZipFromEndpoint(
+                    '/api/export/nawaf-addon.zip',
+                    'nawaf-bot-v2-carrom-addon.zip'
+                  ).catch((err) => showToast(err.message));
+                }}
+                className="nawaf-choice py-2.5 px-3 text-xs flex items-center justify-center gap-2"
+              >
+                <Download className="w-4 h-4 text-[#60a5fa]" />
+                <span>تحميل إضافة البوت (ZIP)</span>
+              </button>
+            </div>
           </div>
         </section>
       </main>
 
+      <GitHubExportModal open={exportOpen} onClose={() => setExportOpen(false)} />
     </div>
   );
 }
