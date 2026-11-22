@@ -19,7 +19,7 @@ function verify(initData, token) {
   const hash = params.get("hash");
   if (!hash) throw fail("تعذر التحقق من حساب تيليجرام");
   params.delete("hash");
-  const check = [...params.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => `${k}=${v}`).join("\\n");
+  const check = [...params.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => `${k}=${v}`).join("\n");
   const secret = crypto.createHmac("sha256", "WebAppData").update(token).digest();
   const expected = crypto.createHmac("sha256", secret).update(check).digest("hex");
   const a = Buffer.from(hash, "hex"), b = Buffer.from(expected, "hex");
