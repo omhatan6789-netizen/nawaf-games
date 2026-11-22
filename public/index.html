@@ -387,6 +387,7 @@ function renderOnlineLobby(state){
  leave.hidden=state.status!=='pending'||!state.is_joined;
  leave.onclick=()=>onlineLobbyRequest('leave').then(loadOnlineLobby).catch(showOnlineLobbyError);
  if(state.status==='playing'){
+  if(state.game_type==='darts'&&state.game_id){location.replace('/darts/?game_id='+encodeURIComponent(state.game_id));return;}
   status.textContent='بدأت المباراة! افتحوا اللعبة من الزر أدناه.';
   const launch=document.createElement('button');launch.className='c4-start';launch.textContent='فتح اللعبة الآن 🎮';
   launch.onclick=()=>{const param=state.game_type==='connect'?'online_c4_'+state.game_id:state.game_type==='darts'?'online_darts_'+state.game_id:'online_mg_'+state.game_id;const url='https://t.me/'+botUsername+'?startapp='+param;if(tg?.openTelegramLink)tg.openTelegramLink(url);else location.href=url;};
@@ -396,7 +397,7 @@ function renderOnlineLobby(state){
  else{status.textContent=isCreator?'أنت صاحب الغرفة. اضبط الإعدادات وانتظر انضمام اللاعبين.':'انضم للغرفة وانتظر بدء صاحبها.';}
 }
 function escapeLobbyText(value){return String(value||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
-function showOnlineLobbyError(error){const el=document.getElementById('online-room-status');if(el)el.textContent=error?.message||'حدث خطأ';}
+function showOnlineLobbyError(error){const message=error?.message||'حدث خطأ أثناء تحميل الغرفة';let el=document.getElementById('online-room-status');if(el){el.textContent=message;return;}const shell=document.getElementById('c4-shell')||c4Shell();shell.innerHTML='<div class="c4-heading"><h2>تعذر فتح غرفة اللعبة</h2><p>'+escapeLobbyText(message)+'</p></div><div class="c4-panel"><button class="c4-start" id="online-lobby-retry">إعادة المحاولة</button></div>';shell.querySelector('#online-lobby-retry').onclick=()=>loadOnlineLobby().catch(showOnlineLobbyError);}
 async function loadOnlineLobby(){
  const state=await onlineLobbyRequest('state');renderOnlineLobby(state);
 }
