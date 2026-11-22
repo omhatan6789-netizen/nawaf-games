@@ -1099,7 +1099,6 @@ export default function App() {
         </section>
       </main>
 
-      <GitHubExportModal open={exportOpen} onClose={() => setExportOpen(false)} />
     </div>
   );
 }
