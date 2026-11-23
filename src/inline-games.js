@@ -84,7 +84,7 @@ async function createLobby(gameType, user) {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.ok || !data.roomId) throw new Error(data.error || "تعذر إنشاء غرفة اللعبة");
-    const prefix = gameType === "carrom" ? "carrom_" : gameType === "gravity" ? "gravity_" : "snowball_";
+    const prefix = gameType === "carrom" ? "carrom_" : gameType === "gravity" ? "gravity_" : gameType === "snowball" ? "snowball_" : "potato_";
     return { id: data.roomId, startapp: `${prefix}${data.roomId}` };
   }
   if (gameType === "word") {
