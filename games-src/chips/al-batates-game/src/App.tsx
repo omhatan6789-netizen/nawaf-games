@@ -406,6 +406,27 @@ export default function App() {
     updateSettings({ ...settings, soundEnabled: !settings.soundEnabled });
   };
 
+  const handleDownloadZip = async () => {
+    try {
+      setDownloadingZip(true);
+      const response = await fetch('api/download-zip');
+      if (!response.ok) throw new Error('Download failed');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'al-batates-game.zip';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    } catch {
+      showToast('تعذر تحميل ملفات اللعبة حاليًا');
+    } finally {
+      setDownloadingZip(false);
+    }
+  };
+
   const resetLocalMatch = useCallback(() => {
     matchIdRef.current += 1;
     clearAllTimeouts();
