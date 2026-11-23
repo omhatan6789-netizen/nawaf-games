@@ -628,6 +628,43 @@ export default function App() {
     tg.switchInlineQuery('الشبس', ['users', 'groups', 'channels']);
   };
 
+  const handleWithdraw = useCallback(() => {
+    if (
+      screen !== 'playing' ||
+      phase === 'GAME_OVER' ||
+      phase === 'REVEALING_BOMBS'
+    ) {
+      return;
+    }
+
+    if (mode === 'online') {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: 'withdraw' }));
+      }
+      return;
+    }
+
+    matchIdRef.current += 1;
+    clearAllTimeouts();
+    triggerHaptic(settings.haptics, 'heavy');
+    soundEngine.playLose();
+    setIsResolvingPick(false);
+    setShakingTray(null);
+    setWithdrawnByMe(true);
+    setPhase('GAME_OVER');
+  }, [clearAllTimeouts, mode, phase, screen, settings.haptics]);
+
+  const handleRematch = () => {
+    if (mode === 'online') {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        setRematchPending(true);
+        wsRef.current.send(JSON.stringify({ type: 'rematch' }));
+      }
+      return;
+    }
+    startBotMatch();
+  };
+
   // --- BOT MODE LOCAL GAME ENGINE ---
   const startBotCountdownPhase = useCallback(
     (finalPlayerCells?: TrayCell[]) => {
