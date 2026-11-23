@@ -111,6 +111,61 @@ async function handleMusicAccountMessage(message) {
   try {
     const text = String(message.text || message.caption || "").trim();
 
+    // Show scheduled messages for this group only.
+    if (message.isOutgoing && text === "الرسائل المجدولة") {
+      const chatType = message.chat?.chatType || message.chat?.type;
+      if (chatType !== "group" && chatType !== "supergroup") {
+        await client.replyText(message, "أرسل الأمر داخل القروب لعرض رسائله المجدولة.");
+        return;
+      }
+      const result = await db().query(
+        `SELECT message_text, hour, minute
+           FROM music_account_scheduled_messages
+          WHERE chat_id = $1
+          ORDER BY hour, minute, id`,
+        [String(message.chat.id)],
+      );
+      if (!result.rows.length) {
+        await client.replyText(message, "ما فيه رسائل مجدولة في هذا القروب.");
+        return;
+      }
+      const lines = result.rows.map((item, index) => {
+        const hour12 = item.hour % 12 || 12;
+        const meridiem = item.hour >= 12 ? "PM" : "AM";
+        const time = `${hour12}:${String(item.minute).padStart(2, "0")} ${meridiem}`;
+        return `${index + 1}) ${time} — ${item.message_text}`;
+      });
+      await client.replyText(message, `📅 الرسائل المجدولة في هذا القروب:\\n\\n${lines.join("\\n\\n")}`);
+      return;
+    }
+
+    // Delete a schedule by its exact text, scoped to the current group.
+    if (message.isOutgoing && text.startsWith("مسح رسالة -")) {
+      const chatType = message.chat?.chatType || message.chat?.type;
+      if (chatType !== "group" && chatType !== "supergroup") {
+        await client.replyText(message, "أرسل أمر الحذف داخل القروب الذي توجد فيه الرسالة.");
+        return;
+      }
+      const messageText = text.slice("مسح رسالة -".length).trim();
+      if (!messageText) {
+        await client.replyText(message, "اكتب نص الرسالة بعد الشرطة، مثال:\\nمسح رسالة - هلا نواف");
+        return;
+      }
+      const deleted = await db().query(
+        `DELETE FROM music_account_scheduled_messages
+          WHERE chat_id = $1 AND message_text = $2
+          RETURNING id`,
+        [String(message.chat.id), messageText],
+      );
+      await client.replyText(
+        message,
+        deleted.rowCount
+          ? `تم حذف الرسالة المجدولة: ${messageText}`
+          : "ما لقيت رسالة مجدولة بهذا النص في هذا القروب.",
+      );
+      return;
+    }
+
     // Scheduled daily messages are configured by sending a two-line command
     // from the music account in the chat where the message should be posted.
     if (message.isOutgoing && text.startsWith("اضف رسالة -")) {
