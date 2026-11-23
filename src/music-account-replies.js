@@ -135,7 +135,7 @@ async function handleMusicAccountMessage(message) {
         const time = `${hour12}:${String(item.minute).padStart(2, "0")} ${meridiem}`;
         return `${index + 1}) ${time} — ${item.message_text}`;
       });
-      await client.replyText(message, `📅 الرسائل المجدولة في هذا القروب:\\n\\n${lines.join("\\n\\n")}`);
+      await client.replyText(message, `📅 الرسائل المجدولة في هذا القروب:\n\n${lines.join("\n\n")}`);
       return;
     }
 
@@ -148,7 +148,7 @@ async function handleMusicAccountMessage(message) {
       }
       const messageText = text.slice("مسح رسالة -".length).trim();
       if (!messageText) {
-        await client.replyText(message, "اكتب نص الرسالة بعد الشرطة، مثال:\\nمسح رسالة - هلا نواف");
+        await client.replyText(message, "اكتب نص الرسالة بعد الشرطة، مثال:\nمسح رسالة - هلا نواف");
         return;
       }
       const deleted = await db().query(
