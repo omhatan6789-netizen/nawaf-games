@@ -417,6 +417,7 @@ function collectProjectFiles(dirPath: string, relativeBase = ''): string[] {
 async function startServer() {
   const app = express();
   app.use(express.json({ limit: '1mb' }));
+  app.get('/api/health', (_req, res) => res.json({ ok: true, game: 'chips' }));
   app.post('/api/internal/inline-room', (req, res) => {
     const expectedToken = process.env.BOT_TOKEN;
     if (!expectedToken || req.get('x-bot-token') !== expectedToken) {
