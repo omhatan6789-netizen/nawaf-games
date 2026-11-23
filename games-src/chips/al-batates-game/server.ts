@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import JSZip from 'jszip';
 import { WebSocketServer, WebSocket } from 'ws';
+import { randomUUID } from 'node:crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,7 +54,7 @@ interface PlayerState {
 }
 
 interface RoomState {
-  code: string;
+  id: string;
   phase: RoomPhase;
   players: PlayerState[];
   turnSlot: 0 | 1;
@@ -74,14 +75,6 @@ function createEmptyBoard(): CellStatus[] {
   return Array.from({ length: GRID_SIZE }, () => 'CHIP');
 }
 
-function generateRoomCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 5; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return rooms.has(code) ? generateRoomCode() : code;
-}
 
 function completeBombs(existing: number[]): number[] {
   const valid = new Set<number>();
@@ -148,7 +141,7 @@ function broadcastRoomState(room: RoomState) {
 
     safeSend(recipient.ws, {
       type: 'room_state',
-      code: room.code,
+      roomId: room.id,
       phase: room.phase,
       mySlot: recipient.slot,
       myName: recipient.name,
@@ -423,6 +416,46 @@ function collectProjectFiles(dirPath: string, relativeBase = ''): string[] {
 
 async function startServer() {
   const app = express();
+  app.use(express.json({ limit: '1mb' }));
+  app.post('/api/internal/inline-room', (req, res) => {
+    const expectedToken = process.env.BOT_TOKEN;
+    if (!expectedToken || req.get('x-bot-token') !== expectedToken) {
+      return res.status(401).json({ ok: false, error: 'Unauthorized' });
+    }
+    const userId = String(req.body?.userId || '').trim();
+    if (!/^\\d+$/.test(userId)) {
+      return res.status(400).json({ ok: false, error: 'Invalid Telegram user' });
+    }
+    const roomId = randomUUID().replace(/-/g, '').toUpperCase();
+    const name = String(req.body?.name || '').trim().slice(0, 22) || 'لاعب ١';
+    const room: RoomState = {
+      id: roomId,
+      phase: 'LOBBY',
+      players: [{
+        slot: 0,
+        clientId: 'tg_' + userId,
+        name,
+        ws: null,
+        bombs: [],
+        ready: false,
+        hearts: MAX_HEARTS,
+        board: createEmptyBoard(),
+        rematchRequested: false,
+      }],
+      turnSlot: 0,
+      prepTimer: PREP_DURATION_SEC,
+      countdownValue: 3,
+      turnTimer: TURN_DURATION_SEC,
+      revealTimer: REVEAL_DURATION_SEC,
+      isResolvingPick: false,
+      winnerSlot: null,
+      withdrawnSlot: null,
+      intervalId: null,
+      timeouts: [],
+    };
+    rooms.set(roomId, room);
+    res.json({ ok: true, roomId });
+  });
   const server = http.createServer(app);
 
   app.get('/api/download-zip', async (_req, res) => {
@@ -459,7 +492,7 @@ async function startServer() {
   const wss = new WebSocketServer({ server, path: '/ws/potato' });
 
   wss.on('connection', (ws) => {
-    let attachedRoomCode: string | null = null;
+    let attachedRoomId: string | null = null;
     let attachedClientId: string | null = null;
 
     ws.on('message', (raw) => {
@@ -472,51 +505,12 @@ async function startServer() {
 
       const type = String(msg.type || '');
 
-      if (type === 'create_room') {
-        const name = String(msg.name || '').trim().slice(0, 22) || 'لاعب ١';
-        const clientId =
-          String(msg.clientId || '').trim() || `c_${Date.now()}`;
-        const code = generateRoomCode();
-        const room: RoomState = {
-          code,
-          phase: 'LOBBY',
-          players: [
-            {
-              slot: 0,
-              clientId,
-              name,
-              ws,
-              bombs: [],
-              ready: false,
-              hearts: MAX_HEARTS,
-              board: createEmptyBoard(),
-              rematchRequested: false,
-            },
-          ],
-          turnSlot: 0,
-          prepTimer: PREP_DURATION_SEC,
-          countdownValue: 3,
-          turnTimer: TURN_DURATION_SEC,
-          revealTimer: REVEAL_DURATION_SEC,
-          isResolvingPick: false,
-          winnerSlot: null,
-          withdrawnSlot: null,
-          intervalId: null,
-          timeouts: [],
-        };
-        rooms.set(code, room);
-        attachedRoomCode = code;
-        attachedClientId = clientId;
-        broadcastRoomState(room);
-        return;
-      }
-
       if (type === 'join_room') {
-        const code = String(msg.code || '').trim().toUpperCase();
+        const roomId = String(msg.roomId || '').trim().toUpperCase();
         const name = String(msg.name || '').trim().slice(0, 22) || 'لاعب ٢';
         const clientId =
           String(msg.clientId || '').trim() || `c_${Date.now()}`;
-        const room = rooms.get(code);
+        const room = rooms.get(roomId);
 
         if (!room) {
           safeSend(ws, { type: 'error', message: 'الغرفة غير موجودة أو انتهت' });
@@ -527,7 +521,7 @@ async function startServer() {
         if (existing) {
           existing.ws = ws;
           existing.name = name || existing.name;
-          attachedRoomCode = code;
+          attachedRoomId = roomId;
           attachedClientId = clientId;
           broadcastRoomState(room);
           return;
@@ -554,14 +548,14 @@ async function startServer() {
           board: createEmptyBoard(),
           rematchRequested: false,
         });
-        attachedRoomCode = code;
+        attachedRoomId = roomId;
         attachedClientId = clientId;
         broadcastRoomState(room);
         return;
       }
 
-      if (!attachedRoomCode || !attachedClientId) return;
-      const room = rooms.get(attachedRoomCode);
+      if (!attachedRoomId || !attachedClientId) return;
+      const room = rooms.get(attachedRoomId);
       if (!room) return;
       const player = room.players.find((p) => p.clientId === attachedClientId);
       if (!player) return;
@@ -630,12 +624,12 @@ async function startServer() {
                 });
               }
             }
-            rooms.delete(room.code);
+            rooms.delete(room.id);
           } else {
             room.players = room.players.filter((p) => p.slot !== player.slot);
             broadcastRoomState(room);
           }
-          attachedRoomCode = null;
+          attachedRoomId = null;
           return;
         }
 
@@ -662,33 +656,19 @@ async function startServer() {
     });
 
     ws.on('close', () => {
-      if (!attachedRoomCode || !attachedClientId) return;
-      const room = rooms.get(attachedRoomCode);
+      if (!attachedRoomId || !attachedClientId) return;
+      const room = rooms.get(attachedRoomId);
       if (!room) return;
       const player = room.players.find((p) => p.clientId === attachedClientId);
       if (!player) return;
-
       player.ws = null;
-
       if (room.phase === 'LOBBY') {
-        room.players = room.players.filter(
-          (p) => p.clientId !== attachedClientId
-        );
-        if (room.players.length === 0) {
-          clearRoomTimers(room);
-          rooms.delete(room.code);
-        } else {
-          room.players[0].slot = 0;
-          broadcastRoomState(room);
-        }
+        // Keep the invited player's slot reserved while they temporarily close
+        // the Mini App; reopening the Telegram invitation reconnects them.
+        broadcastRoomState(room);
         return;
       }
-
-      if (
-        room.phase === 'PREP' ||
-        room.phase === 'COUNTDOWN' ||
-        room.phase === 'PLAYING'
-      ) {
+      if (room.phase === 'PREP' || room.phase === 'COUNTDOWN' || room.phase === 'PLAYING') {
         const opp = room.players.find((p) => p.slot !== player.slot);
         if (opp && opp.ws) {
           clearRoomTimers(room);
@@ -698,13 +678,13 @@ async function startServer() {
           broadcastRoomState(room);
         } else {
           clearRoomTimers(room);
-          rooms.delete(room.code);
+          rooms.delete(room.id);
         }
       } else {
         const anyConnected = room.players.some((p) => Boolean(p.ws));
         if (!anyConnected) {
           clearRoomTimers(room);
-          rooms.delete(room.code);
+          rooms.delete(room.id);
         } else {
           broadcastRoomState(room);
         }
