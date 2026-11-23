@@ -86,6 +86,12 @@ async function handleMusicAccountMessage(message) {
     // Scheduled daily messages are configured by sending a two-line command
     // from the music account in the chat where the message should be posted.
     if (message.isOutgoing && text.startsWith("اضف رسالة -")) {
+      const chatType = message.chat?.chatType || message.chat?.type;
+      if (chatType !== "group" && chatType !== "supergroup") {
+        await client.replyText(message, "أرسل أمر إضافة الرسالة داخل القروب المطلوب، وليس في الخاص.");
+        return;
+      }
+
       const lines = text.split(/\r?\n/).map((line) => line.trim());
       const firstLine = lines[0] || "";
       const messageText = [
@@ -187,29 +193,47 @@ function getRiyadhDateAndTime() {
   };
 }
 
+function millisecondsUntilNextMinute() {
+  const now = new Date();
+  return Math.max(50, 60_000 - (now.getSeconds() * 1000 + now.getMilliseconds()) + 25);
+}
+
 async function startScheduledMessagesLoop(client) {
   console.log("[MUSIC SCHEDULE] Daily message scheduler started (Asia/Riyadh).");
   while (true) {
     try {
       const { date, minutes } = getRiyadhDateAndTime();
+      // Claim due group messages atomically. This prevents two overlapping
+      // Render instances during a deploy from sending the same message twice.
       const due = await db().query(
-        `SELECT id, chat_id, message_text
-           FROM music_account_scheduled_messages
-          WHERE last_sent_date IS DISTINCT FROM $1::date
-            AND (hour * 60 + minute) <= $2
-          ORDER BY hour, minute, id`,
+        `WITH due AS (
+           SELECT id
+             FROM music_account_scheduled_messages
+            WHERE chat_id < 0
+              AND last_sent_date IS DISTINCT FROM $1::date
+              AND (hour * 60 + minute) <= $2
+            ORDER BY hour, minute, id
+            FOR UPDATE SKIP LOCKED
+         )
+         UPDATE music_account_scheduled_messages AS scheduled
+            SET last_sent_date = $1::date
+           FROM due
+          WHERE scheduled.id = due.id
+         RETURNING scheduled.id, scheduled.chat_id, scheduled.message_text`,
         [date, minutes],
       );
 
       for (const item of due.rows) {
         try {
-          await client.sendText(String(item.chat_id), item.message_text);
+          // Pass a numeric marked Telegram chat ID; a string is interpreted
+          // by mtcute as a username (e.g. "-100...").
+          await client.sendText(Number(item.chat_id), item.message_text);
+          console.log(`[MUSIC SCHEDULE] Sent daily message ${item.id} to group ${item.chat_id}.`);
+        } catch (error) {
           await db().query(
-            "UPDATE music_account_scheduled_messages SET last_sent_date = $2::date WHERE id = $1",
+            "UPDATE music_account_scheduled_messages SET last_sent_date = NULL WHERE id = $1 AND last_sent_date = $2::date",
             [item.id, date],
           );
-          console.log(`[MUSIC SCHEDULE] Sent daily message ${item.id} to chat ${item.chat_id}.`);
-        } catch (error) {
           console.error(
             `[MUSIC SCHEDULE] Failed to send message ${item.id}; it will retry: `,
             error?.message || error,
@@ -219,7 +243,9 @@ async function startScheduledMessagesLoop(client) {
     } catch (error) {
       console.error("[MUSIC SCHEDULE] Scheduler check failed:", error?.message || error);
     }
-    await sleep(15_000);
+    // Wake at the next minute boundary, so 5:20 AM is sent at 5:20,
+    // rather than up to 15 seconds late.
+    await sleep(millisecondsUntilNextMinute());
   }
 }
 
