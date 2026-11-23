@@ -2,12 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
   Bomb,
-  Copy,
   Download,
-  Globe,
   LogOut,
   Play,
-  Share2,
   Shuffle,
   Sparkles,
   Timer,
@@ -107,12 +104,8 @@ function getTelegramPlayerName(): string {
   return 'أنت';
 }
 
-function getInitialRoomCodeFromUrl(): string {
+function getInitialRoomIdFromUrl(): string {
   try {
-    const params = new URLSearchParams(window.location.search);
-    const queryRoom = params.get('room') || params.get('lobby');
-    if (queryRoom) return queryRoom.trim().toUpperCase();
-
     const startParam =
       (
         window as unknown as {
@@ -123,17 +116,13 @@ function getInitialRoomCodeFromUrl(): string {
       ).Telegram?.WebApp?.initDataUnsafe?.start_param || '';
 
     if (startParam.startsWith('potato_')) {
-      return startParam.slice(7).trim().toUpperCase();
-    }
-    if (startParam.startsWith('online_lobby_')) {
-      return startParam.slice(13).trim().toUpperCase();
+      return startParam.slice(7).trim();
     }
   } catch {
     // Ignore URL errors
   }
   return '';
 }
-
 function getStableClientId(): string {
   try {
     const tgId = (
@@ -267,14 +256,14 @@ function createTrayWithBombs(bombIndices: number[]): TrayCell[] {
 }
 
 export default function App() {
-  const initialRoomCode = useMemo(() => getInitialRoomCodeFromUrl(), []);
+  const initialRoomId = useMemo(() => getInitialRoomIdFromUrl(), []);
   const clientId = useMemo(() => getStableClientId(), []);
 
   const [screen, setScreen] = useState<Screen>(() =>
-    initialRoomCode ? 'online_lobby' : 'home'
+    initialRoomId ? 'online_lobby' : 'home'
   );
   const [mode, setMode] = useState<GameMode>(() =>
-    initialRoomCode ? 'online' : 'bot'
+    initialRoomId ? 'online' : 'bot'
   );
   const [settings, setSettings] = useState<PotatoSettings>(loadSavedSettings);
   const [playerName, setPlayerName] = useState<string>(getTelegramPlayerName);
@@ -307,8 +296,6 @@ export default function App() {
 
   // Online multiplayer state
   const wsRef = useRef<WebSocket | null>(null);
-  const [roomCode, setRoomCode] = useState<string>('');
-  const [joinInput, setJoinInput] = useState<string>(initialRoomCode);
   const [lobbyPlayers, setLobbyPlayers] = useState<LobbyPlayerInfo[]>([]);
   const [mySlot, setMySlot] = useState<0 | 1>(0);
   const [opponentName, setOpponentName] = useState<string>('الخصم');
@@ -397,7 +384,6 @@ export default function App() {
       wsRef.current.close();
       wsRef.current = null;
     }
-    setRoomCode('');
     setLobbyPlayers([]);
     setMyOnlineReady(false);
     setRematchPending(false);
@@ -508,7 +494,6 @@ export default function App() {
           const slot = (Number(data.mySlot) === 1 ? 1 : 0) as 0 | 1;
           mySlotRef.current = slot;
           setMySlot(slot);
-          setRoomCode(String(data.code || ''));
           if (Array.isArray(data.players)) {
             setLobbyPlayers(data.players as LobbyPlayerInfo[]);
           }
@@ -581,7 +566,6 @@ export default function App() {
 
       ws.onclose = () => {
         if (screenRef.current === 'online_lobby') {
-          setRoomCode('');
           setLobbyPlayers([]);
         }
       };
@@ -589,144 +573,38 @@ export default function App() {
     [closeWs, settings.haptics, showToast]
   );
 
-  // Auto-join online room if ?room= or start_param was provided
+  // Join the Telegram invitation's internal game ID automatically.
   useEffect(() => {
-    if (!initialRoomCode || autoJoinedRef.current) return;
+    if (!initialRoomId || autoJoinedRef.current) return;
     autoJoinedRef.current = true;
     const myName = getTelegramPlayerName();
     connectOnlineWs((ws) => {
       ws.send(
         JSON.stringify({
           type: 'join_room',
-          code: initialRoomCode,
+          roomId: initialRoomId,
           clientId,
           name: myName,
         })
       );
     });
-  }, [clientId, connectOnlineWs, initialRoomCode]);
+  }, [clientId, connectOnlineWs, initialRoomId]);
 
-  const handleCreateRoom = () => {
-    const myName = playerName.trim() || 'أنت';
-    connectOnlineWs((ws) => {
-      ws.send(
-        JSON.stringify({
-          type: 'create_room',
-          clientId,
-          name: myName,
-        })
-      );
-    });
-  };
-
-  const handleJoinRoom = () => {
-    const code = joinInput.trim().toUpperCase();
-    if (code.length < 4) {
-      showToast('أدخل كود الغرفة الصحيح');
-      return;
-    }
-    const myName = playerName.trim() || 'أنت';
-    connectOnlineWs((ws) => {
-      ws.send(
-        JSON.stringify({
-          type: 'join_room',
-          code,
-          clientId,
-          name: myName,
-        })
-      );
-    });
-  };
-
-  const copyInviteLink = async () => {
-    const url = `${window.location.origin}?room=${roomCode}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      showToast(`تم نسخ رابط الدعوة (${roomCode})`);
-    } catch {
-      showToast(`كود الغرفة: ${roomCode}`);
-    }
-  };
-
-  const shareTelegramInvite = () => {
-    const url = `${window.location.origin}?room=${roomCode}`;
-    const text = `🥔 تحداني في لعبة البطاطس!\nكود الغرفة: ${roomCode}`;
-    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
-    try {
-      const tg = (
-        window as unknown as {
-          Telegram?: { WebApp?: { openTelegramLink?: (u: string) => void } };
-        }
-      ).Telegram?.WebApp;
-      if (tg?.openTelegramLink) {
-        tg.openTelegramLink(shareUrl);
-        return;
+  const chooseTelegramOpponent = () => {
+    const picker = (
+      window as unknown as {
+        Telegram?: {
+          WebApp?: {
+            switchInlineQuery?: (query: string, chatTypes?: string[]) => void;
+          };
+        };
       }
-    } catch {
-      // Fallback
-    }
-    void copyInviteLink();
-  };
-
-  const handleWithdraw = useCallback(() => {
-    if (
-      screen !== 'playing' ||
-      phase === 'GAME_OVER' ||
-      phase === 'REVEALING_BOMBS'
-    ) {
+    ).Telegram?.WebApp?.switchInlineQuery;
+    if (typeof picker !== 'function') {
+      showToast('افتح اللعبة من الميني آب داخل تيليجرام لاختيار المحادثة.');
       return;
     }
-
-    if (mode === 'online') {
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({ type: 'withdraw' }));
-      }
-      return;
-    }
-
-    matchIdRef.current += 1;
-    clearAllTimeouts();
-    triggerHaptic(settings.haptics, 'heavy');
-    soundEngine.playLose();
-    setIsResolvingPick(false);
-    setShakingTray(null);
-    setWithdrawnByMe(true);
-    setPhase('GAME_OVER');
-  }, [clearAllTimeouts, mode, phase, screen, settings.haptics]);
-
-  const handleRematch = () => {
-    if (mode === 'online') {
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        setRematchPending(true);
-        wsRef.current.send(JSON.stringify({ type: 'rematch' }));
-      }
-      return;
-    }
-    startBotMatch();
-  };
-
-  const handleDownloadZip = async () => {
-    if (downloadingZip) return;
-    setDownloadingZip(true);
-    showToast('جاري تجهيز ملفات اللعبة...');
-    try {
-      const res = await fetch('/api/download-zip', { cache: 'no-store' });
-      if (!res.ok) throw new Error('Download failed');
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'al-batates-game.zip';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 4000);
-      showToast('تم تحميل ملفات اللعبة (Zip)');
-    } catch {
-      showToast('تعذر تحميل الملف حالياً');
-    } finally {
-      setDownloadingZip(false);
-    }
+    picker('الشبس', ['users', 'groups', 'channels']);
   };
 
   // --- BOT MODE LOCAL GAME ENGINE ---
@@ -1179,14 +1057,11 @@ export default function App() {
 
             <button
               type="button"
-              onClick={() => {
-                setMode('online');
-                setScreen('online_lobby');
-              }}
+              onClick={chooseTelegramOpponent}
               className="nawaf-secondary flex items-center justify-center gap-2.5"
             >
-              <Globe className="h-5 w-5 text-sky-300" />
-              <span>لعب أونلاين مع صديق</span>
+              <span className="text-xl">👥</span>
+              <span>لعب ضد شخص بالتيليجرام</span>
             </button>
 
             <button
@@ -1216,13 +1091,16 @@ export default function App() {
         </div>
       )}
 
-      {/* ONLINE LOBBY SCREEN (Zero Bot mentions) */}
+      {/* ONLINE LOBBY SCREEN */}
       {screen === 'online_lobby' && (
         <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pb-6 pt-4">
           <div className="mb-4 flex items-center justify-between">
             <button
               type="button"
               onClick={() => {
+                if (wsRef.current?.readyState === WebSocket.OPEN) {
+                  wsRef.current.send(JSON.stringify({ type: 'withdraw' }));
+                }
                 closeWs();
                 setScreen('home');
               }}
@@ -1231,145 +1109,71 @@ export default function App() {
               <ArrowRight className="h-4 w-4" />
               <span>رجوع</span>
             </button>
-            <h2 className="m-0 text-lg font-black">لعب أونلاين مع صديق</h2>
+            <h2 className="m-0 text-lg font-black">تحدي الشبس 🥔</h2>
             <div className="w-16" aria-hidden="true" />
           </div>
 
-          {!roomCode ? (
-            <div className="nawaf-panel space-y-4 p-4">
-              <p className="text-xs font-bold text-white/75 leading-relaxed">
-                أنشئ غرفة خاصة وأرسل الكود أو رابط الدعوة لصديقك للعب مواجهة
-                1 ضد 1 مباشرة!
-              </p>
+          <div className="nawaf-panel space-y-4 p-4">
+            <p className="text-xs font-bold text-white/75 leading-relaxed">
+              تم فتح دعوة تيليجرام. انتظر انضمام اللاعب الآخر لبدء المواجهة.
+            </p>
+            <div className="space-y-2">
+              <div className="text-xs font-extrabold text-white/75">
+                اللاعبون ({lobbyPlayers.length} / 2)
+              </div>
+              {lobbyPlayers.map((p) => (
+                <div
+                  key={p.slot}
+                  className="flex items-center justify-between rounded-xl border border-white/15 bg-black/30 px-3.5 py-2.5"
+                >
+                  <span className="font-black text-white">{p.name}</span>
+                  <span
+                    className={`rounded-lg px-2.5 py-0.5 text-xs font-black ${
+                      p.slot === mySlot
+                        ? 'bg-sky-500/25 text-sky-300'
+                        : 'bg-rose-500/25 text-rose-300'
+                    }`}
+                  >
+                    {p.slot === mySlot ? 'أنت' : 'الخصم'}
+                  </span>
+                </div>
+              ))}
+            </div>
 
+            {mySlot === 0 ? (
               <button
                 type="button"
-                onClick={handleCreateRoom}
-                className="nawaf-primary flex items-center justify-center gap-2"
+                disabled={lobbyPlayers.length < 2}
+                onClick={() =>
+                  wsRef.current?.send(JSON.stringify({ type: 'start_match' }))
+                }
+                className="nawaf-primary disabled:opacity-50"
               >
-                <Globe className="h-5 w-5" />
-                <span>إنشاء غرفة جديدة</span>
+                {lobbyPlayers.length < 2
+                  ? 'بانتظار اللاعب الآخر...'
+                  : 'ابدأ المباراة الآن'}
               </button>
-
-              <div className="relative flex items-center justify-center py-1">
-                <div className="h-px w-full bg-white/15" />
-                <span className="bg-[#1b080c] px-3 text-xs font-bold text-white/55">
-                  أو
-                </span>
-                <div className="h-px w-full bg-white/15" />
+            ) : (
+              <div className="rounded-xl border border-sky-400/25 bg-sky-500/10 py-3 text-center text-sm font-extrabold text-sky-200">
+                بانتظار بدء المباراة...
               </div>
+            )}
 
-              <div>
-                <label
-                  htmlFor="room-code-input"
-                  className="mb-1.5 block text-xs font-extrabold text-white/80"
-                >
-                  الانضمام برمز الغرفة
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    id="room-code-input"
-                    type="text"
-                    maxLength={8}
-                    value={joinInput}
-                    onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
-                    placeholder="أدخل الكود..."
-                    className="flex-1 rounded-xl border border-white/25 bg-black/35 px-3.5 py-2.5 text-center text-sm font-black tracking-widest text-amber-300 uppercase outline-none focus:border-sky-400"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleJoinRoom}
-                    className="nawaf-choice px-5 py-2.5 text-sm font-black"
-                  >
-                    دخول
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="nawaf-panel space-y-4 p-4">
-              <div className="rounded-2xl border border-white/15 bg-black/35 p-3.5 text-center">
-                <div className="text-xs font-bold text-white/60">كود الغرفة</div>
-                <div className="mt-1 text-3xl font-black tracking-widest text-amber-300 tabular-nums">
-                  {roomCode}
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={shareTelegramInvite}
-                    className="nawaf-choice flex items-center justify-center gap-1.5 py-2 text-xs"
-                  >
-                    <Share2 className="h-3.5 w-3.5 text-sky-300" />
-                    <span>مشاركة بتيليجرام</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={copyInviteLink}
-                    className="nawaf-choice flex items-center justify-center gap-1.5 py-2 text-xs"
-                  >
-                    <Copy className="h-3.5 w-3.5 text-amber-300" />
-                    <span>نسخ الرابط</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-xs font-extrabold text-white/75">
-                  اللاعبون ({lobbyPlayers.length} / 2)
-                </div>
-                {lobbyPlayers.map((p) => (
-                  <div
-                    key={p.slot}
-                    className="flex items-center justify-between rounded-xl border border-white/15 bg-black/30 px-3.5 py-2.5"
-                  >
-                    <span className="font-black text-white">{p.name}</span>
-                    <span
-                      className={`rounded-lg px-2.5 py-0.5 text-xs font-black ${
-                        p.slot === mySlot
-                          ? 'bg-sky-500/25 text-sky-300'
-                          : 'bg-rose-500/25 text-rose-300'
-                      }`}
-                    >
-                      {p.slot === mySlot ? 'أنت' : 'الخصم'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {mySlot === 0 ? (
-                <button
-                  type="button"
-                  disabled={lobbyPlayers.length < 2}
-                  onClick={() =>
-                    wsRef.current?.send(JSON.stringify({ type: 'start_match' }))
-                  }
-                  className="nawaf-primary disabled:opacity-50"
-                >
-                  {lobbyPlayers.length < 2
-                    ? 'بانتظار دخول الخصم...'
-                    : 'ابدأ المباراة الآن'}
-                </button>
-              ) : (
-                <div className="rounded-xl border border-sky-400/25 bg-sky-500/10 py-3 text-center text-sm font-extrabold text-sky-200">
-                  بانتظار صاحب الغرفة لبدء المباراة...
-                </div>
-              )}
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (wsRef.current?.readyState === WebSocket.OPEN) {
-                    wsRef.current.send(JSON.stringify({ type: 'withdraw' }));
-                  }
-                  closeWs();
-                }}
-                className="nawaf-secondary flex items-center justify-center gap-1.5 text-xs text-white/80"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>مغادرة الغرفة</span>
-              </button>
-            </div>
-          )}
+            <button
+              type="button"
+              onClick={() => {
+                if (wsRef.current?.readyState === WebSocket.OPEN) {
+                  wsRef.current.send(JSON.stringify({ type: 'withdraw' }));
+                }
+                closeWs();
+                setScreen('home');
+              }}
+              className="nawaf-secondary flex items-center justify-center gap-1.5 text-xs text-white/80"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>مغادرة التحدي</span>
+            </button>
+          </div>
         </div>
       )}
 
