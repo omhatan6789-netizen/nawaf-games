@@ -1,0 +1,6 @@
+{
+  "name": "البطاطس",
+  "description": "لعبة البطاطس التنافسية 1 ضد 1 ضد البوت - خبّي 3 قنابل تحت رقائق الشيبس وتجنب قنابل البوت",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
