@@ -58,6 +58,7 @@ const gameDefinitions = [
   { name: "carrom", port: 10001 },
   { name: "gravity", port: 10002 },
   { name: "snowball", port: 10003 },
+  { name: "chips", port: 10004, cwd: "games-src/chips/al-batates-game" },
 ];
 const gameProcesses = new Map();
 const gameProxies = new Map();
@@ -253,7 +254,7 @@ const server = app.listen(port, "0.0.0.0", () => {
 
 if (process.env.ENABLE_GAME_SERVERS !== "false") {
   for (const game of gameDefinitions) {
-    const cwd = path.resolve(process.cwd(), "games-src", game.name);
+    const cwd = path.resolve(process.cwd(), game.cwd || path.join("games-src", game.name));
     const child = spawn(process.execPath, ["server.ts"], {
       cwd,
       env: {
@@ -288,6 +289,10 @@ server.on("upgrade", (req, socket, head) => {
   }
   if (pathname === "/ws/snowball") {
     gameProxies.get("snowball")?.ws(req, socket, head);
+    return;
+  }
+  if (pathname === "/ws/potato") {
+    gameProxies.get("chips")?.ws(req, socket, head);
     return;
   }
   socket.destroy();
