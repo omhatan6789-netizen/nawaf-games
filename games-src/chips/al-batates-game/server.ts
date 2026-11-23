@@ -424,7 +424,7 @@ async function startServer() {
       return res.status(401).json({ ok: false, error: 'Unauthorized' });
     }
     const userId = String(req.body?.userId || '').trim();
-    if (!/^\\d+$/.test(userId)) {
+    if (!/^\d+$/.test(userId)) {
       return res.status(400).json({ ok: false, error: 'Invalid Telegram user' });
     }
     const roomId = randomUUID().replace(/-/g, '').toUpperCase();
