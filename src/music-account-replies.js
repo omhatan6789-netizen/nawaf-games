@@ -30,6 +30,17 @@ export async function ensureMusicAccountRepliesSchema() {
     VALUES (1, '{"replies_enabled": true, "muted": {}, "restricted": {}}'::jsonb)
     ON CONFLICT (id) DO NOTHING
   `);
+  await db().query(`
+    CREATE TABLE IF NOT EXISTS music_account_scheduled_messages (
+      id BIGSERIAL PRIMARY KEY,
+      chat_id BIGINT NOT NULL,
+      message_text TEXT NOT NULL,
+      hour SMALLINT NOT NULL CHECK (hour BETWEEN 0 AND 23),
+      minute SMALLINT NOT NULL CHECK (minute BETWEEN 0 AND 59),
+      last_sent_date DATE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
 
   const result = await db().query(
     "SELECT COALESCE((settings->>'replies_enabled')::boolean, TRUE) AS enabled FROM name_reaction_settings WHERE id = 1",
@@ -71,6 +82,48 @@ async function handleMusicAccountMessage(message) {
   const client = await getMusicAccountClient();
   try {
     const text = String(message.text || message.caption || "").trim();
+
+    // Scheduled daily messages are configured by sending a two-line command
+    // from the music account in the chat where the message should be posted.
+    if (message.isOutgoing && text.startsWith("اضف رسالة -")) {
+      const lines = text.split(/\\r?\\n/).map((line) => line.trim());
+      const firstLine = lines[0] || "";
+      const messageText = [
+        firstLine.slice("اضف رسالة -".length).trim(),
+        ...lines.slice(1, -1),
+      ].filter(Boolean).join("\\n").trim();
+      const timeLine = lines.at(-1) || "";
+      const timeMatch = timeLine.match(/^(1[0-2]|0?[1-9]):([0-5]\\d)\\s*(AM|PM)$/i);
+
+      if (!messageText || !timeMatch) {
+        await client.replyText(
+          message,
+          "الصيغة غير صحيحة. اكتب الرسالة ثم الوقت في السطر الثاني، مثال:\\nاضف رسالة - هاي نيوف\\n5:00 PM",
+        );
+        return;
+      }
+
+      let hour = Number(timeMatch[1]) % 12;
+      if (timeMatch[3].toUpperCase() === "PM") hour += 12;
+      const minute = Number(timeMatch[2]);
+
+      await db().query(
+        `INSERT INTO music_account_scheduled_messages
+           (chat_id, message_text, hour, minute)
+         VALUES ($1, $2, $3, $4)`,
+        [String(message.chat.id), messageText, hour, minute],
+      );
+
+      try {
+        await client.sendReaction({ message, emoji: "👍" });
+      } catch (error) {
+        console.error("[MUSIC SCHEDULE] Could not react to the add command:", error?.message || error);
+      }
+      console.log(
+        `[MUSIC SCHEDULE] Added daily message for chat ${message.chat.id} at ${timeMatch[1]}:${timeMatch[2]} ${timeMatch[3].toUpperCase()} Riyadh time.`,
+      );
+      return;
+    }
 
     // Original Python behavior: only messages sent by the music account
     // itself can control the replies setting.
@@ -114,6 +167,62 @@ async function handleMusicAccountMessage(message) {
   }
 }
 
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function getRiyadhDateAndTime() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Riyadh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return {
+    date: `${values.year}-${values.month}-${values.day}`,
+    minutes: Number(values.hour) * 60 + Number(values.minute),
+  };
+}
+
+async function startScheduledMessagesLoop(client) {
+  console.log("[MUSIC SCHEDULE] Daily message scheduler started (Asia/Riyadh).");
+  while (true) {
+    try {
+      const { date, minutes } = getRiyadhDateAndTime();
+      const due = await db().query(
+        `SELECT id, chat_id, message_text
+           FROM music_account_scheduled_messages
+          WHERE last_sent_date IS DISTINCT FROM $1::date
+            AND (hour * 60 + minute) <= $2
+          ORDER BY hour, minute, id`,
+        [date, minutes],
+      );
+
+      for (const item of due.rows) {
+        try {
+          await client.sendText(String(item.chat_id), item.message_text);
+          await db().query(
+            "UPDATE music_account_scheduled_messages SET last_sent_date = $2::date WHERE id = $1",
+            [item.id, date],
+          );
+          console.log(`[MUSIC SCHEDULE] Sent daily message ${item.id} to chat ${item.chat_id}.`);
+        } catch (error) {
+          console.error(
+            `[MUSIC SCHEDULE] Failed to send message ${item.id}; it will retry: `,
+            error?.message || error,
+          );
+        }
+      }
+    } catch (error) {
+      console.error("[MUSIC SCHEDULE] Scheduler check failed:", error?.message || error);
+    }
+    await sleep(15_000);
+  }
+}
+
 export async function startMusicAccountReplies() {
   if (started) return;
   if (!pool) {
@@ -125,5 +234,8 @@ export async function startMusicAccountReplies() {
   const client = await getMusicAccountClient();
   client.onNewMessage.add(handleMusicAccountMessage);
   started = true;
+  startScheduledMessagesLoop(client).catch((error) => {
+    console.error("[MUSIC SCHEDULE] Scheduler stopped unexpectedly:", error?.message || error);
+  });
   console.log("[NAME REACTION] Started successfully.");
 }
