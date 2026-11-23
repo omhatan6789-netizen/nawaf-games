@@ -562,7 +562,7 @@ async function startServer() {
       if (!player) return;
 
       if (type === 'start_match') {
-        if (player.slot !== 0 || room.players.length < 2) return;
+        if (player.slot !== 0 || room.players.length < 2 || room.players.some((p) => !p.ws)) return;
         if (room.phase !== 'LOBBY') return;
         startPrepPhase(room);
         return;
