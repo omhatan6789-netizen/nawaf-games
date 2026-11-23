@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Code2,
   Copy,
+  Download,
+  FolderArchive,
   LogOut,
   RotateCcw,
   Share2,
@@ -9,6 +12,10 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { CarromPreviewSvg } from './components/CarromPreviewSvg';
+import {
+  downloadZipFromEndpoint,
+  GitHubExportModal,
+} from './components/GitHubExportModal';
 import { PlayerBar } from './components/PlayerBar';
 import { StrikerSlider } from './components/StrikerSlider';
 import {
@@ -106,7 +113,7 @@ export default function App() {
   const initialRoomCode = useMemo(() => getInitialRoomCodeFromUrl(), []);
   const clientId = useMemo(() => getStableClientId(), []);
 
-  const [screen, setScreen] = useState<'home' | 'setup' | 'playing'>(() => initialRoomCode ? 'setup' : 'home');
+  const [screen, setScreen] = useState<'setup' | 'playing'>('setup');
   const [mode, setMode] = useState<GameMode>(() =>
     initialRoomCode ? 'online' : 'bot'
   );
@@ -116,9 +123,9 @@ export default function App() {
   const [playerName, setPlayerName] = useState<string>(
     () => getTelegramPlayerName() || 'أنت'
   );
-  const [botUsername, setBotUsername] = useState<string>('');
   const [localP2Name, setLocalP2Name] = useState<string>('اللاعب الثاني');
   const [muted, setMuted] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   // Online multiplayer state
   const [wsConnected, setWsConnected] = useState(false);
@@ -158,19 +165,6 @@ export default function App() {
   useEffect(() => {
     window.Telegram?.WebApp?.ready?.();
     window.Telegram?.WebApp?.expand?.();
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    fetch('/api/mini-app')
-      .then((response) => response.ok ? response.json() : null)
-      .then((data) => {
-        if (active && data?.bot_username) {
-          setBotUsername(String(data.bot_username).replace(/^@/, ''));
-        }
-      })
-      .catch(() => {});
-    return () => { active = false; };
   }, []);
 
   const showToast = useCallback((msg: string) => {
@@ -453,9 +447,7 @@ export default function App() {
 
   const buildInviteDetails = (room: OnlineRoomState) => {
     const baseUrl = `${window.location.origin}${window.location.pathname}`;
-    const roomUrl = botUsername
-      ? `https://t.me/${botUsername}?startapp=${encodeURIComponent(`carrom_${room.id}`)}`
-      : `${baseUrl}?room=${encodeURIComponent(room.id)}`;
+    const roomUrl = `${baseUrl}?room=${encodeURIComponent(room.id)}`;
     const hostName = room.players[0]?.name || playerName || 'لاعب';
     const inviteText =
       `🎯 غرفة أونلاين — لعبة الكيرم\n\n` +
@@ -501,37 +493,6 @@ export default function App() {
   };
 
   const isHost = onlineRoom ? onlineRoom.hostId === myOnlineId : false;
-
-  // =========================================================================
-  // MAIN MODE SELECTOR
-  // =========================================================================
-  if (screen === 'home') {
-    return (
-      <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center px-4 py-6">
-        <main className="w-full max-w-[520px] flex flex-col gap-4">
-          <section className="nawaf-panel p-5 sm:p-7 flex flex-col gap-5 text-center">
-            <CarromPreviewSvg />
-            <div>
-              <h1 className="text-3xl font-black text-white">الكيرم 🎯</h1>
-              <p className="mt-2 text-sm font-bold text-white/70">اختر طريقة اللعب وابدأ التحدي</p>
-            </div>
-            <button type="button" onClick={() => { setMode('bot'); setScreen('setup'); }} className="nawaf-primary py-4 text-base">
-              🤖 اللعب ضد بوت نواف
-            </button>
-            <button type="button" onClick={() => { setMode('online'); setScreen('setup'); }} className="nawaf-secondary py-4 text-base">
-              🌐 اللعب ضد شخص في تيليجرام
-            </button>
-            <button type="button" onClick={() => { setMode('local'); setScreen('setup'); }} className="nawaf-choice py-3 text-sm">
-              👥 اللعب على نفس الجهاز
-            </button>
-            <button type="button" onClick={() => window.Telegram?.WebApp?.close?.()} className="text-xs font-bold text-white/55 py-2">
-              إغلاق
-            </button>
-          </section>
-        </main>
-      </div>
-    );
-  }
 
   // =========================================================================
   // GAMEPLAY SCREEN (Fits cleanly inside 100dvh without scrolling)
@@ -691,19 +652,21 @@ export default function App() {
               )}
 
               <div className="online-end-actions">
-                <button type="button" onClick={handleRestart} disabled={mode === 'online' && !isHost}>
-                  ↻ إعادة اللعبة
-                </button>
+                {mode !== 'online' || isHost ? (
+                  <button type="button" onClick={handleRestart}>
+                    ↻ العب مرة ثانية
+                  </button>
+                ) : (
+                  <button type="button" disabled>
+                    بانتظار صاحب الغرفة لإعادة اللعب...
+                  </button>
+                )}
                 <button
                   type="button"
                   className="secondary-end"
-                  onClick={() => {
-                    const telegram = (window as unknown as { Telegram?: { WebApp?: { close?: () => void } } }).Telegram?.WebApp;
-                    if (telegram?.close) telegram.close();
-                    else { try { window.close(); } catch {} }
-                  }}
+                  onClick={handleExitGameplay}
                 >
-                  قفل الصفحة
+                  خروج للقائمة الرئيسية
                 </button>
               </div>
             </div>
@@ -746,6 +709,16 @@ export default function App() {
             >
               {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
+            {mode !== 'online' && (
+              <button
+                type="button"
+                onClick={handleStartLocalOrBot}
+                className="nawaf-pill flex items-center gap-1.5 whitespace-nowrap shrink-0"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>ابدأ</span>
+              </button>
+            )}
           </div>
         </header>
 
@@ -836,7 +809,7 @@ export default function App() {
                   mode === 'online' ? 'active' : ''
                 }`}
               >
-🌐 ضد شخص في تيليجرام
+                🌐 أونلاين
               </button>
             </div>
           </div>
@@ -860,16 +833,6 @@ export default function App() {
                 ))}
               </div>
             </div>
-          )}
-
-          {mode !== 'online' && (
-            <button
-              type="button"
-              onClick={handleStartLocalOrBot}
-              className="nawaf-primary w-full py-4 text-base font-black shadow-lg"
-            >
-              🎯 ابدأ اللعبة
-            </button>
           )}
 
           {/* Player Count & 4-Player Mode */}
@@ -980,8 +943,23 @@ export default function App() {
                     👥 أنشئ غرفة أونلاين جديدة
                   </button>
 
-                  <div className="text-center text-[11px] font-bold text-white/55">
-                    أنشئ غرفة ثم أرسل رابط الدعوة، وسينضم اللاعب مباشرة عند فتحه في تيليجرام
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="text"
+                      maxLength={8}
+                      value={joinCodeInput}
+                      onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
+                      placeholder="رمز الغرفة (مثال: A7K9P2)"
+                      className="min-w-0 flex-1 rounded-xl border border-white/25 bg-[#0e0508] px-3 py-2.5 text-sm font-black tracking-wider text-white text-center uppercase outline-none focus:border-[#ff9ba3]"
+                    />
+                    <button
+                      type="button"
+                      disabled={!wsConnected}
+                      onClick={handleJoinOnlineRoom}
+                      className="nawaf-choice px-4 py-2.5 text-sm font-black shrink-0 disabled:opacity-50"
+                    >
+                      دخول الغرفة
+                    </button>
                   </div>
                 </>
               ) : (
@@ -992,7 +970,10 @@ export default function App() {
                         غرفة الكيرم 🎯
                       </div>
                       <div className="text-[11px] font-bold text-white/60">
-                        أرسل رابط الدعوة للاعبين للانضمام مباشرة
+                        رمز الغرفة:{' '}
+                        <span className="text-[#facc15] tracking-widest font-black">
+                          {onlineRoom.id}
+                        </span>
                       </div>
                     </div>
                     <div className="text-xs font-black tabular-nums text-white/80">
@@ -1112,9 +1093,59 @@ export default function App() {
             <div>• سقوط قرص التسديد في الجيب يُحتسب فاول ويُعيد أحد أقراصك للمركز.</div>
           </div>
 
+          <div className="flex flex-col gap-2.5">
+            {mode !== 'online' && (
+              <button
+                type="button"
+                onClick={handleStartLocalOrBot}
+                className="nawaf-primary"
+              >
+                ابدأ اللعب
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setExportOpen(true)}
+              className="nawaf-secondary flex items-center justify-center gap-2"
+            >
+              <Code2 className="w-4 h-4 text-[#ff9ba3]" />
+              <span>كود الإضافة لمشروعك في GitHub (nawaf-bot-v2)</span>
+            </button>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  downloadZipFromEndpoint(
+                    '/api/export/project.zip',
+                    'carrom-game-project.zip'
+                  ).catch((err) => showToast(err.message));
+                }}
+                className="nawaf-choice py-2.5 px-3 text-xs flex items-center justify-center gap-2"
+              >
+                <FolderArchive className="w-4 h-4 text-[#facc15]" />
+                <span>تحميل المشروع كامل (ZIP)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  downloadZipFromEndpoint(
+                    '/api/export/nawaf-addon.zip',
+                    'nawaf-bot-v2-carrom-addon.zip'
+                  ).catch((err) => showToast(err.message));
+                }}
+                className="nawaf-choice py-2.5 px-3 text-xs flex items-center justify-center gap-2"
+              >
+                <Download className="w-4 h-4 text-[#60a5fa]" />
+                <span>تحميل إضافة البوت (ZIP)</span>
+              </button>
+            </div>
+          </div>
         </section>
       </main>
 
+      <GitHubExportModal open={exportOpen} onClose={() => setExportOpen(false)} />
     </div>
   );
 }
