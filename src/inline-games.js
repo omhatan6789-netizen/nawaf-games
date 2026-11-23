@@ -19,7 +19,7 @@ async function ensureInlineLobbyGameTypes() {
       await pool.query(`
         ALTER TABLE online_game_lobbies
         ADD CONSTRAINT online_game_lobbies_game_type_check
-        CHECK (game_type IN ('connect','dots','memory','word','match','find','number','sort','carrom','gravity','snowball','darts'))
+        CHECK (game_type IN ('connect','dots','memory','word','match','find','number','sort','carrom','gravity','snowball','darts','chips'))
         NOT VALID
       `);
     })().catch(error => {
@@ -43,6 +43,7 @@ const GAME_INFO = {
   gravity: ["جري الجاذبية 🏃", "بدّل الجاذبية وتجاوز العقبات مع لاعب آخر"],
   snowball: ["كرة الثلج ❄️", "صوّب كرات الثلج وتحدَّ لاعبًا آخر"],
   darts: ["السهام 🎯", "صوّب بدقة لتصل إلى الصفر قبل خصمك"],
+  chips: ["الشبس 🥔", "خبّئ القنابل تحت رقائق الشيبس وتجنب قنابل خصمك"],
 };
 
 const WORDS = ["سيارة", "مدرسة", "مكتبة", "طائرة", "حاسوب", "نافذة", "حديقة", "مفتاح", "مصباح", "وسادة", "حقيبة", "ثلاجة", "غسالة", "مروحة", "تلفاز", "سفينة", "دراجة", "طاولة", "ملعقة", "تفاحة"];
@@ -62,6 +63,7 @@ function selectGames(query = "") {
   if (/(كرة الثلج|ثلج|snowball)/i.test(value)) return ["snowball"];
   if (/(جري الجاذبية|الجاذبية|gravity)/i.test(value)) return ["gravity"];
   if (/(السهام|سهام|darts?|dart)/i.test(value)) return ["darts"];
+  if (/(الشبس|الشيبس|البطاطس|chips?|potato)/i.test(value)) return ["chips"];
   return Object.keys(GAME_INFO);
 }
 
@@ -72,8 +74,8 @@ function playerName(user) {
 
 async function createLobby(gameType, user) {
   const name = playerName(user);
-  if (gameType === "carrom" || gameType === "gravity" || gameType === "snowball") {
-    const port = gameType === "carrom" ? 10001 : gameType === "gravity" ? 10002 : 10003;
+  if (gameType === "carrom" || gameType === "gravity" || gameType === "snowball" || gameType === "chips") {
+    const port = gameType === "carrom" ? 10001 : gameType === "gravity" ? 10002 : gameType === "snowball" ? 10003 : 10004;
     const response = await fetch(`http://127.0.0.1:${port}/api/internal/inline-room`, {
       method: "POST",
       headers: { "content-type": "application/json", "x-bot-token": process.env.BOT_TOKEN },
@@ -206,6 +208,7 @@ export async function handleInlineGameChosen(ctx) {
       : gameType === "carrom" ? "carrom_"
       : gameType === "gravity" ? "gravity_"
       : gameType === "snowball" ? "snowball_"
+      : gameType === "chips" ? "potato_"
       : "online_lobby_";
     const roomUrl = `https://t.me/${username}?startapp=${prefix}${roomId}`;
 
