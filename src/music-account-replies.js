@@ -42,6 +42,34 @@ export async function ensureMusicAccountRepliesSchema() {
     )
   `);
 
+  // Collapse duplicate schedules created by earlier versions/repeated commands.
+  // Preserve today's sent marker if any duplicate row already ran.
+  await db().query(`
+    WITH duplicates AS (
+      SELECT MIN(id) AS keep_id, MAX(last_sent_date) AS sent_date
+        FROM music_account_scheduled_messages
+       GROUP BY chat_id, message_text, hour, minute
+      HAVING COUNT(*) > 1
+    )
+    UPDATE music_account_scheduled_messages AS scheduled
+       SET last_sent_date = duplicates.sent_date
+      FROM duplicates
+     WHERE scheduled.id = duplicates.keep_id
+  `);
+  await db().query(`
+    DELETE FROM music_account_scheduled_messages AS older
+     USING music_account_scheduled_messages AS newer
+     WHERE older.chat_id = newer.chat_id
+       AND older.message_text = newer.message_text
+       AND older.hour = newer.hour
+       AND older.minute = newer.minute
+       AND older.id > newer.id
+  `);
+  await db().query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS music_account_scheduled_messages_unique
+      ON music_account_scheduled_messages (chat_id, message_text, hour, minute)
+  `);
+
   const result = await db().query(
     "SELECT COALESCE((settings->>'replies_enabled')::boolean, TRUE) AS enabled FROM name_reaction_settings WHERE id = 1",
   );
@@ -113,11 +141,19 @@ async function handleMusicAccountMessage(message) {
       if (timeMatch[3].toUpperCase() === "PM") hour += 12;
       const minute = Number(timeMatch[2]);
 
+      const { date: todayInRiyadh, minutes: currentRiyadhMinutes } = getRiyadhDateAndTime();
+      // If the requested time has already arrived today, the first delivery
+      // is tomorrow. Adding a schedule must never send it immediately.
+      const lastSentDate = hour * 60 + minute <= currentRiyadhMinutes
+        ? todayInRiyadh
+        : null;
+
       await db().query(
         `INSERT INTO music_account_scheduled_messages
-           (chat_id, message_text, hour, minute)
-         VALUES ($1, $2, $3, $4)`,
-        [String(message.chat.id), messageText, hour, minute],
+           (chat_id, message_text, hour, minute, last_sent_date)
+         VALUES ($1, $2, $3, $4, $5::date)
+         ON CONFLICT (chat_id, message_text, hour, minute) DO NOTHING`,
+        [String(message.chat.id), messageText, hour, minute, lastSentDate],
       );
 
       try {
