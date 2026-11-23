@@ -591,7 +591,7 @@ export default function App() {
   }, [clientId, connectOnlineWs, initialRoomId]);
 
   const chooseTelegramOpponent = () => {
-    const picker = (
+    const tg = (
       window as unknown as {
         Telegram?: {
           WebApp?: {
@@ -599,12 +599,12 @@ export default function App() {
           };
         };
       }
-    ).Telegram?.WebApp?.switchInlineQuery;
-    if (typeof picker !== 'function') {
+    ).Telegram?.WebApp;
+    if (typeof tg?.switchInlineQuery !== 'function') {
       showToast('افتح اللعبة من الميني آب داخل تيليجرام لاختيار المحادثة.');
       return;
     }
-    picker('الشبس', ['users', 'groups', 'channels']);
+    tg.switchInlineQuery('الشبس', ['users', 'groups', 'channels']);
   };
 
   // --- BOT MODE LOCAL GAME ENGINE ---
@@ -1134,7 +1134,7 @@ export default function App() {
                         : 'bg-rose-500/25 text-rose-300'
                     }`}
                   >
-                    {p.slot === mySlot ? 'أنت' : 'الخصم'}
+                    {p.slot === mySlot ? 'أنت' : p.connected ? 'الخصم متصل' : 'الخصم غير متصل'}
                   </span>
                 </div>
               ))}
@@ -1143,7 +1143,7 @@ export default function App() {
             {mySlot === 0 ? (
               <button
                 type="button"
-                disabled={lobbyPlayers.length < 2}
+                disabled={lobbyPlayers.length < 2 || lobbyPlayers.some((p) => !p.connected)}
                 onClick={() =>
                   wsRef.current?.send(JSON.stringify({ type: 'start_match' }))
                 }
