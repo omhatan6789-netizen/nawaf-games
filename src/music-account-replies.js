@@ -86,19 +86,19 @@ async function handleMusicAccountMessage(message) {
     // Scheduled daily messages are configured by sending a two-line command
     // from the music account in the chat where the message should be posted.
     if (message.isOutgoing && text.startsWith("اضف رسالة -")) {
-      const lines = text.split(/\\r?\\n/).map((line) => line.trim());
+      const lines = text.split(/\r?\n/).map((line) => line.trim());
       const firstLine = lines[0] || "";
       const messageText = [
         firstLine.slice("اضف رسالة -".length).trim(),
         ...lines.slice(1, -1),
-      ].filter(Boolean).join("\\n").trim();
+      ].filter(Boolean).join("\n").trim();
       const timeLine = lines.at(-1) || "";
-      const timeMatch = timeLine.match(/^(1[0-2]|0?[1-9]):([0-5]\\d)\\s*(AM|PM)$/i);
+      const timeMatch = timeLine.match(/^(1[0-2]|0?[1-9]):([0-5]\d)\s*(AM|PM)$/i);
 
       if (!messageText || !timeMatch) {
         await client.replyText(
           message,
-          "الصيغة غير صحيحة. اكتب الرسالة ثم الوقت في السطر الثاني، مثال:\\nاضف رسالة - هاي نيوف\\n5:00 PM",
+          "الصيغة غير صحيحة. اكتب الرسالة ثم الوقت في السطر الثاني، مثال:\nاضف رسالة - هاي نيوف\n5:00 PM",
         );
         return;
       }
